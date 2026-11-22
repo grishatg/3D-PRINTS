@@ -1,3 +1,5 @@
+> **Current version: [`v7-65x15x88/`](v7-65x15x88/)** (AB Rollie Book, Bambu A1). **New session? Read [`HANDOVER.md`](HANDOVER.md) first.** The README below describes the original v1 Topo Edition.
+
 # Slim EDC Cigarette Case: Topo Edition
 
 A slim pocket case for **10 king-size cigarettes** (85 × 8 mm). It borrows the design language of JanBerry Design's *Hiking Container*: a faceted chamfered shell, a screw-pin side hinge on lug fins, a latch block on the opposite side, recessed front panels with an angular step, and a lanyard hole. The geometry is all new. No meshes were copied from the original.
