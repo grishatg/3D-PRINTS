@@ -14,8 +14,8 @@
 | **Test print** | **Not printed yet.** The printer was busy, so the first print is planned for **23 Nov 2026**. |
 | **Next action** | Get the owner's print feedback, then tune using the checklist in §6. Tolerances are the main unknown: magnet snap lip, hinge pin, knuckle gap. |
 | **Backup fallback file** | `v7-65x15x88/AB_Rollie_Book_v7_A1_geometry_only.3mf`. Same parts, filaments and modifiers, but no print profile: it uses the owner's own A1 presets. Only needed if the main file ever refuses to load. |
-| **Repo** | `grishatg/3D-PRINTS`, folder `edc-cigarette-case/`. The work is on branch **`claude/elegant-turing-9djtl2`** with a pull request into `main` (marked ready for review). If that PR has been merged, `main` has everything. |
-| **Backup** | The original home was `grishatg/General-`, branch `claude/elegant-turing-9djtl2`. That branch is kept untouched as a backup; its PR #3 there was closed (not merged) when the project moved. |
+| **Repo** | `grishatg/3D-PRINTS`, folder `edc-cigarette-case/`. The work is on branch **`claude/elegant-turing-9djtl2`**, in pull request **grishatg/3D-PRINTS#1** (https://github.com/grishatg/3D-PRINTS/pull/1) into `main`, marked ready for review. If that PR has been merged, `main` has everything. |
+| **Backup** | The original home was `grishatg/General-`, branch `claude/elegant-turing-9djtl2`. That branch is kept as a backup, with a copy of this handover; its PR (grishatg/General-#3) was closed, not merged, when the project moved. |
 
 ---
 
