@@ -77,7 +77,8 @@ def export(r, out, orig, geometry_only=False):
         inst.append(f'    <model_instance>\n      <metadata key="object_id" value="{top}"/>\n      <metadata key="instance_id" value="0"/>\n'
                     f'      <metadata key="identify_id" value="{ident}"/>\n    </model_instance>')
     tag = STYLE[v7.RIPPLE]
-    title = f'AB Rollie Book v7.1 {tag.replace("_", " ")} - A1 by object'
+    stem = 'AB_Rollie_Book_v7' if v7.INITIALS else 'Rollie_Book_v7'      # public (no-initials) build drops 'AB' everywhere
+    title = f'{stem.replace("_", " ")}.1 {tag.replace("_", " ")} - A1 by object'
     desc = ('Slim rollie case 65x13.5x88 mm, 6 channels (rollies up to 6 x 60 mm) + 2 filter-tip bays. Bambu Lab A1 + AMS lite, PETG-HF: 1 grey (cover), 2 black (tray), 3 yellow. '
             'ONE plate, print by object. Hardware: ONLY 2 x 9.53x2.53 mm magnets + 1.75 mm filament hinge pin. The printer chimes and PAUSES itself twice '
             f'(cover at {r["pause_cover_z"]:.2f} mm, tray at {r["pause_tray_z"]:.2f} mm): drop a magnet in, marked face UP, press Resume. No supports, no glue.')
@@ -111,10 +112,10 @@ def export(r, out, orig, geometry_only=False):
     files['[Content_Types].xml'] = open(f'{orig}/[Content_Types].xml').read()
     files['_rels/.rels'] = ('<?xml version="1.0" encoding="UTF-8"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\n'
                             ' <Relationship Target="/3D/3dmodel.model" Id="rel-1" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/>\n</Relationships>\n')
-    fn = f'{out}/AB_Rollie_Book_v7_A1_' + ('geometry_only' if geometry_only else 'by_object') + f'_{tag}.3mf'
+    fn = f'{out}/{stem}_A1_' + ('geometry_only' if geometry_only else 'by_object') + f'_{tag}.3mf'
     with zipfile.ZipFile(fn, 'w', zipfile.ZIP_DEFLATED) as z:
         for k, v in files.items(): z.writestr(k, v)
-    sd = f'{out}/stl_{tag}'; os.makedirs(sd, exist_ok=True)
+    sd = f'{out}/stl_{tag}' + ('' if v7.INITIALS else '_no_initials'); os.makedirs(sd, exist_ok=True)
     for name, parts, _p, _o, _f in objs:
         for k, (man, kind, ext) in enumerate(parts):
             if kind != 'mod': v6_final.write_stl(f'{sd}/{name.split(" (")[0].replace(" ", "_")}_{k}_{ {1: "grey", 2: "black", 3: "yellow"}[ext]}.stl', man)

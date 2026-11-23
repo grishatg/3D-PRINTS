@@ -1,20 +1,20 @@
-# MakerWorld listing: AB Rollie Book (copy and paste)
+# MakerWorld listing: Rollie Book (public version, no initials; copy and paste)
 
 ## Model name
-AB Rollie Book: slim magnetic rollie case, sealed-in magnets, 3 ripple designs (A1 + AMS lite)
+Rollie Book: slim magnetic rollie case, sealed-in magnets, 3 ripple designs (A1 + AMS lite)
 
 ## Category / tags
 - **Category:** Household › Storage (or Gadgets › Everyday carry)
 - **Tags:** rollie case, cigarette case, EDC, everyday carry, magnetic case, multicolour, AMS lite, Bambu A1, PETG, print in place magnets, minimal, ripple
 
 ## Summary (short description)
-A slim 65 × 13.5 × 88 mm book-style case for six rollies (up to 6 × 60 mm), with two filter-tip bays. It closes with two magnets sealed inside the print: the printer chimes and pauses for each one. The hinge pin is a length of 1.75 mm filament. No glue, no screws. Three ripple designs, one plate, about 2¾–3 h on an A1.
+A slim 65 × 13.5 × 88 mm book-style case for six rollies (up to 6 × 60 mm), with two filter-tip bays. It closes with two magnets sealed inside the print: the printer chimes and pauses for each one. The hinge pin is a length of 1.75 mm filament. No glue, no screws. Three ripple designs, one plate, about 2¼–2½ h on an A1.
 
 ---
 
 ## Description
 
-**A pocket case that clicks shut and feels good in the hand.** It opens like a book: a grey cover on a filament-pin hinge with a yellow hex sleeve, over a black tray with six vertical channels. Two hidden magnets give it a firm close. A yellow datum line sits at the golden section and wraps round the opening edge, and yellow ripples run edge to edge across both faces. The yellow initials **A·B** are inset on the bottom end.
+**A pocket case that clicks shut and feels good in the hand.** It opens like a book: a grey cover on a filament-pin hinge with a yellow hex sleeve, over a black tray with six vertical channels. Two hidden magnets give it a firm close. A yellow datum line sits at the golden section and wraps round the opening edge, and yellow ripples run edge to edge across both faces.
 
 ### Pick your ripple
 | Profile | Look |
@@ -55,7 +55,7 @@ The case, the magnets and the print time are the same in every profile; only the
 - **Base:** 0.16 mm High Quality (A1), PETG HF filament profile, 240 °C nozzle, 70 °C plate.
 - **Strength:** 100% infill, 4 walls, 6 top / 5 bottom shells, concentric top surfaces.
 - **Plate setup:** 4 mm outer brim, no supports, no prime tower.
-- **Time:** about **2 h 40 m** sliced, about 2¾–3 h with colour changes and the two pauses. 47 colour swaps.
+- **Time:** about **2 h 10 m** sliced, about 2¼–2½ h with colour changes and the two pauses. 15 colour swaps.
 - **Filament:** about 14 g grey, 33 g black and 2 g yellow, plus purge.
 
 ### Notes
@@ -68,14 +68,13 @@ The case, the magnets and the print time are the same in every profile; only the
 ## Print-profile names and descriptions (one per 3MF)
 | Upload this file | Profile name | Profile description |
 |---|---|---|
-| `AB_Rollie_Book_v7_A1_by_object_A_Flow.3mf` | **A1 + AMS lite · A Flow · 0.16 HQ PETG** | Flow ripples. By object, one plate, magnets dropped in at two automatic pauses (screen layers ~25 and ~82). About 2¾–3 h. |
-| `AB_Rollie_Book_v7_A1_by_object_B_Rings.3mf` | **A1 + AMS lite · B Rings · 0.16 HQ PETG** | Rings ripples. Same print, same pauses. |
-| `AB_Rollie_Book_v7_A1_by_object_C_Topo.3mf` | **A1 + AMS lite · C Topo · 0.16 HQ PETG** | Topo ripples. Same print, same pauses. |
+| `Rollie_Book_v7_A1_by_object_A_Flow.3mf` | **A1 + AMS lite · A Flow · 0.16 HQ PETG** | Flow ripples. By object, one plate, magnets dropped in at two automatic pauses (screen layers ~25 and ~82). About 2¼–2½ h. |
+| `Rollie_Book_v7_A1_by_object_B_Rings.3mf` | **A1 + AMS lite · B Rings · 0.16 HQ PETG** | Rings ripples. Same print, same pauses. |
+| `Rollie_Book_v7_A1_by_object_C_Topo.3mf` | **A1 + AMS lite · C Topo · 0.16 HQ PETG** | Topo ripples. Same print, same pauses. |
 
-## Images (in `makerworld/images/`, 1600 × 1200)
-Suggested cover image is `0_all_three_designs.png`. Then upload:
-- `B_rings_1_front_back.png`, `A_flow_1_front_back.png` and `C_topo_1_front_back.png`;
-- `B_rings_2_open.png` and `B_rings_3_base.png`;
-- `4_magnets_sealed_in.png` and `5_plate.png`.
-
-Each profile can also take its own `<design>_1/2/3` images.
+## Files to upload (in `makerworld/`)
+- **Print profiles:** `3mf/Rollie_Book_v7_A1_by_object_{A_Flow,B_Rings,C_Topo}.3mf`. This is the **no-initials** public version; your own A·B files stay private.
+- **Images:** in `images/`, 1600 × 1200.
+  - Cover image: `0_all_three_designs.png`.
+  - Then: `B_rings_1_front_back.png`, `A_flow_1_front_back.png`, `C_topo_1_front_back.png`, `B_rings_2_open.png`, `4_magnets_sealed_in.png` and `5_plate.png`.
+  - Each profile can also take its own `<design>_1/2` images.

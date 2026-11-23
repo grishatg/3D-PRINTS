@@ -12,6 +12,7 @@
 | **Print files** | **Three ripple designs**, otherwise identical: `v7-65x15x88/AB_Rollie_Book_v7_A1_by_object_{A_Flow,B_Rings,C_Topo}.3mf`. Each is a Bambu Studio project for the **Bambu Lab A1 + AMS lite**, one plate, **print by object**, with **self-pausing magnet layers**. The owner picks one after printing or viewing (Claude recommended **B · Rings**). |
 | **Owner verification** | v7.0 was **opened and sliced** in Bambu Studio on the A1 (22 Nov) and **test-printed (cover only) on 23 Nov**; that feedback drove v7.1 (§6.1). **v7.1 has not yet been opened in real Bambu Studio.** Ask the owner to confirm the preview shows 2 pauses. |
 | **Next action** | Owner prints a v7.1 design. Check the self-pauses fire, the magnets drop in and the case closes, warping is fixed and the yellow ripples look clean; then tune with §6. |
+| **Public (MakerWorld) version** | `v7-65x15x88/makerworld/3mf/Rollie_Book_v7_A1_by_object_<design>.3mf`, built with **`INITIALS=0`**: no A·B and no "AB" in names. 15 colour swaps, about 2 h 10 m. Listing text is in `makerworld/MakerWorld_listing.md`; images (`src/render/makerworld.py`, `MW_PREFIX=pub_`) are in `makerworld/images/`. **The owner's A·B files stay private.** |
 | **Backup fallback files** | `..._geometry_only_<design>.3mf`. Same parts and filaments, no print profile, so it uses the owner's own A1 presets and has **no automatic pauses**: pause by hand at screen layers 25 and 82. |
 | **Repo** | `grishatg/3D-PRINTS`, folder `edc-cigarette-case/`. v7.0 arrived via merged PR grishatg/3D-PRINTS#1. v7.1 is on branch **`claude/hopeful-thompson-ysz39k`**, in draft PR **grishatg/3D-PRINTS#2** (https://github.com/grishatg/3D-PRINTS/pull/2). If that PR has been merged, `main` has everything. |
 | **Backup** | The original home was `grishatg/General-`, branch `claude/elegant-turing-9djtl2`. That branch is kept as a backup, with a copy of this handover; its PR (grishatg/General-#3) was closed, not merged, when the project moved. |
@@ -316,6 +317,8 @@ mkdir -p /tmp/tmpl /tmp/out && (cd /tmp/tmpl && unzip -o -q "$OLDPWD/AB_Rollie_B
 ```
 ```bash
 for st in flow rings topo; do RIPPLE=$st python3 src/v7_a1_export.py /tmp/out /tmp/tmpl; done
+# public MakerWorld version (no initials, files named Rollie_Book_...):
+for st in flow rings topo; do INITIALS=0 RIPPLE=$st python3 src/v7_a1_export.py /tmp/out_pub /tmp/tmpl; done
 ```
 - **v7.1:** each run writes `AB_Rollie_Book_v7_A1_{by_object,geometry_only}_{A_Flow,B_Rings,C_Topo}.3mf` and `stl_<design>/`.
 - **Template:** any shipped v7.1 3MF works. The exporter strips its own pause block before re-adding it.

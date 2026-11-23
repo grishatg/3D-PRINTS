@@ -11,6 +11,8 @@ v7.1 is the first-print revision: it applies the feedback from the v7.0 test pri
 | **`AB_Rollie_Book_v7_A1_by_object_C_Topo.3mf`** | **C · Topo:** contour lines, a nod to the v1 Topo Edition |
 | `AB_Rollie_Book_v7_A1_geometry_only_<design>.3mf` | **Fallback** if a main file ever refuses to open: same parts, colours and plate, but your own A1 presets. **It has no automatic magnet pauses**, so pause by hand (see below). |
 
+**MakerWorld (public) version:** `makerworld/3mf/Rollie_Book_v7_A1_by_object_<design>.3mf`. It's identical to the files above but has **no A·B initials** and no "AB" in any name. That cuts the colour swaps from 47 to **15** and the print to about **2 h 10 m** sliced (about 2¼–2½ h real). The listing text and images are in `makerworld/`.
+
 Each main file is a complete Bambu Studio project: A1 + AMS lite, one plate, print **by object**. `stl/<design>/` holds the loose STLs. The v7.0 files you printed are in `superseded/v7.0-first-print/`.
 
 ![plate](v7_a1_plate.png)

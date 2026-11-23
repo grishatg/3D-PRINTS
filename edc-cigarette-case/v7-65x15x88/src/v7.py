@@ -25,6 +25,7 @@ DATUM_W, RIP_W = 2.0, 1.2            # yellow datum line width; yellow ripple st
 RIPPLE = os.environ.get('RIPPLE', 'flow')   # 'flow' (Design 6, connected) | 'rings' | 'topo'
 RIPPLE_STATS = {}
 ROUND_PILLAR = True                  # tray magnet column: round (v7.1) or square (v7.0)
+INITIALS = os.environ.get('INITIALS', '1') != '0'   # INITIALS=0: plain bottom (public MakerWorld version, no 'A·B')
 RIP_PHASE = 0.10                     # v7.0 used 0.22: neighbouring waves drifted together (0.16 mm gaps) once continuous
 EDGE_R, CORNER_OPEN, CORNER_SPINE = 3.0, 6.0, 1.0   # rounded long edges (45 deg at the bed), plan-view corner radii
 YD = 0.68                      # visible (bed-face) yellow: 4 layers = 0.2 + 3 x 0.16, stops well short of the grey/black body
@@ -216,8 +217,10 @@ def build():
         badge_black = base_ - chamfer_cut
         badge_yellow = letters
         y4 = None
-    else:   # inlaid on the bottom face, dead-centre
+    elif INITIALS:   # inlaid on the bottom face, dead-centre
         cut = v3.cs(mono).extrude(AB_D + 0.5).translate((0, 0, -0.5)).mirror((0, 1, 0)); y4 = cut ^ tray; tray = tray - cut
+    else:            # no initials: plain black bottom
+        y4 = None
     d['knuckle_mod'] = d['knuckle_mod'] + chbox(PILLAR_X0 - 1, W / 2 + 1, -D, D, MZ - 9, MZ + 9, cv=0.1)
     yel_cover = [y for y in (y1, y5, y3) if y is not None]
     yel_tray = [y for y in (y2, y6, y4) if y is not None]
@@ -256,7 +259,7 @@ def checks(r):
                                  else (D / 2 - r['t_top_z']) - (r['c_top_z'] - D / 2), 2),
                 pauses=(r['pause_cover_z'], r['pause_tray_z']),
                 cover_front_skin=round(r['c_top_z'] - (POCKET_H if CAPTURE else MAG_T + 0.05), 2), MX=round(MX, 2), slot_x1=round(P['SLOT_X1'], 2),
-                mono=[round(v, 2) for v in r['mono'].bounds], datum_z=r['zd'], badge_mm=round(r['badge_t'], 2),
+                mono=[round(v, 2) for v in r['mono'].bounds] if INITIALS else None, datum_z=r['zd'], badge_mm=round(r['badge_t'], 2),
                 rib_interference_mm3=ov_ribs, yellow_depth_mm=YD)
 
 if __name__ == '__main__':

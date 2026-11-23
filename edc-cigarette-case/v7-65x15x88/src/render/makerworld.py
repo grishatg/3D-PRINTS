@@ -1,9 +1,12 @@
 """MakerWorld image set (4:3, 1600 x 1200) from the Playwright renders.
 Usage (from v7-65x15x88/): python3 src/render/makerworld.py <render_root> <out_dir>
-Needs <render_root>/final_{flow,rings,topo}/v7_{front,open,back,base}.png, magnet_section_v7.1.png and v7_a1_plate.png."""
+Needs <render_root>/<MW_PREFIX>{flow,rings,topo}/v7_{front,open,back,base}.png, magnet_section_v7.1.png and v7_a1_plate.png."""
 import sys, os
 from PIL import Image, ImageDraw, ImageFont
 R, OUT = sys.argv[1], sys.argv[2]; os.makedirs(OUT, exist_ok=True)
+PRE = os.environ.get('MW_PREFIX', 'final_')            # 'pub_' = renders without initials
+NAME = os.environ.get('MW_NAME', 'Rollie Book')        # public listing name (no initials)
+BASE_SUB = os.environ.get('MW_BASE_SUB', 'plain black bottom · rounded edges · ripples run over the edges')
 BG = (236, 234, 228); INK = (28, 28, 30); SUB = (95, 95, 95); YEL = (255, 208, 11)
 F = lambda s, b=False: ImageFont.truetype(f'/usr/share/fonts/truetype/dejavu/DejaVuSans{"-Bold" if b else ""}.ttf', s)
 D = {'flow': ('A', 'FLOW', 'Design 6 ripples, unbroken, edge to edge'),
@@ -20,21 +23,22 @@ def canvas(title, sub):
 def fit(im, w, h):
     s = min(w / im.width, h / im.height); return im.resize((int(im.width * s), int(im.height * s)), Image.LANCZOS)
 for k, (L, name, tag) in D.items():
-    base = f'{R}/final_{k}'
-    c, d = canvas(f'AB Rollie Book · {L} {name}', tag)
+    base = f'{R}/{PRE}{k}'
+    c, d = canvas(f'{NAME} · {L} {name}', tag)
     for i, v in enumerate(('front', 'back')):
         im = fit(crop(f'{base}/v7_{v}.png'), 780, 1080); c.paste(im, (20 + i * 790 + (780 - im.width) // 2, 20 + (1080 - im.height) // 2))
     c.save(f'{OUT}/{L}_{name.lower()}_1_front_back.png')
-    c, d = canvas(f'AB Rollie Book · {L} {name}', 'open: 6 rollies (≤ 6 × 60 mm) + 2 filter-tip bays, filament-pin hinge')
+    c, d = canvas(f'{NAME} · {L} {name}', 'open: 6 rollies (≤ 6 × 60 mm) + 2 filter-tip bays, filament-pin hinge')
     im = fit(crop(f'{base}/v7_open.png', (40, 200)), 1560, 1080); c.paste(im, ((1600 - im.width) // 2, 20 + (1080 - im.height) // 2)); c.save(f'{OUT}/{L}_{name.lower()}_2_open.png')
-    c, d = canvas(f'AB Rollie Book · {L} {name}', 'A·B in yellow on the bottom end · rounded edges')
+    if os.environ.get('MW_BASE', '0') != '1': continue      # base close-up only makes sense with the initials (MW_BASE=1)
+    c, d = canvas(f'{NAME} · {L} {name}', BASE_SUB)
     im = fit(crop(f'{base}/v7_base.png', (10, 10)), 1560, 1080); c.paste(im, ((1600 - im.width) // 2, 20 + (1080 - im.height) // 2)); c.save(f'{OUT}/{L}_{name.lower()}_3_base.png')
 # overview of all three
-c, d = canvas('AB Rollie Book · 3 designs', 'same case, same print, pick your ripple')
+c, d = canvas(f'{NAME} · 3 designs', 'same case, same print, pick your ripple')
 for i, (k, (L, name, tag)) in enumerate(D.items()):
     x0 = 20 + i * 527
     for j, v in enumerate(('front', 'back')):
-        im = fit(crop(f'{R}/final_{k}/v7_{v}.png'), 500, 500); c.paste(im, (x0 + (507 - im.width) // 2, 14 + j * 520 + (500 - im.height) // 2))
+        im = fit(crop(f'{R}/{PRE}{k}/v7_{v}.png'), 500, 500); c.paste(im, (x0 + (507 - im.width) // 2, 14 + j * 520 + (500 - im.height) // 2))
     d.text((x0 + 8, 1052), f'{L} · {name}', fill=INK, font=F(30, True))
 c.save(f'{OUT}/0_all_three_designs.png')
 # shared: magnet cut-through and plate
