@@ -27,7 +27,10 @@ RIPPLE_STATS = {}
 ROUND_PILLAR = True                  # tray magnet column: round (v7.1) or square (v7.0)
 INITIALS = os.environ.get('INITIALS', '1') != '0'   # INITIALS=0: plain bottom (public MakerWorld version, no 'A·B')
 RIP_PHASE = 0.10                     # v7.0 used 0.22: neighbouring waves drifted together (0.16 mm gaps) once continuous
-EDGE_R, CORNER_OPEN, CORNER_SPINE = 3.0, 6.0, 1.0   # rounded long edges (45 deg at the bed), plan-view corner radii
+EDGE_R = float(os.environ.get('EDGE_R', 3.0))                   # rounded long edges (45 deg at the bed)
+CORNER_OPEN, CORNER_SPINE = float(os.environ.get('CORNER_OPEN', 6.0)), float(os.environ.get('CORNER_SPINE', 1.0))   # plan-view corner radii
+OUTLINE = os.environ.get('OUTLINE', 'round')                   # 'round' (circular corners) | 'squircle' (continuous-curvature, n=4, Apple-style)
+PATTERN_HOOK = None                                            # concepts: callable(ctx) -> {'front'|'back'|'inside': [(geom, key)]}
 YD = 0.68                      # visible (bed-face) yellow: 4 layers = 0.2 + 3 x 0.16, stops well short of the grey/black body
 AB_D = 0.68                    # initials inlay depth on the bottom face
 FONT, CAP = 'Inter-Bold.ttf', 5.0
@@ -61,7 +64,21 @@ def edge_inset(h):
     return 2 * HC - h
 def _rrect(x0, z0, x1, z1, r):
     return sbox(x0 + r, z0 + r, x1 - r, z1 - r).buffer(r, quad_segs=24)
-BASE = _rrect(-W / 2, 0, W / 2 + 20, H, CORNER_SPINE).intersection(_rrect(-W / 2 - 20, 0, W / 2, H, CORNER_OPEN))
+def _squircle(x0, z0, x1, z1, r_spine, r_open, n=4.0, k=1.6):
+    """Rounded rectangle whose corners are superellipse quadrants (continuous curvature, no tangent break).
+    k scales the corner extent so it reads like a circular corner of the same nominal radius."""
+    pts = []
+    t = np.linspace(0, np.pi / 2, 40)
+    u, v = np.cos(t) ** (2 / n), np.sin(t) ** (2 / n)
+    for (cx, cz, sx, sz, rr) in ((x1, z1, 1, 1, r_open), (x0, z1, -1, 1, r_spine), (x0, z0, -1, -1, r_spine), (x1, z0, 1, -1, r_open)):
+        S = rr * k
+        q = list(zip(cx - sx * S + sx * S * u, cz - sz * S + sz * S * v))
+        pts += q if sx * sz > 0 else q[::-1]
+    return Polygon(pts).buffer(0)
+if OUTLINE == 'squircle':
+    BASE = _squircle(-W / 2, 0, W / 2, H, CORNER_SPINE, CORNER_OPEN)
+else:
+    BASE = _rrect(-W / 2, 0, W / 2 + 20, H, CORNER_SPINE).intersection(_rrect(-W / 2 - 20, 0, W / 2, H, CORNER_OPEN))
 def round_env(p=None, step=0.1):
     zones = []
     ys_ = list(np.arange(-D / 2, -D / 2 + EDGE_R, step)) + [-D / 2 + EDGE_R, D / 2 - EDGE_R] + list(np.arange(D / 2 - EDGE_R + step, D / 2 + 1e-9, step))
@@ -188,12 +205,28 @@ def build():
             return out
         fr = keep(topo(f_reg, 7), f_reg, 6); br = keep(topo(b_reg, 3), b_reg, 6)
     # yellow ripples: filled flush with yellow (4 layers, same layers as the datum: no extra colour swaps)
-    cover, y5 = v6.inlay(cover, stripes(fr), 'f', YD)
-    tray, y6 = v6.inlay(tray, stripes(br), 'b', YD)
-    RIPPLE_STATS.update(front=fr, back=br)
-    cover, y1 = v6.inlay(cover, sbox(FRONT.bounds[0] + 0.4, zd - hw, xr0 - 2.6, zd + hw), 'f', YD)
-    tray, y2 = v6.inlay(tray, sbox(-W / 2 - 2.0, zd - hw, -7.0, zd + hw), 'b', YD)
-    cover, y3 = v6.inside_inlay(cover, sbox(-(W / 2 - 10.0), zd - hw, W / 2 - 16.0, zd + hw), ys)
+    acc = []                                                        # (solid, 'c'|'t', colour key) for concept patterns
+    if PATTERN_HOOK is None:
+        cover, y5 = v6.inlay(cover, stripes(fr), 'f', YD)
+        tray, y6 = v6.inlay(tray, stripes(br), 'b', YD)
+        RIPPLE_STATS.update(front=fr, back=br)
+        cover, y1 = v6.inlay(cover, sbox(FRONT.bounds[0] + 0.4, zd - hw, xr0 - 2.6, zd + hw), 'f', YD)
+        tray, y2 = v6.inlay(tray, sbox(-W / 2 - 2.0, zd - hw, -7.0, zd + hw), 'b', YD)
+        cover, y3 = v6.inside_inlay(cover, sbox(-(W / 2 - 10.0), zd - hw, W / 2 - 16.0, zd + hw), ys)
+    else:                                                           # concept: its own front / back / inside inlays
+        y1 = y2 = y3 = y5 = y6 = None
+        pats = PATTERN_HOOK(dict(BASE=BASE, FRONT=FRONT, BACK=BACK, BACKO=affinity.scale(BASE, -1, 1, origin=(0, 0)), MX=MX, MZ=MZ, zd=zd,
+                                 XA=XA, R=R, W=W, H=H, D=D, HC=HC, END=END))
+        for side, part in (('front', 'c'), ('back', 't')):
+            for g, key in pats.get(side, []):
+                sh = cover if part == 'c' else tray
+                sh, y = v6.inlay(sh, g, 'f' if part == 'c' else 'b', YD)
+                if part == 'c': cover = sh
+                else: tray = sh
+                if y is not None: acc.append((y, part, key))
+        for g, key in pats.get('inside', []):
+            cover, y = v6.inside_inlay(cover, g, ys)
+            if y is not None: acc.append((y, 'c', key))
     mono = monogram()
     badge_black = badge_yellow = None; bt = 0.0
     if USE_BADGE:
@@ -224,7 +257,9 @@ def build():
     d['knuckle_mod'] = d['knuckle_mod'] + chbox(PILLAR_X0 - 1, W / 2 + 1, -D, D, MZ - 9, MZ + 9, cv=0.1)
     yel_cover = [y for y in (y1, y5, y3) if y is not None]
     yel_tray = [y for y in (y2, y6, y4) if y is not None]
-    return dict(d=d, tray=tray, cover=cover, sleeve=d['sleeve'], yel_cover=yel_cover, yel_tray=yel_tray, mono=mono,
+    if PATTERN_HOOK is not None:   # concept colours travel with acc; keep yel_* for the shared checks
+        yel_cover = yel_cover + [y for y, p, k in acc if p == 'c']; yel_tray = yel_tray + [y for y, p, k in acc if p == 't']
+    return dict(d=d, tray=tray, cover=cover, sleeve=d['sleeve'], yel_cover=yel_cover, yel_tray=yel_tray, mono=mono, acc=acc, y4=y4,
                 badge_black=badge_black, badge_yellow=badge_yellow, badge_t=bt,
                 c_pocket=c_pocket, t_pocket=t_pocket, pause_cover_z=(c_top_z + LAYER) if CAPTURE else None, pause_tray_z=(t_top_z + LAYER) if CAPTURE else None,
                 c_top_z=c_top_z, t_top_z=t_top_z, zd=zd)
