@@ -132,7 +132,7 @@ def build():
         for xc in np.arange(x0, x1, 2.8):
             t = (xc - x0) / (x1 - x0); t = t if toward_right else 1 - t
             A = 0.05 + 1.6 * t ** 1.6
-            zs = np.linspace(zr0, zr1, 160)
+            zs = np.linspace(-2.0, H + 2.0, 220)          # v7.1: run the full height, edge to edge
             out.append(LineString([(xc + A * np.sin(2 * np.pi * z / 27.0 + RIP_PHASE * xc), z) for z in zs]))
         return out
     xr0 = 2.2
@@ -148,16 +148,20 @@ def build():
             if c.geom_type == 'MultiLineString': c = linemerge(c)        # rejoin a ring cut at its start point
             out += [(g, w) for g in getattr(c, 'geoms', [c]) if g.geom_type == 'LineString' and g.length > minlen]
         return out
-    f_reg = FRONT.buffer(-1.6).intersection(sbox(xr0 - 0.6, zr0, 60, zr1))
-    b_reg = BACK.buffer(-1.6).intersection(sbox(-60, zr0, -2.2 + 0.6, zr1)).difference(datum_gap)
+    # full-height fields: lines run out over the top and bottom edges (like the datum wraps the opening edge)
+    BACKO = affinity.scale(BASE, -1, 1, origin=(0, 0))
+    f_reg = BASE.intersection(sbox(xr0 - 0.6, -1, FRONT.bounds[2] - 1.6, H + 1))
+    b_reg = BACKO.intersection(sbox(BACK.bounds[0] + 1.6, -1, -2.2 + 0.6, H + 1)).difference(datum_gap)
     if RIPPLE == 'flow':      # Design 6 ripples, now continuous on the front too (they run over the hidden magnet)
         whole = lambda ls, reg: [(l, w) for l, w in ls if l.intersection(reg).geom_type == 'LineString']   # no broken, dashed lines
-        fr = keep(whole([(l, RIP_W) for l in rip(xr0, FRONT.bounds[2] - 1.0, True)], FRONT.buffer(-1.6)), FRONT.buffer(-1.6), 8)
-        br = keep([(l, RIP_W) for l in rip(BACK.bounds[0] + 1.0, -2.2, False)], BACK.buffer(-1.6).difference(datum_gap), 15)
+        f_all = BASE.intersection(sbox(-60, -1, FRONT.bounds[2] - 1.6, H + 1))
+        b_all = BACKO.intersection(sbox(BACK.bounds[0] + 1.6, -1, 60, H + 1))
+        fr = keep(whole([(l, RIP_W) for l in rip(xr0, FRONT.bounds[2] - 1.0, True)], f_all), f_all, 8)
+        br = keep([(l, RIP_W) for l in rip(BACK.bounds[0] + 1.0, -2.2, False)], b_all.difference(datum_gap), 15)
     elif RIPPLE == 'rings':   # a stone dropped at the clasp: rings spread out and thin as they travel
         def rings(cx):
             out = []
-            for k in range(8):
+            for k in range(13):                                    # enough rings to reach both ends
                 rad = 5.5 + 2.9 * k + 0.12 * k * k; w = max(1.4 - 0.07 * k, 0.95)
                 out.append((Point(cx, MZ).buffer(rad, quad_segs=64).exterior, w))
             return out

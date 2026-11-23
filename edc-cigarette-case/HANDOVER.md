@@ -1,6 +1,6 @@
 # HANDOVER: EDC rollie case ("AB Rollie Book"). Read this first.
 
-> **Written 22 Nov 2026, 15:40 UTC, at the end of the design session.** This file is self-contained: a new session with only this repository can pick up the work, rebuild every file byte-for-byte, and continue. Every command below was run and checked before handover.
+> **Written 22 Nov 2026, 15:40 UTC; updated 23 Nov 2026 for v7.1 (first-print feedback).** This file is self-contained: a new session with only this repository can pick up the work, rebuild every file byte-for-byte, and continue. Every command below was run and checked before handover.
 
 ---
 
@@ -8,13 +8,12 @@
 
 | Item | State |
 |---|---|
-| **Current design** | **v7**, `v7-65x15x88/`: 65 × 15 × 88 mm clamshell "book" case for 6 rollies (≤ 6 × 60 mm) plus 2 filter-tip bays. Visual language is **Design 6 "Hybrid"** (grey cover, black tray, yellow details). |
-| **Print file** | `v7-65x15x88/AB_Rollie_Book_v7_A1_by_object.3mf`: Bambu Studio project for the **Bambu Lab A1 + AMS lite**, one plate, **print by object**. |
-| **Owner verification** | The owner **opened and sliced it in Bambu Studio on their A1: "opened fine, sliced great"** (22 Nov 2026). |
-| **Test print** | **Not printed yet.** The printer was busy, so the first print is planned for **23 Nov 2026**. |
-| **Next action** | Get the owner's print feedback, then tune using the checklist in §6. Tolerances are the main unknown: magnet snap lip, hinge pin, knuckle gap. |
-| **Backup fallback file** | `v7-65x15x88/AB_Rollie_Book_v7_A1_geometry_only.3mf`. Same parts, filaments and modifiers, but no print profile: it uses the owner's own A1 presets. Only needed if the main file ever refuses to load. |
-| **Repo** | `grishatg/3D-PRINTS`, folder `edc-cigarette-case/`. The work is on branch **`claude/elegant-turing-9djtl2`**, in pull request **grishatg/3D-PRINTS#1** (https://github.com/grishatg/3D-PRINTS/pull/1) into `main`, marked ready for review. If that PR has been merged, `main` has everything. |
+| **Current design** | **v7.1**, in `v7-65x15x88/` (folder name kept; the case is now **65 × 13.5 × 88 mm**): clamshell "book" case for 6 rollies (≤ 6 × 60 mm) plus 2 filter-tip bays. Visual language is **Design 6 "Hybrid"** (grey cover, black tray, yellow details). |
+| **Print files** | **Three ripple designs**, otherwise identical: `v7-65x15x88/AB_Rollie_Book_v7_A1_by_object_{A_Flow,B_Rings,C_Topo}.3mf`. Each is a Bambu Studio project for the **Bambu Lab A1 + AMS lite**, one plate, **print by object**, with **self-pausing magnet layers**. The owner picks one after printing or viewing (Claude recommended **B · Rings**). |
+| **Owner verification** | v7.0 was **opened and sliced** in Bambu Studio on the A1 (22 Nov) and **test-printed (cover only) on 23 Nov**; that feedback drove v7.1 (§6.1). **v7.1 has not yet been opened in real Bambu Studio.** Ask the owner to confirm the preview shows 2 pauses. |
+| **Next action** | Owner prints a v7.1 design. Check the self-pauses fire, the magnets drop in and the case closes, warping is fixed and the yellow ripples look clean; then tune with §6. |
+| **Backup fallback files** | `..._geometry_only_<design>.3mf`. Same parts and filaments, no print profile, so it uses the owner's own A1 presets and has **no automatic pauses**: pause by hand at screen layers 25 and 88. |
+| **Repo** | `grishatg/3D-PRINTS`, folder `edc-cigarette-case/`. v7.0 arrived via merged PR grishatg/3D-PRINTS#1. v7.1 is on branch **`claude/hopeful-thompson-ysz39k`**, in draft PR **grishatg/3D-PRINTS#2** (https://github.com/grishatg/3D-PRINTS/pull/2). If that PR has been merged, `main` has everything. |
 | **Backup** | The original home was `grishatg/General-`, branch `claude/elegant-turing-9djtl2`. That branch is kept as a backup, with a copy of this handover; its PR (grishatg/General-#3) was closed, not merged, when the project moved. |
 
 ---
@@ -35,20 +34,20 @@
     ├── v6-concepts/                ← 5 visual directions + judge's Hybrid (renders only); designer analysis in README
     ├── v6-final/                   ← Design 6 Hybrid final (Michroma A·B, 4 × 6×2 magnets, 2 mm rod): SUPERSEDED
     ├── v6-final-revB/              ← 2 sealed-in Ø9.51 magnets + filament pin, 5 slots, Inter Bold A·B, pauses: SUPERSEDED
-    └── v7-65x15x88/                ← ★ CURRENT
-        ├── AB_Rollie_Book_v7_A1_by_object.3mf      ★ the file to print
-        ├── AB_Rollie_Book_v7_A1_geometry_only.3mf  fallback (no project settings)
+    └── v7-65x15x88/                ← ★ CURRENT (v7.1; folder name kept, the case is now 65 × 13.5 × 88)
+        ├── AB_Rollie_Book_v7_A1_by_object_{A_Flow,B_Rings,C_Topo}.3mf      ★ the files to print (3 ripple designs)
+        ├── AB_Rollie_Book_v7_A1_geometry_only_{A_Flow,B_Rings,C_Topo}.3mf  fallbacks (no project settings, no auto-pause)
         ├── README.md                               owner-facing print and assembly guide + verification table
-        ├── v7_a1_sheet.png, v7_a1_plate.png        4-view sheet and A1 plate layout
-        ├── renders/                                v7_front / v7_open / v7_back / v7_base .png
-        ├── stl/                                    7 loose STLs (cover, tray, yellow inlays, sleeve)
+        ├── ripple_options_v7.1.png, v7_a1_plate.png  the 3 designs (front/back), A1 plate layout
+        ├── renders/<design>/                       v7_front / v7_open / v7_back / v7_base .png
+        ├── stl/<design>/                           9 loose STLs each (cover, tray, 6 yellow inlay bodies, sleeve)
         ├── fonts/Inter-Bold.ttf + README.md        font for the initials (SIL OFL 1.1), bundled so rebuilds need no download
         ├── test-slice/
-        │   ├── a1_hq_petghf_0.16.ini               PrusaSlicer config emulating the A1 (by object, clearances, HQ speeds)
-        │   ├── a1_one_plate.3mf                    PrusaSlicer project built from CAD
-        │   ├── roundtrip_from_shipped_3mf.3mf      PrusaSlicer project built FROM the shipped Bambu 3MF (round-trip proof)
+        │   ├── a1_hq_petghf_0.16.ini               PrusaSlicer config emulating the A1 (by object, clearances, v7.1 settings + pause block)
+        │   ├── a1_one_plate_B_Rings.3mf            PrusaSlicer project built from CAD (Rings)
+        │   ├── roundtrip_from_shipped_3mf_B_Rings.3mf  PrusaSlicer project built FROM the shipped Bambu 3MF (round-trip proof)
         │   └── bambu_loader_check_baseline.txt     expected output of the Bambu loader check (26 benign flags per release)
-        ├── superseded/                             P1S three-plate file (magnets sealed in with pauses) + its test slice + sheet
+        ├── superseded/                             v7.0-first-print/ (the file printed on 23 Nov, its renders, STLs, test slices) + the P1S three-plate file
         └── src/                                    all generators (see §7)
 ```
 
@@ -75,11 +74,11 @@
 ## 3. Hard requirements: do not break these
 
 1. **Hardware is ONLY:**
-   - **2 round magnets Ø9.51 × 2.51 mm** (the owner has exactly two);
+   - **2 round magnets Ø9.53 × 2.53 mm** (re-measured 23 Nov; the owner has exactly two). Since v7.1 they are **sealed inside** the cover and tray during the print: the file pauses itself and the owner drops them in;
    - a **1.75 mm filament** hinge pin.
 
    **No glue, no screws, no steel rod, no other hardware.** ("no other hardware just prints and filament")
-2. **All parts in Bambu PETG-HF.** Colours: **grey** cover, **black** tray, **yellow** accents and spine sleeve. AMS lite slots **1 grey / 2 black / 3 yellow**.
+2. **All parts in PETG**, printed with Bambu's **PETG HF** profile (240 °C). The owner's spools are **Elegoo Rapid PETG** (yellow) and a **generic PETG** rated 240–260 °C at 100–200 mm/s (black); grey brand unknown. Colours: **grey** cover, **black** tray, **yellow** accents and spine sleeve. AMS lite slots **1 grey / 2 black / 3 yellow**. Don't switch to "Generic PETG HF" (220 °C, below the black's 230 °C minimum). Tell the owner **not to press Sync AMS** (non-RFID spools); map the slots in the Print dialog instead.
 3. **Approved visual: Design 6 "Hybrid".**
    - **Cover:** grey PETG-HF with ripple grooves building toward the opening edge.
    - **Tray:** black.
@@ -87,13 +86,27 @@
    - **Spine sleeve:** yellow, hexagonal.
 4. **Initials:** **uppercase "A·B"** in a **Helvetica-like** font, which is **Inter Bold**. **5 mm** cap height, **centred on the bottom face** (the 65 × 15 end).
 5. **Outside yellow is thin:** the yellow visible on the outside faces is **only a few layers** (now **4 layers = 0.68 mm**) and must **not pass through** into the grey or black body. Owner's words: "the line that is visible from the outside only make it a few layers … not pass through the rest of the black or gray".
-6. **Printer: Bambu Lab A1 + AMS lite, one plate, print by object.**
-7. **Size: 65 × 15 × 88 mm.** 88 was chosen over 85 for proportion. Rollies are up to **6 mm × 60 mm**.
-8. **Quality first, at a reasonable print time** (currently about 4 h).
+6. **Printer: Bambu Lab A1 + AMS lite, one plate, print by object.** The owner can pause and resume by hand but wants to be told when; v7.1 does it automatically (§8.10).
+7. **Size: 65 × 13.5 × 88 mm** since v7.1 (owner: "panels too thick", agreed to the slimmer case "as long as the magnets fit"). 88 was chosen over 85 for proportion. Rollies are up to **6 mm × 60 mm**.
+8. **Quality first, at a reasonable print time** (v7.1: about 2¾–3 h).
+9. **Comfort:** rounded edges and corners, no sharp details (v7.1 feedback). **Yellow ripples** run edge to edge (top to bottom) on the cover and the tray back.
 
 ---
 
 ## 4. v7 design specification
+
+### 4.0 v7.1 changes (23 Nov 2026). These override the v7.0 values further down this section
+| Area | v7.0 | **v7.1** |
+|---|---|---|
+| Depth `D` | 15 | **13.5**: `TC` 3.0 → **2.0**, `WB` 2.6 → **2.0**; channel depth unchanged |
+| Envelope | Chamfers 1.6 / 2.2 / 1.0, 6 mm facets | **`round_env()`**: plan outline with R6 (opening) and R1 (spine) corners. Long edges are rounded with `EDGE_R` 3.0, whose fillet turns into a **45° chamfer at each bed face** (`HC` = 0.88 mm), so both bed faces print without overhang. Built as 0.1 mm slabs. |
+| Magnets | Snap-in, Ø9.7 pocket + lip | **Sealed in** (`CAPTURE = True`): Ø**9.85** pocket, depth **2.72** (17 layers; the magnet sits 0.19 below the pocket top). Cover: 1.16 mm grey below, 3 layers above. Tray: 3 layers above. Boss height = `SKIN_OUT + POCKET_H + SKIN − TC` = 2.36. Magnets close 1.64 mm apart. |
+| Pauses | none | Cover **print z 4.04** (screen layer 25), tray **print z 8.52** (≈ layer 88), via layer-change G-code (§8.10) |
+| Inside | Square lip, notched-octagon frame, V notch, 3 grip notches | **`LIP_R` 3.0** rounded lip, **`INNER_FRAME = False`**, **`NOTCH_ROUND`**, **`GRIP_GROOVES = False`**. These are new `v5.book()` switches; their defaults keep older versions unchanged. |
+| Ripples | Stepped V-grooves, broken around the magnet | **Yellow inlays 1.2 mm wide, 4 layers deep, edge to edge (top to bottom)** on the cover and tray back, in 3 designs: `RIPPLE` = `flow` / `rings` / `topo` (env var). Flow `RIP_PHASE` 0.22 → 0.10 so neighbours don't crowd. Lines that would break into dashes are dropped. All keep ≥ 0.6 mm of grey between stripes. |
+| Datum | 1.0 mm wide | **`DATUM_W` 2.0** (front, back, inside) |
+| Infill | 50% gyroid + 100% modifiers | **100% everywhere, no modifier meshes** (their wall outlines were the "squares") |
+
 
 ### 4.1 Architecture
 - **Construction:** a clamshell "book". The **tray** (black) holds the rollies. The **cover** (grey) hinges on a **spine** along one long edge (the hinge axis runs along the 88 mm height).
@@ -166,15 +179,25 @@
 | `SCOOP_Z`, `NOTCH_Z` | (55,70), (54,71) | Thumb scoop and notch heights | |
 | `LAYER0`, `LAYER` | 0.20, 0.16 | Used to snap features onto layer boundaries | layer-height change |
 
-### 4.5 `v7.checks()` expected output (current geometry)
-`env [65,15,88]`, `pieces (1,1)`, `overlap 0`, `rollups 6`, `rollups_vs_tray 0.0`, `swing_contacts []` (the cover swings to 165° without contact), `tray_wall_void 0.002`, `cover_wall_void 0.002`, `magnet_gap 1.0`, `cover_front_skin 1.44`, `MX 25.45`, `slot_x1 18.4`, `datum_z 33.6`, `yellow_depth_mm 0.68`.
+### 4.5 `v7.checks()` expected output (v7.1, every `RIPPLE`)
+`env [65,13.5,88]`, `pieces (1,1)` (sealed pockets are voids, not pieces), `overlap 0`, `pocket_material (0,0)` (pockets empty), `pocket_unsealed (0,0)` (≥ 0.3 mm of plastic all round), `rollups 6`, `rollups_vs_tray 0`, `swing_contacts []`, `tray_wall_void 0`, `cover_wall_void 0`, `magnet_gap 1.64`, `pauses (4.04, 8.52)`, `cover_front_skin 1.16`, `MX 25.37`, `slot_x1 18.25`, `datum_z 33.6`, `yellow_depth_mm 0.68`.
+- **Slot margin:** `slot_x1` leaves only 0.75 mm of slack for the 6 channels. Growing the boss or pocket further will collide with the last channel.
+- **v7.0 values** were: `env [65,15,88]`, `magnet_gap 1.0`, `cover_front_skin 1.44`, `MX 25.45`, `slot_x1 18.4`.
 
 ---
 
 ## 5. Print setup (A1), as built into the main 3MF
 
 - **Presets** (Bambu's **released** system presets, values from tag v02.08.04.61): printer **Bambu Lab A1 0.4 nozzle**, process **0.16mm High Quality @BBL A1**, filaments **Bambu PETG HF @BBL A1** × 3.
-- **Overrides:**
+- **v7.1 overrides on top of the list below:**
+  - 100% infill (zig-zag), no modifiers.
+  - `top_surface_pattern` concentric.
+  - `brim_type` outer_only, `brim_width` 4.
+  - `filament_max_volumetric_speed` 18 / **15** / 18 (black capped).
+  - `layer_change_gcode` = the A1 template plus the magnet-pause block (§8.10).
+  - Parts 114 mm apart: cover (38.5, 60), tray (217.5, 60), sleeve (128, 200).
+  - Expected time (PrusaSlicer A1 emulation): **≈ 2 h 40 m**; 47 swaps, 121 layers, 2 pauses; ≈ 14 / 33.5 / 1.6–2.1 g.
+- **Overrides (v7.0 list; still applies except where v7.1 changes it above):**
   - **Layers:** 0.16 (first layer 0.20).
   - **Walls and shells:** 4 walls (arachne), 6 top / 5 bottom shells.
   - **Infill:** 50% gyroid.
@@ -200,7 +223,19 @@
 
 ---
 
-## 6. Test-print feedback checklist (ask the owner these after the first print)
+## 6. Test-print feedback checklist (ask the owner these after each print)
+
+### 6.1 v7.0 first print (23 Nov 2026, cover only): what the owner reported, and the v7.1 fix
+- **First layer:** OK, but it **warped** on one side. v7.1 adds a 4 mm brim; the owner should clean the plate and dry the PETG.
+- **Outside yellow:** OK.
+- **Magnets didn't fit;** they re-measured 9.53 × 2.53. The owner also wanted them **embedded**, with the printer telling them when. v7.1: sealed pockets + self-pause + chime.
+- **Panels too thick.** v7.1: 2.0 mm panels, 100% infill, 13.5 mm deep.
+- **"Squares" in the surface pattern.** These were modifier and frame outlines. v7.1: no modifiers, no frame, concentric top surfaces.
+- **Too many sharp edges.** v7.1: rounded envelope, lip and notch.
+- **Yellow line thicker; ripple slits yellow; ripples connected and reaching the top and bottom edges.** v7.1: 2 mm datum lines, yellow edge-to-edge ripples, 3 designs.
+- **Photos showed** blobs, zits and stringing on the top surfaces (likely damp PETG), and lumps at the 3 grip notches (now removed).
+
+### 6.2 Checklist
 
 | # | Check | If it fails → change (in `src/v7.py`) |
 |---|---|---|
@@ -280,8 +315,11 @@ A clean rebuild from this repo alone reproduced both shipped 3MFs **byte-for-byt
 mkdir -p /tmp/tmpl /tmp/out && (cd /tmp/tmpl && unzip -o -q "$OLDPWD/AB_Rollie_Book_v7_A1_by_object.3mf")
 ```
 ```bash
-python3 src/v7_a1_export.py /tmp/out /tmp/tmpl
+for st in flow rings topo; do RIPPLE=$st python3 src/v7_a1_export.py /tmp/out /tmp/tmpl; done
 ```
+- **v7.1:** each run writes `AB_Rollie_Book_v7_A1_{by_object,geometry_only}_{A_Flow,B_Rings,C_Topo}.3mf` and `stl_<design>/`.
+- **Template:** any shipped v7.1 3MF works. The exporter strips its own pause block before re-adding it.
+- **Verified 23 Nov:** a rebuild from a shipped v7.1 file reproduces settings, model and STLs byte-for-byte, except UUIDs.
 - **What it prints:** `v7.checks()` (§4.5), then both 3MF paths, then: `heights {'Cover (grey)': 5.7, 'Tray (black)': 14.9, 'Spine sleeve (yellow)': 19.4} | min gaps {... 74.0 ...}`, `on bed True | printer Bambu Lab A1 0.16mm High Quality @BBL A1 by object prime tower 0`.
 - **Outputs:** `/tmp/out/AB_Rollie_Book_v7_A1_by_object.3mf`, `/tmp/out/AB_Rollie_Book_v7_A1_geometry_only.3mf`, and `/tmp/out/stl/*.stl`. Copy them into place when happy.
 - **Build time:** about 20 s.
@@ -298,15 +336,18 @@ python3 src/v7_a1_export.py /tmp/out /tmp/tmpl
    python3 src/slicetest_a1.py /tmp/slice
    ```
    - It writes `/tmp/slice/a1_one_plate.3mf`, `a1_hq_petghf_0.16.ini` and the G-code.
-   - **Expected:** `{"time": "3h 44m 10s"` (±1 s between runs), `"filament_g": "19.47, 36.58, 0.56", "toolchanges": 47, "layers": 121, "pauses": 0, …}`
+   - **Expected (v7.1, set `RIPPLE`):** ≈ `2h 39m 40s` (Rings) / `2h 39m 46s` (Flow) / `2h 42m 05s` (Topo); 47 toolchanges, 121 layers, `"pauses": 2`.
+   - **It also prints** `magnet pauses (object, layer z): [('0', 4.04), ('1', 8.52)]`. The M486 ids are 0 = Cover and 1 = Tray; check the `M486 A` lines.
+   - **v7.0 expected** was `3h 44m 10s`, 19.47 / 36.58 / 0.56 g, 0 pauses.
    - Note: this script builds its ini from the clone's **working-tree HEAD** profiles (`a1_profile.py`). That is fine for the PrusaSlicer emulation, but **never** use `a1_profile.project_config` for the Bambu 3MF again (see §8).
 3. **Round-trip re-slice of the shipped 3MF.** Run it after step 2, because it needs the ini in that folder:
    ```bash
    python3 src/roundtrip_reslice.py /tmp/slice AB_Rollie_Book_v7_A1_by_object.3mf
    ```
    - It reads meshes, part filaments, modifiers and positions **out of the shipped file**.
-   - **Expected:** 9 meshes `NoError`, then `3h 44m 8s`, 47 toolchanges, 121 layers.
-4. **"Long bridging" warning from PrusaSlicer** is expected and benign. It is:
+   - **Expected (v7.1):** 9 meshes `NoError`, then the same time as step 2 within ±5 s, 47 toolchanges, 121 layers, **2 pauses**.
+4. **v7.1: "Detected print stability issues: Cover, Floating bridge anchors"** is expected and benign. It is the 3-layer roof over the sealed cover pocket; in the real print the magnet sits 0.19 mm below it. Proven by an A/B slice: with the pocket filled, the warning disappears.
+5. **v7.0 only: "Long bridging"** was expected and benign. It was:
    - the 0.6 mm groove ceilings at z 0.68;
    - the first solid layer over gyroid inside the 3.0 / 2.6 mm floors (z 2.28 cover, z 1.80 tray).
 
@@ -383,6 +424,18 @@ python3 src/render/render_sheet.py /tmp/r
    - `nozzle_height = 4.76`; `printer_structure = i3`; printable height 256.
 8. **A1 start G-code placeholders** are identical from v02.03.01.51 to v02.09.01.70 (13 placeholders), so the release-tag G-code is safe across versions.
 9. **"Customised preset" dialog on open** is expected whenever a project overrides system presets. Keep the project settings.
+10. **Pausing while printing by object (v7.1).** Bambu's own per-layer pauses are ignored by object (point 6), so the pause lives in **`layer_change_gcode`**:
+    - **Condition:** `{if (current_object_idx == 0 and layer_z > 4.03 and layer_z < 4.05) or (current_object_idx == 1 and layer_z > 8.51 and layer_z < 8.53)}`.
+    - **Body:** the A1 start-tune chime (`M1006 …`), `; PAUSE_PRINTING` (Bambu's reserved tag, so the preview can show it), then `M400 U1` (= the A1's `machine_pause_gcode`).
+    - **Checked in Bambu source at v02.03.01.51, v02.08.04.61 and v02.09.01.70:**
+      - `current_object_idx` is set to 0, then to the finished-object count before each object.
+      - By-object print order is the **object-list order**, because the auto-sort is `#if 0`'d.
+      - The `and` / `or` keywords exist in the placeholder parser.
+      - `layer_z` is the new layer's `print_z`.
+      - The screen layer (`M73 L`) is cumulative across objects.
+    - **Keep the object order** cover → tray → sleeve in the 3MF.
+11. **Sealed voids and `decompose()`.** An enclosed pocket is returned by `decompose()` as its own piece, so "keep the largest piece" silently deletes it. Subtract sealed pockets **after** any keep-largest step. `v7.checks()` now asserts that both pockets are empty and sealed.
+12. **Sync AMS with non-RFID spools** replaces the project's filament presets with the slot presets. Tell the owner to map slots in the Print dialog instead.
 
 ---
 
@@ -421,12 +474,14 @@ python3 src/render/render_sheet.py /tmp/r
 | v7 (A1) | **Bambu A1, one plate, by object**; outside yellow cut to **4 layers**; **snap-in magnets** (pauses don't work by object); A1 presets | "line visible from the outside only a few layers… not pass through"; "Bambu Lab A1, print by object, fit on 1 plate". |
 | v7 (A1 fix) | Rebuilt project settings on the proven key set + released values; added geometry-only fallback; loader emulator + round-trip re-slice | First A1 file failed in Bambu ("Invalid configuration file"). **Fixed and confirmed by the owner: opened and sliced fine.** |
 | move | Project moved with full history from `grishatg/General-` to **`grishatg/3D-PRINTS`** | Owner request, 22 Nov 2026. |
+| v7.1 | **65 × 13.5 × 88**; magnets **sealed in with self-pauses (by object)**; rounded edges; 100% infill, no modifiers; concentric tops; 4 mm brim; 2 mm datums; **yellow edge-to-edge ripples in 3 designs (Flow / Rings / Topo)** | First print of the v7.0 cover on 23 Nov (§6.1). The owner asked for all 3 designs to be built before choosing. |
 
 ---
 
 ## 11. Open items and ideas backlog
 
-1. **Test print** (23 Nov): collect feedback with the §6 checklist; record real time, filament, and Bambu's own estimate in the v7 README.
+1. **v7.1 print:** confirm the self-pauses fire in real Bambu Studio and on the A1; record which ripple design the owner chose, the real print time, and Bambu's own estimate. Then retire the other two designs into `superseded/`.
+1a. **Magnet pull at 1.64 mm:** if the close feels too soft, cut `POCKET_H` to 2.56 (magnet flush with the pocket top; 0.03 mm margin) or `SKIN` to 2 layers. Either brings it to about 1.3 mm.
 2. **Tolerances are unproven:** snap lip interference (0.12), pin bores (1.80 / 2.0 / 2.1), knuckle gap (0.3), boss gap (0.2).
    - Option: a tiny **tolerance coupon** (pin-bore ladder 1.75–1.90 and lip interference 0.08/0.12/0.16), about 10 min to print, if the first print shows fit issues.
 3. **Cutting colour swaps (47):** most come from the upright A·B on the tray bottom.
@@ -440,4 +495,4 @@ python3 src/render/render_sheet.py /tmp/r
 
 ## 12. Starter prompt for the next session (copy-paste)
 
-> Continue the EDC rollie case project in `grishatg/3D-PRINTS` (folder `edc-cigarette-case/`). Read `edc-cigarette-case/HANDOVER.md` first and follow its hard requirements (§3) and Bambu 3MF rules (§8). Check out branch `claude/elegant-turing-9djtl2`, or `main` if the PR has been merged. I've printed v7 on my A1. Here's my feedback: [paste feedback / photos]. Tune the design using the §6 checklist, rebuild, rerun all §7.4 checks, then give me the updated `AB_Rollie_Book_v7_A1_by_object.3mf`.
+> Continue the EDC rollie case project in `grishatg/3D-PRINTS` (folder `edc-cigarette-case/`). Read `edc-cigarette-case/HANDOVER.md` first and follow its hard requirements (§3) and Bambu 3MF rules (§8). Check out `main` if PR #2 has been merged, else branch `claude/hopeful-thompson-ysz39k`. I've printed v7.1 (design: [A Flow / B Rings / C Topo]) on my A1. Here's my feedback: [paste feedback / photos]. Tune the design using the §6 checklist, rebuild, rerun all §7.4 checks, then give me the updated 3MF.

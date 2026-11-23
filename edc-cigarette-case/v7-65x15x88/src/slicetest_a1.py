@@ -23,7 +23,7 @@ rep = {'wipe_tower': '0', 'complete_objects': '1', 'extruder_clearance_radius': 
        'default_acceleration': s(pr['default_acceleration']), 'temperature': '240,240,240', 'first_layer_temperature': '240,240,240',
        'filament_load_time': f"{s(m['machine_load_filament_time'])},"*2 + f"{s(m['machine_load_filament_time'])}",
        'filament_unload_time': f"{s(m['machine_unload_filament_time'])},"*2 + f"{s(m['machine_unload_filament_time'])}",
-       'filament_max_volumetric_speed': f"{s(f['filament_max_volumetric_speed'])},"*2 + f"{s(f['filament_max_volumetric_speed'])}",
+       'filament_max_volumetric_speed': ','.join(AX.MAXVOL),
        'fill_density': '100%', 'fill_pattern': 'rectilinear', 'top_fill_pattern': 'concentric', 'brim_width': f'{AX.BRIM:g}', 'brim_type': 'outer_only',
        'layer_gcode': 'G92 E0' + AX.pause_block(r['pause_cover_z'], r['pause_tray_z'], chime=False).replace('\n', '\\n')}
 for k, v in rep.items():
