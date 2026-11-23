@@ -30,6 +30,9 @@ RIP_PHASE = 0.10                     # v7.0 used 0.22: neighbouring waves drifte
 EDGE_R = float(os.environ.get('EDGE_R', 3.0))                   # rounded long edges (45 deg at the bed)
 CORNER_OPEN, CORNER_SPINE = float(os.environ.get('CORNER_OPEN', 6.0)), float(os.environ.get('CORNER_SPINE', 1.0))   # plan-view corner radii
 OUTLINE = os.environ.get('OUTLINE', 'round')                   # 'round' (circular corners) | 'squircle' (continuous-curvature, n=4, Apple-style)
+CRESCENT = os.environ.get('CRESCENT', '0') == '1'            # v8: one crescent thumb scoop across both halves (replaces notch + scoop)
+PINCH = os.environ.get('PINCH', '0') == '1'                  # v8: pinch zone at the top of every channel (lower ribs + shallow floor dish)
+INITIALS_MODE = os.environ.get('INITIALS_MODE', 'inlay')     # 'inlay' (coloured) | 'engrave' (tone-on-tone recess)
 PATTERN_HOOK = None                                            # concepts: callable(ctx) -> {'front'|'back'|'inside': [(geom, key)]}
 YD = 0.68                      # visible (bed-face) yellow: 4 layers = 0.2 + 3 x 0.16, stops well short of the grey/black body
 AB_D = 0.68                    # initials inlay depth on the bottom face
@@ -88,6 +91,8 @@ def round_env(p=None, step=0.1):
         zones.append(v5._map_inner(K.shapely_to_cs(BASE.buffer(-ins, quad_segs=24) if ins > 0 else BASE).extrude(b - a), a))
     return m3.Manifold.batch_boolean(zones, m3.OpType.Add)
 P['ENV'] = round_env
+if CRESCENT: P['THUMB'] = False
+if PINCH: P['RIB_TOP'] = 55.0
 FACE = BASE.buffer(-(2 * HC + 0.3))                     # flat part of the front/back faces
 FRONT = FACE.intersection(sbox(XA + R - 0.8, -1, W, H + 1))
 BACK = affinity.scale(FACE, -1, 1, origin=(0, 0))
@@ -147,6 +152,15 @@ def build():
     tray = max(tray.decompose(), key=lambda q: q.volume()); cover = max(cover.decompose(), key=lambda q: q.volume())
     # pockets AFTER the keep-largest step: a sealed pocket is an internal void, which decompose() returns as its own piece
     tray = tray - t_pocket; cover = cover - c_pocket
+    if CRESCENT:   # ellipsoid dish centred on the split line at the opening edge, above the clasp
+        cres = m3.Manifold.sphere(1.0, 96).scale((7.0, 5.2, 9.5)).translate((W / 2 + 7.0 - 3.2, YS - 0.3, 63.0))
+        cover = cover - cres; tray = tray - cres
+    if PINCH:      # shallow dish in the channel floor under the top end of each rollie (ribs already stop at z 55)
+        dishes = []
+        for i in range(P['SLOTS']):
+            xc = d['slot_x0'] + i * (P['SLOT_W'] + P['RIB_T']) + P['SLOT_W'] / 2
+            dishes.append(m3.Manifold.sphere(1.0, 64).scale((2.6, 0.6, 7.0)).translate((xc, D / 2 - WB, 63.0)))
+        tray = tray - m3.Manifold.batch_boolean(dishes, m3.OpType.Add)
     # ---- Design 6 visuals ----
     zr0, zr1 = END + 1.5, H - END - 1.5
     def rip(x0, x1, toward_right):
@@ -219,6 +233,13 @@ def build():
                                  XA=XA, R=R, W=W, H=H, D=D, HC=HC, END=END))
         for side, part in (('front', 'c'), ('back', 't')):
             for g, key in pats.get(side, []):
+                if key == 'engrave':      # tone-on-tone engraving: 3 stepped layers (45 deg), prints support-free face down
+                    for k_, dep in enumerate((LAYER0, LAYER0 + LAYER, LAYER0 + 2 * LAYER)):
+                        gk = g.buffer(-0.16 * k_, quad_segs=6) if k_ else g
+                        if gk.is_empty: break
+                        if part == 'c': cover = v3.recess(cover, gk, 'f', dep)
+                        else: tray = v3.recess(tray, gk, 'b', dep)
+                    continue
                 sh = cover if part == 'c' else tray
                 sh, y = v6.inlay(sh, g, 'f' if part == 'c' else 'b', YD)
                 if part == 'c': cover = sh
@@ -250,6 +271,8 @@ def build():
         badge_black = base_ - chamfer_cut
         badge_yellow = letters
         y4 = None
+    elif INITIALS and INITIALS_MODE == 'engrave':   # tone-on-tone, 0.5 mm deep, no extra colour
+        cut = v3.cs(mono).extrude(0.5 + 0.5).translate((0, 0, -0.5)).mirror((0, 1, 0)); y4 = None; tray = tray - cut
     elif INITIALS:   # inlaid on the bottom face, dead-centre
         cut = v3.cs(mono).extrude(AB_D + 0.5).translate((0, 0, -0.5)).mirror((0, 1, 0)); y4 = cut ^ tray; tray = tray - cut
     else:            # no initials: plain black bottom

@@ -99,7 +99,8 @@ def book(surface='knurl', seed=(5, 11), p=P):
     x = slot_x0; ribs = []
     for i in range(p['SLOTS'] - 1):
         x += p['SLOT_W']; rt = p['RIB_T']
-        ribs.append(prism_xz([(x, END - 0.5), (x + rt, END - 0.5), (x + rt, H - END - 12), (x + rt / 2, H - END - 11), (x, H - END - 12)],
+        rtop = p.get('RIB_TOP', H - END - 12)       # v8: lower rib tops leave a pinch zone at the top of each rollie
+        ribs.append(prism_xz([(x, END - 0.5), (x + rt, END - 0.5), (x + rt, rtop), (x + rt / 2, rtop + 1), (x, rtop)],
                              D / 2 - WB - p['RIB_H'], D / 2 - WB + 0.1)
                     ^ prism_yz([(D / 2 - WB - p['RIB_H'] - 0.01, END - 1), (D / 2, END - 1), (D / 2, H), (D / 2 - WB - p['RIB_H'] - 0.01, H)], x - 1, x + rt + 1))
         x += rt
@@ -149,15 +150,18 @@ def book(surface='knurl', seed=(5, 11), p=P):
         mags.append((mx, z))
     # thumb access: notch in the cover inner edge + 45 deg scoop in the tray front edge (z 34-51)
     nz0, nz1 = p.get('NOTCH_Z', (33, 52))
-    if p.get('NOTCH_ROUND'):   # v7.1: smooth arc instead of a sharp V
+    if not p.get('THUMB', True):   # v8: replaced by one crescent across both halves (added in v7.build)
+        pass
+    elif p.get('NOTCH_ROUND'):   # v7.1: smooth arc instead of a sharp V
         zc, half = (nz0 + nz1) / 2, (nz1 - nz0) / 2; dep = 2.0; rad = (half ** 2 + dep ** 2) / (2 * dep)
         arc = Point(W / 2 + rad - dep, zc).buffer(rad, quad_segs=48)
         cover -= _map_inner(K.shapely_to_cs(arc).extrude(1.2 + 0.01), ys - 1.2)
     else:
         cover -= prism_xz([(W / 2 + 1, nz0), (W / 2 + 1, nz1), (W / 2 - 2.0, (nz0 + nz1) / 2)], ys - 1.4, ys + 0.01)
     sz0, sz1 = p.get('SCOOP_Z', (34, 51))
-    scoop = prism_xy([(W / 2 + 1, ys - 0.1), (W / 2 - 3.2, ys - 0.1), (W / 2 + 1, ys + 4.2)], sz0, sz1)
-    tray -= scoop
+    if p.get('THUMB', True):
+        scoop = prism_xy([(W / 2 + 1, ys - 0.1), (W / 2 - 3.2, ys - 0.1), (W / 2 + 1, ys + 4.2)], sz0, sz1)
+        tray -= scoop
     # top grip grooves (echo the reference lid bars)
     for gx in ((-6, 0, 6) if p.get('GRIP_GROOVES', True) else ()):
         g = chbox(gx - 0.6, gx + 0.6, -D / 2 + 2.6, D / 2 - 2.6, H - 0.6, H + 1, cv=0.3)
