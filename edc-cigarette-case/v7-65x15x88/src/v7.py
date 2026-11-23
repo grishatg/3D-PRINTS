@@ -18,12 +18,13 @@ from shapely import affinity
 
 LAYER0, LAYER = 0.2, 0.16
 MAG_D, MAG_T = 9.53, 2.53            # re-measured by the owner (23 Nov)
-POCKET_D, SKIN, GAP = 9.85, 0.48, 0.2   # drop-in pocket (prints ~9.7); 3 layers over each magnet; boss-to-recess clearance
+POCKET_D, SKIN, GAP = 9.85, 0.96, 0.2   # drop-in pocket (prints ~9.7); 6 layers (~1.0 mm, owner's choice) over each magnet; boss-to-recess clearance
 SKIN_OUT = 1.16                      # cover: 7 layers between the magnet and the outside face (no dark disc showing through)
 POCKET_H = 2.72                      # 17 layers: magnet sits 0.19 below the pocket top, so the nozzle never touches it
 DATUM_W, RIP_W = 2.0, 1.2            # yellow datum line width; yellow ripple stripe width
 RIPPLE = os.environ.get('RIPPLE', 'flow')   # 'flow' (Design 6, connected) | 'rings' | 'topo'
 RIPPLE_STATS = {}
+ROUND_PILLAR = True                  # tray magnet column: round (v7.1) or square (v7.0)
 RIP_PHASE = 0.10                     # v7.0 used 0.22: neighbouring waves drifted together (0.16 mm gaps) once continuous
 EDGE_R, CORNER_OPEN, CORNER_SPINE = 3.0, 6.0, 1.0   # rounded long edges (45 deg at the bed), plan-view corner radii
 YD = 0.68                      # visible (bed-face) yellow: 4 layers = 0.2 + 3 x 0.16, stops well short of the grey/black body
@@ -114,7 +115,10 @@ def build():
         c_pocket, c_lip_y = snap_pocket(boss_top, -1)
         t_pocket, t_lip_y = snap_pocket(rec_floor, +1)
         c_top_z = c_lip_y + D / 2; t_top_z = D / 2 - t_lip_y
-    pillar = chbox(PILLAR_X0, CX1 + 0.5, YS, D / 2 - WB + 0.1, MZ - POCKET_D / 2 - 1.4, MZ + POCKET_D / 2 + 1.4, cv=0.1)
+    if ROUND_PILLAR:   # v7.1: round magnet column in the tray, matching the cover's round boss (owner request)
+        pillar = ycyl(REC_R + 1.0, YS, D / 2 - WB + 0.1, seg=96)
+    else:
+        pillar = chbox(PILLAR_X0, CX1 + 0.5, YS, D / 2 - WB + 0.1, MZ - POCKET_D / 2 - 1.4, MZ + POCKET_D / 2 + 1.4, cv=0.1)
     lip_slot = chbox(CX1 - 1.2 - GAP, CX1 + 0.1, YS - 1.0, YS + 1.4 + GAP, MZ - POCKET_D / 2 - 1.6, MZ + POCKET_D / 2 + 1.6, cv=0.1)
     tray = (tray + (pillar ^ env)) - ycyl(REC_R, YS - 1.0, rec_floor) - lip_slot
     if P.get('INNER_FRAME', True):
