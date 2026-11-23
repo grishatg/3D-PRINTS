@@ -1,50 +1,77 @@
-"""v7 - Design 6 'Hybrid' re-proportioned to 65 (W) x 15 (D) x 88 (H) mm.
-Hardware: only 2 x Ø9.51 x 2.51 mm magnets (sealed in) + 1.75 mm filament hinge pin.
+"""v7.1 - Design 6 'Hybrid', 65 (W) x 13.5 (D) x 88 (H) mm (first-print feedback, 23 Nov 2026).
+Hardware: only 2 x Ø9.53 x 2.53 mm magnets (sealed in during the print: the file pauses itself) + 1.75 mm filament hinge pin.
 6 rollie channels (6.6 mm), centred magnet clasp on the opening edge, 2 filter-tip bays, 'A·B' Inter Bold 5 mm on the bottom.
+v7.1 vs v7.0: thinner panels (cover 2.0, back 2.0) -> 13.5 mm deep, rounded edges and corners, yellow-filled ripples
+(cover and tray), 2 mm datum lines, rounded inside (no octagon frame, no grip notches), magnets sealed in by pause.
 """
 import sys, os
 sys.path.insert(0, os.path.dirname(__file__))
 import v3
-v3.W, v3.D, v3.H = 65.0, 15.0, 88.0                      # must precede every other project import
+v3.W, v3.D, v3.H = 65.0, 13.5, 88.0                      # must precede every other project import
 W, D, H = v3.W, v3.D, v3.H
 import numpy as np, manifold3d as m3
 import case as K, v5, v6
 from v3 import chbox
 from shapely.geometry import Polygon, LineString, Point, box as sbox
-from shapely.ops import unary_union
+from shapely.ops import unary_union, linemerge
 from shapely import affinity
 
 LAYER0, LAYER = 0.2, 0.16
-MAG_D, MAG_T = 9.51, 2.51
-POCKET_D, SKIN, GAP = 9.7, 0.4, 0.2
+MAG_D, MAG_T = 9.53, 2.53            # re-measured by the owner (23 Nov)
+POCKET_D, SKIN, GAP = 9.85, 0.48, 0.2   # drop-in pocket (prints ~9.7); 3 layers over each magnet; boss-to-recess clearance
+SKIN_OUT = 1.16                      # cover: 7 layers between the magnet and the outside face (no dark disc showing through)
+POCKET_H = 2.72                      # 17 layers: magnet sits 0.19 below the pocket top, so the nozzle never touches it
+DATUM_W, RIP_W = 2.0, 1.2            # yellow datum line width; yellow ripple stripe width
+RIPPLE = os.environ.get('RIPPLE', 'flow')   # 'flow' (Design 6, connected) | 'rings' | 'topo'
+RIPPLE_STATS = {}
+RIP_PHASE = 0.10                     # v7.0 used 0.22: neighbouring waves drifted together (0.16 mm gaps) once continuous
+EDGE_R, CORNER_OPEN, CORNER_SPINE = 3.0, 6.0, 1.0   # rounded long edges (45 deg at the bed), plan-view corner radii
 YD = 0.68                      # visible (bed-face) yellow: 4 layers = 0.2 + 3 x 0.16, stops well short of the grey/black body
 AB_D = 0.68                    # initials inlay depth on the bottom face
 FONT, CAP = 'Inter-Bold.ttf', 5.0
 BADGE_LAYERS, BADGE_W, BADGE_H, BADGE_CLR = 6, 17.0, 7.0, 0.10
 USE_BADGE = False              # optional: initials as a separate press-fit badge
-CAPTURE = False                # True: magnets sealed in via pauses (by-layer only). False: snap-in pockets (works by-object)
+CAPTURE = True                 # True: magnets sealed in; the 3MF pauses itself (by object, via layer-change G-code). False: snap-in pockets
 LIP_H, LIP_INT, LIP_SLOTS, LIP_SLOT_W = 0.4, 0.12, 4, 0.8   # snap lip: height, radial interference, relief slots
 
 P = dict(v5.P)
-P.update(TC=3.0, WB=2.6, WS=2.6, END=9.0, R=2.8, G=0.3, CF=1.6, CB=2.2, CE=1.0, FACET=6.0,
+P.update(TC=2.0, WB=2.0, WS=2.6, END=9.0, R=2.8, G=0.3, CF=1.6, CB=2.2, CE=1.0, FACET=6.0,
          PIN_PRESS=1.80, PIN_SLIP=2.0, PIN_SLEEVE=2.1, SLOTS=6, SLOT_W=6.6, RIB_T=0.8, RIB_H=3.0,
          MAG_ENDS=False, INSIDE_PLATE=False, BOTTOM_MONO=False,
          SEGS=[(0, 16), (16, 34), (34, 54), (54, 72), (72, 88)],
-         SCOOP_Z=(55, 70), NOTCH_Z=(54, 71))
+         SCOOP_Z=(55, 70), NOTCH_Z=(54, 71),
+         LIP_R=3.0, INNER_FRAME=False, GRIP_GROOVES=False, NOTCH_ROUND=True)
 TC, WB, WS, END, R = P['TC'], P['WB'], P['WS'], P['END'], P['R']
 YS = -D / 2 + TC
 CX0, CX1 = -W / 2 + WS, W / 2 - WS
 XA = -W / 2 + R + 0.1
-BOSS_R = POCKET_D / 2 + 0.8; BOSS_H = 1.4; REC_R = BOSS_R + GAP
+BOSS_R = POCKET_D / 2 + 0.8; BOSS_H = SKIN_OUT + POCKET_H + SKIN - TC; REC_R = BOSS_R + GAP   # boss top = cover magnet skin
 MX = CX1 + (WS - 1.2) - REC_R                 # recess keeps a 1.2 mm side wall
 MZ = H / 2
 PILLAR_X0 = MX - REC_R - 1.0                  # 1.0 mm wall between recess and the last channel
 P['SLOT_X1'] = PILLAR_X0 - 0.2
 
-xz = [(-W / 2 + P['CE'], 0), (W / 2 - P['FACET'], 0), (W / 2, P['FACET']), (W / 2, H - P['FACET']), (W / 2 - P['FACET'], H),
-      (-W / 2 + P['CE'], H), (-W / 2, H - P['CE']), (-W / 2, P['CE'])]
-FRONT = Polygon(xz).buffer(-(P['CF'] + 0.3), join_style=2).intersection(sbox(XA + R - 0.8, -1, W, H + 1))
-BACK = affinity.scale(Polygon(xz).buffer(-(P['CB'] + 0.3), join_style=2), -1, 1, origin=(0, 0))
+# ---- rounded envelope: plan outline with rounded corners, long edges rounded with a 45-degree run-out at each bed face ----
+HC = EDGE_R * (1 - np.sqrt(0.5))                       # height where the fillet reaches 45 deg; below it a 45 deg chamfer meets the bed
+def edge_inset(h):
+    if h >= EDGE_R: return 0.0
+    if h >= HC: s = (EDGE_R - h) / EDGE_R; return EDGE_R - EDGE_R * np.sqrt(1 - s * s)
+    return 2 * HC - h
+def _rrect(x0, z0, x1, z1, r):
+    return sbox(x0 + r, z0 + r, x1 - r, z1 - r).buffer(r, quad_segs=24)
+BASE = _rrect(-W / 2, 0, W / 2 + 20, H, CORNER_SPINE).intersection(_rrect(-W / 2 - 20, 0, W / 2, H, CORNER_OPEN))
+def round_env(p=None, step=0.1):
+    zones = []
+    ys_ = list(np.arange(-D / 2, -D / 2 + EDGE_R, step)) + [-D / 2 + EDGE_R, D / 2 - EDGE_R] + list(np.arange(D / 2 - EDGE_R + step, D / 2 + 1e-9, step))
+    ys_ = sorted(set(round(y, 4) for y in ys_ + [D / 2]))
+    for a, b in zip(ys_[:-1], ys_[1:]):
+        ym = (a + b) / 2; ins = max(edge_inset(ym + D / 2), edge_inset(D / 2 - ym))
+        zones.append(v5._map_inner(K.shapely_to_cs(BASE.buffer(-ins, quad_segs=24) if ins > 0 else BASE).extrude(b - a), a))
+    return m3.Manifold.batch_boolean(zones, m3.OpType.Add)
+P['ENV'] = round_env
+FACE = BASE.buffer(-(2 * HC + 0.3))                     # flat part of the front/back faces
+FRONT = FACE.intersection(sbox(XA + R - 0.8, -1, W, H + 1))
+BACK = affinity.scale(FACE, -1, 1, origin=(0, 0))
 
 def snap_down(z):
     return LAYER0 + np.floor((z - LAYER0) / LAYER + 1e-9) * LAYER
@@ -61,15 +88,15 @@ def monogram():
 
 def build():
     d = v5.book('none', p=P); tray, cover, ys = d['tray'], d['cover'], d['ys']
-    env = v5.envelope(P)
+    env = round_env(P)
     # ---- magnet clasp (sealed-in magnets) ----
     boss_top = YS + BOSS_H
     rec_floor = YS + BOSS_H + GAP
     if CAPTURE:
         c_top_z = snap_down((boss_top - SKIN) + D / 2)                # cover prints face-down: z = y + D/2
-        c_pocket = ycyl(POCKET_D / 2, c_top_z - (MAG_T + 0.09) - D / 2, c_top_z - D / 2)
+        c_pocket = ycyl(POCKET_D / 2, c_top_z - POCKET_H - D / 2, c_top_z - D / 2)
         t_top_z = snap_down(D / 2 - (rec_floor + SKIN))               # tray prints back-down: z = D/2 - y
-        t_pocket = ycyl(POCKET_D / 2, D / 2 - t_top_z, D / 2 - (t_top_z - (MAG_T + 0.09)))
+        t_pocket = ycyl(POCKET_D / 2, D / 2 - t_top_z, D / 2 - (t_top_z - POCKET_H))
     else:
         # snap-in pockets open to the closing faces: magnet clicks past a slotted 0.4 mm lip (no pause, no glue)
         def snap_pocket(face_y, inward):                              # inward = +1 (into tray) or -1 (into cover)
@@ -89,14 +116,16 @@ def build():
         c_top_z = c_lip_y + D / 2; t_top_z = D / 2 - t_lip_y
     pillar = chbox(PILLAR_X0, CX1 + 0.5, YS, D / 2 - WB + 0.1, MZ - POCKET_D / 2 - 1.4, MZ + POCKET_D / 2 + 1.4, cv=0.1)
     lip_slot = chbox(CX1 - 1.2 - GAP, CX1 + 0.1, YS - 1.0, YS + 1.4 + GAP, MZ - POCKET_D / 2 - 1.6, MZ + POCKET_D / 2 + 1.6, cv=0.1)
-    fr_poly = v5.notched_panel(CX0 + 5.0, CX1 - 2.5, END + 3.0, H - END - 3.0, c=3.0, step=3.0)
-    frame_ring = fr_poly.buffer(GAP, join_style=2).difference(fr_poly.buffer(-1.6 - GAP, join_style=2))
-    frame_slot = v5._map_inner(K.shapely_to_cs(frame_ring).extrude(0.8 + GAP + 0.5), YS - 0.5)
-    tray = (tray + (pillar ^ env)) - ycyl(REC_R, YS - 1.0, rec_floor) - lip_slot - t_pocket - frame_slot
-    cover = (cover + (ycyl(BOSS_R, YS - 0.3, boss_top) ^ env)) - c_pocket
+    tray = (tray + (pillar ^ env)) - ycyl(REC_R, YS - 1.0, rec_floor) - lip_slot
+    if P.get('INNER_FRAME', True):
+        fr_poly = v5.notched_panel(CX0 + 5.0, CX1 - 2.5, END + 3.0, H - END - 3.0, c=3.0, step=3.0)
+        frame_ring = fr_poly.buffer(GAP, join_style=2).difference(fr_poly.buffer(-1.6 - GAP, join_style=2))
+        tray -= v5._map_inner(K.shapely_to_cs(frame_ring).extrude(0.8 + GAP + 0.5), YS - 0.5)
+    cover = cover + (ycyl(BOSS_R, YS - 0.3, boss_top) ^ env)
     tray = max(tray.decompose(), key=lambda q: q.volume()); cover = max(cover.decompose(), key=lambda q: q.volume())
+    # pockets AFTER the keep-largest step: a sealed pocket is an internal void, which decompose() returns as its own piece
+    tray = tray - t_pocket; cover = cover - c_pocket
     # ---- Design 6 visuals ----
-    stone = Point(MX, MZ).buffer(7.2)
     zr0, zr1 = END + 1.5, H - END - 1.5
     def rip(x0, x1, toward_right):
         out = []
@@ -104,17 +133,58 @@ def build():
             t = (xc - x0) / (x1 - x0); t = t if toward_right else 1 - t
             A = 0.05 + 1.6 * t ** 1.6
             zs = np.linspace(zr0, zr1, 160)
-            out.append(LineString([(xc + A * np.sin(2 * np.pi * z / 27.0 + 0.22 * xc), z) for z in zs]))
+            out.append(LineString([(xc + A * np.sin(2 * np.pi * z / 27.0 + RIP_PHASE * xc), z) for z in zs]))
         return out
     xr0 = 2.2
-    fr = [l.intersection(FRONT.buffer(-1.6)).difference(stone) for l in rip(xr0, FRONT.bounds[2] - 1.0, True)]
-    cover = v6.grooves(cover, [g for l in fr for g in getattr(l, 'geoms', [l]) if not g.is_empty and g.length > 8], 'f')
+    hw = DATUM_W / 2
     zd = round(0.382 * H, 1)                                           # golden-section datum
-    br = [l.intersection(BACK.buffer(-1.6)).difference(sbox(-60, zd - 2.3, 60, zd + 2.3)) for l in rip(BACK.bounds[0] + 1.0, -2.2, False)]
-    tray = v6.grooves(tray, [g for l in br for g in getattr(l, 'geoms', [l]) if not g.is_empty and g.length > 15], 'b')
-    cover, y1 = v6.inlay(cover, sbox(FRONT.bounds[0] + 0.4, zd - 0.5, xr0 - 2.6, zd + 0.5), 'f', YD)
-    tray, y2 = v6.inlay(tray, sbox(-W / 2 - 2.0, zd - 0.5, -7.0, zd + 0.5), 'b', YD)
-    cover, y3 = v6.inside_inlay(cover, sbox(-(W / 2 - 10.0), zd - 0.5, W / 2 - 16.0, zd + 0.5), ys)
+    datum_gap = sbox(-60, zd - hw - 1.8, 60, zd + hw + 1.8)
+    def stripes(items):                                                # items: (line, width)
+        return unary_union([g.buffer(w / 2, quad_segs=8) for l, w in items for g in getattr(l, 'geoms', [l]) if not g.is_empty])
+    def keep(lines, region, minlen):
+        out = []
+        for l, w in lines:
+            c = l.intersection(region)
+            if c.geom_type == 'MultiLineString': c = linemerge(c)        # rejoin a ring cut at its start point
+            out += [(g, w) for g in getattr(c, 'geoms', [c]) if g.geom_type == 'LineString' and g.length > minlen]
+        return out
+    f_reg = FRONT.buffer(-1.6).intersection(sbox(xr0 - 0.6, zr0, 60, zr1))
+    b_reg = BACK.buffer(-1.6).intersection(sbox(-60, zr0, -2.2 + 0.6, zr1)).difference(datum_gap)
+    if RIPPLE == 'flow':      # Design 6 ripples, now continuous on the front too (they run over the hidden magnet)
+        whole = lambda ls, reg: [(l, w) for l, w in ls if l.intersection(reg).geom_type == 'LineString']   # no broken, dashed lines
+        fr = keep(whole([(l, RIP_W) for l in rip(xr0, FRONT.bounds[2] - 1.0, True)], FRONT.buffer(-1.6)), FRONT.buffer(-1.6), 8)
+        br = keep([(l, RIP_W) for l in rip(BACK.bounds[0] + 1.0, -2.2, False)], BACK.buffer(-1.6).difference(datum_gap), 15)
+    elif RIPPLE == 'rings':   # a stone dropped at the clasp: rings spread out and thin as they travel
+        def rings(cx):
+            out = []
+            for k in range(8):
+                rad = 5.5 + 2.9 * k + 0.12 * k * k; w = max(1.4 - 0.07 * k, 0.95)
+                out.append((Point(cx, MZ).buffer(rad, quad_segs=64).exterior, w))
+            return out
+        fr = keep(rings(MX), f_reg, 4); br = keep(rings(-MX), b_reg, 4)
+    elif RIPPLE == 'topo':    # contour lines of a gentle landscape (nod to the v1 Topo Edition)
+        from skimage import measure
+        def topo(reg, seed):
+            rng = np.random.default_rng(seed); x0, z0, x1, z1 = reg.bounds; res = 0.25
+            xs = np.arange(x0 - 3, x1 + 3, res); zs_ = np.arange(z0 - 3, z1 + 3, res); X, Z = np.meshgrid(xs, zs_)
+            F = 0.0 * X
+            for _ in range(5):
+                cx, cz = rng.uniform(x0, x1), rng.uniform(z0, z1); sx, sz = rng.uniform(7, 13), rng.uniform(9, 18)
+                F += rng.choice([-1, 1]) * rng.uniform(0.6, 1.0) * np.exp(-((X - cx) ** 2 / (2 * sx * sx) + (Z - cz) ** 2 / (2 * sz * sz)))
+            F += 0.025 * X                                             # gentle slope so lines run, not just ring
+            out = []
+            for lv in np.linspace(np.percentile(F, 4), np.percentile(F, 96), 13):
+                for c in measure.find_contours(F, lv):
+                    out.append((LineString([(xs[0] + q[1] * res, zs_[0] + q[0] * res) for q in c]).simplify(0.05), RIP_W))
+            return out
+        fr = keep(topo(f_reg, 7), f_reg, 6); br = keep(topo(b_reg, 3), b_reg, 6)
+    # yellow ripples: filled flush with yellow (4 layers, same layers as the datum: no extra colour swaps)
+    cover, y5 = v6.inlay(cover, stripes(fr), 'f', YD)
+    tray, y6 = v6.inlay(tray, stripes(br), 'b', YD)
+    RIPPLE_STATS.update(front=fr, back=br)
+    cover, y1 = v6.inlay(cover, sbox(FRONT.bounds[0] + 0.4, zd - hw, xr0 - 2.6, zd + hw), 'f', YD)
+    tray, y2 = v6.inlay(tray, sbox(-W / 2 - 2.0, zd - hw, -7.0, zd + hw), 'b', YD)
+    cover, y3 = v6.inside_inlay(cover, sbox(-(W / 2 - 10.0), zd - hw, W / 2 - 16.0, zd + hw), ys)
     mono = monogram()
     badge_black = badge_yellow = None; bt = 0.0
     if USE_BADGE:
@@ -141,7 +211,9 @@ def build():
     else:   # inlaid on the bottom face, dead-centre
         cut = v3.cs(mono).extrude(AB_D + 0.5).translate((0, 0, -0.5)).mirror((0, 1, 0)); y4 = cut ^ tray; tray = tray - cut
     d['knuckle_mod'] = d['knuckle_mod'] + chbox(PILLAR_X0 - 1, W / 2 + 1, -D, D, MZ - 9, MZ + 9, cv=0.1)
-    return dict(d=d, tray=tray, cover=cover, sleeve=d['sleeve'], yel_cover=[y1, y3], yel_tray=[y2] + ([y4] if y4 is not None else []), mono=mono,
+    yel_cover = [y for y in (y1, y5, y3) if y is not None]
+    yel_tray = [y for y in (y2, y6, y4) if y is not None]
+    return dict(d=d, tray=tray, cover=cover, sleeve=d['sleeve'], yel_cover=yel_cover, yel_tray=yel_tray, mono=mono,
                 badge_black=badge_black, badge_yellow=badge_yellow, badge_t=bt,
                 c_pocket=c_pocket, t_pocket=t_pocket, pause_cover_z=(c_top_z + LAYER) if CAPTURE else None, pause_tray_z=(t_top_z + LAYER) if CAPTURE else None,
                 c_top_z=c_top_z, t_top_z=t_top_z, zd=zd)
@@ -163,12 +235,19 @@ def checks(r):
         y_lip = face + inward * LIP_H; y_bot = y_lip + inward * (MAG_T + 0.05)
         g = ycyl(POCKET_D / 2 + grow, y_lip, y_bot + inward * grow)
         return round((g - ycyl(POCKET_D / 2, y_lip, y_bot) - part).volume(), 3)
-    return dict(env=[round(bb[i + 3] - bb[i], 2) for i in range(3)], pieces=(len(a.decompose()), len(b.decompose())), overlap=round(ov, 3),
+    solids = lambda m: len([q for q in m.decompose() if q.volume() > 1.0])          # sealed magnet pockets are voids, not pieces
+    pv = lambda m, pk: round((pk ^ m).volume(), 3)                                      # 0 = the pocket is really empty
+    def sealed(m, pk, t=0.3):                                                           # 0 = >= 0.3 mm of plastic all round
+        bbp = pk.bounding_box(); shell = ycyl(POCKET_D / 2 + t, bbp[1] - t, bbp[4] + t) - pk
+        return round((shell - m).volume(), 3)
+    return dict(env=[round(bb[i + 3] - bb[i], 2) for i in range(3)], pieces=(solids(a), solids(b)), overlap=round(ov, 3),
+                pocket_material=(pv(a, r['t_pocket']), pv(b, r['c_pocket'])), pocket_unsealed=(sealed(a, r['t_pocket']), sealed(b, r['c_pocket'])),
                 rollups=len(v5.rollups(r['d'])), rollups_vs_tray=round((RR ^ a).volume(), 3), swing_contacts=swing,
                 tray_wall_void=wall(a, r['t_pocket'], which='tray'), cover_wall_void=wall(b, r['c_pocket'], which='cover'),
-                magnet_gap=round((D / 2 - r['t_top_z']) - (r['c_top_z'] - D / 2) - (0.18 if CAPTURE else 0.0), 2),
+                magnet_gap=round(((D / 2 - (r['t_top_z'] - POCKET_H + MAG_T)) - (r['c_top_z'] - POCKET_H + MAG_T - D / 2)) if CAPTURE
+                                 else (D / 2 - r['t_top_z']) - (r['c_top_z'] - D / 2), 2),
                 pauses=(r['pause_cover_z'], r['pause_tray_z']),
-                cover_front_skin=round(r['c_top_z'] - (MAG_T + (0.09 if CAPTURE else 0.05)), 2), MX=round(MX, 2), slot_x1=round(P['SLOT_X1'], 2),
+                cover_front_skin=round(r['c_top_z'] - (POCKET_H if CAPTURE else MAG_T + 0.05), 2), MX=round(MX, 2), slot_x1=round(P['SLOT_X1'], 2),
                 mono=[round(v, 2) for v in r['mono'].bounds], datum_z=r['zd'], badge_mm=round(r['badge_t'], 2),
                 rib_interference_mm3=ov_ribs, yellow_depth_mm=YD)
 

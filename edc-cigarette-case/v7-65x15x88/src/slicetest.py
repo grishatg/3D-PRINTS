@@ -88,7 +88,7 @@ def config(lh, path):
     with open(path, 'w') as f:
         for k, v in c.items(): f.write(f'{k} = {v}\n')
 
-def plate(r):
+def plate(r, with_mods=False):
     P = v7.P
     U = lambda vs: m3.Manifold.batch_boolean(vs, m3.OpType.Add) if len(vs) > 1 else vs[0]
     end_blocks = chbox(-v7.W / 2 - 1, v7.W / 2 + 1, -v7.D, v7.D, -1, P['END'] + 0.5, cv=0.1) + chbox(-v7.W / 2 - 1, v7.W / 2 + 1, -v7.D, v7.D, v7.H - P['END'] - 0.5, v7.H + 1, cv=0.1)
@@ -102,8 +102,9 @@ def plate(r):
             out.append((q, k, e, s))
         return out
     M100 = {'fill_density': '100%', 'perimeters': '6'}
-    tray = drop([(tray_rot(r['tray']), 'part', 2, {})] + [(tray_rot(y), 'part', 3, {}) for y in r['yel_tray']] + [(tray_rot(mod), 'mod', 0, M100)])
-    cover = drop([(cover_rot(r['cover']), 'part', 1, {})] + [(cover_rot(y), 'part', 3, {}) for y in r['yel_cover']] + [(cover_rot(mod), 'mod', 0, M100)])
+    mods = lambda rot: [(rot(mod), 'mod', 0, M100)] if with_mods else []      # v7.1 prints 100% everywhere: no modifiers
+    tray = drop([(tray_rot(r['tray']), 'part', 2, {})] + [(tray_rot(y), 'part', 3, {}) for y in r['yel_tray']] + mods(tray_rot))
+    cover = drop([(cover_rot(r['cover']), 'part', 1, {})] + [(cover_rot(y), 'part', 3, {}) for y in r['yel_cover']] + mods(cover_rot))
     sleeve = drop([(r['sleeve'], 'part', 3, {})])
     badge = drop([(r['badge_black'], 'part', 2, {}), (r['badge_yellow'], 'part', 3, {})]) if r.get('badge_black') is not None else None
     return [('Cover', cover, (110, 128))], [('Tray', tray, (110, 128))], [('Sleeve', sleeve, (128, 128))], ([('Badge', badge, (128, 128))] if badge else [])

@@ -70,7 +70,8 @@ def project_config(template, colours, overrides):
     for k, v in overrides.items():
         assert k in template, f'override {k} is not in the proven key set'
         cfg[k] = v
-    cfg['different_settings_to_system'] = [';'.join(sorted(k for k in overrides if k in process))] + [''] * n + [';'.join(sorted(k for k in overrides if k in machine))]
+    PROCESS_DEFAULT_KEYS = {'brim_type'}   # process options the A1 preset leaves at Bambu's built-in default
+    cfg['different_settings_to_system'] = [';'.join(sorted(k for k in overrides if k in process or k in PROCESS_DEFAULT_KEYS))] + [''] * n + [';'.join(sorted(k for k in overrides if k in machine))]
     return cfg, src
 
 def check(cfg, template):
