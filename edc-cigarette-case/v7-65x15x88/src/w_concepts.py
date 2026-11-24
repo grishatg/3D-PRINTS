@@ -105,7 +105,7 @@ def tumbling_blocks(region, s=4.0, gap=0.4):
 
 def w_endgrain(k):
     F, B = full(k, 'f'), full(k, 'b')
-    return {'front': [(chequer(F), 'acc1')], 'back': [(grid_lines(B), 'engrave')]}
+    return {'front': [(chequer(F, c=5.2), 'acc1')], 'back': [(chequer(B, c=5.2, gap=0.9), 'engrave')]}
 def w_cubes(k):
     F, B = full(k, 'f'), full(k, 'b')
     lf, rf, _ = tumbling_blocks(F)
@@ -129,10 +129,10 @@ DESIGNS = {
                  font='Jost-Bold.ttf', fontname='Jost (Futura-like, European modernism)', cap=5.0, thick=0.0, fn=w_parquet,
                  idea='Marquetry: a herringbone of teak and cherry staves laid into an oak lid, the oak showing as fine joints. All four woods in one case; the walnut back carries the pattern engraved.',
                  front='Teak and cherry herringbone with oak joints', back='Engraved herringbone outlines; oak A·B in the corner'),
- 'endgrain': dict(name='ENDGRAIN', craft='Danish end-grain butcher blocks', cover='oak', tray='teak', sleeve='walnut', acc1='walnut', mono='walnut',
+ 'endgrain': dict(name='ENDGRAIN', craft='End-grain butcher blocks and two-tone chequered luggage canvas', cover='teak', tray='walnut', sleeve='oak', acc1='walnut', mono='oak',
                  font='Inter-Bold.ttf', fontname='Inter (Helvetica-like, Scandinavian modern)', cap=5.0, thick=0.0, fn=w_endgrain,
-                 idea='The lid is a butcher block seen end-on: an oak and walnut chequer, edge to edge. The teak base carries the block joints as a fine engraved grid.',
-                 front='Oak and walnut chequer, full face', back='Engraved block grid; walnut A·B in the corner'),
+                 idea='Two browns, one fine chequer: walnut blocks set into a teak lid like an end-grain board, the quiet two-tone check of old travel trunks. The walnut base repeats the chequer, engraved tone-on-tone.',
+                 front='Teak and walnut chequer, full face', back='Engraved chequer, tone-on-tone; oak A·B in the corner'),
  'cubes':   dict(name='CUBES', craft='18th-century French marquetry à cubes (tumbling blocks)', cover='oak', tray='cherry', sleeve='walnut', acc1='walnut', acc2='teak', mono='oak',
                  font='CormorantGaramond-Bold.ttf', fontname='Garamond (the French ébénistes’ typeface)', cap=6.0, thick=0.12, fn=w_cubes,
                  idea='Stacked cubes in three woods: oak tops, teak and walnut sides, the 3D illusion of Louis XV marquetry. A cherry base with the cube outlines engraved.',

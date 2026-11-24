@@ -1,17 +1,28 @@
-# Rollie Book · wood PLA: six designs (renders only, no 3MF yet)
+# Rollie Book · wood PLA: six designs
 
 ![overview](W0_overview.png)
 
-Six designs in the four wood PLA tones from your photo: **Oak, Teak, Cherry, Walnut**. Four tones means all four AMS lite slots. Each design takes its cue from a wood craft or brand. Its **A·B** uses a typeface from the same world, placed as a **maker's mark in the bottom corner of the back plate**, on the hinge side. **Every design also comes without initials.**
+Six designs in the four wood PLA tones from your photo: **Oak, Teak, Cherry, Walnut**. Four tones means all four AMS lite slots.
+- Each design takes its cue from a wood craft or brand.
+- Its **A·B** uses a typeface from the same world, placed as a **maker's mark in the bottom corner of the back plate**, on the hinge side.
+- **Every design also comes without initials.**
+
+**Status (24 Nov):**
+- **W1–W4 are approved and built.** Their print files are in [`../wood-3mf/`](../wood-3mf/README.md).
+- **W5 ENDGRAIN and W6 CUBES are new.** They replace TAMBOUR and INLAY and need your approval. Once you approve, their 3MFs come from the same exporter in minutes.
 
 | # | Design | Inspired by | Woods | A·B typeface |
 |---|---|---|---|---|
 | W1 | **KUMIKO** | Japanese kumiko joinery (asanoha lattice) | Oak lid, Walnut base | Shippori Mincho (Japanese foundry serif), engraved |
-| W2 | **TAMBOUR** | B&O Beosound Balance oak lamellas, tambour cabinets | All Oak, Walnut hinge | Inter (Helvetica-like), inlaid Walnut |
-| W3 | **RIVA** | Riva Aquarama mahogany decks with pale seams | Cherry, Oak seams | Bodoni (Italian), inlaid Oak |
-| W4 | **DIAL** | Swiss watch dials: sunburst and clous de Paris | Teak lid, Walnut base | Cinzel (Roman capitals, as on casebacks), inlaid Oak |
-| W5 | **PARQUET** | European herringbone parquet (marquetry) | Teak + Cherry staves laid in an Oak lid (oak shows as the joints), Walnut base: **all four woods** | Jost (Futura-like), inlaid Oak |
-| W6 | **INLAY** | English cabinetmaking: stringing + butterfly key | Walnut, Oak stringing | Garamond, inlaid Oak |
+| W2 | **RIVA** | Riva Aquarama mahogany decks with pale seams | Cherry, Oak seams | Bodoni (Italian), inlaid Oak |
+| W3 | **DIAL** | Swiss watch dials: sunburst and clous de Paris | Teak lid, Walnut base | Cinzel (Roman capitals, as on casebacks), inlaid Oak |
+| W4 | **PARQUET** | European herringbone parquet (marquetry) | Teak + Cherry staves laid in an Oak lid (oak shows as the joints), Walnut base: **all four woods** | Jost (Futura-like), inlaid Oak |
+| W5 | **ENDGRAIN** · new | End-grain butcher blocks; the quiet two-tone check of old travel trunks | Teak lid with Walnut blocks, Walnut base with the chequer engraved tone-on-tone, Oak hinge | Inter (Helvetica-like), inlaid Oak |
+| W6 | **CUBES** · new | 18th-century French marquetry *à cubes* (tumbling blocks) | Oak / Teak / Walnut cubes on the lid (a 3D illusion), Cherry base with the cube outlines engraved: **all four woods** | Garamond (the French ébénistes' typeface), inlaid Oak |
+
+**Why these two:** you kept the four all-over patterns and dropped the two quiet ones (stringing and flutes), so both replacements are all-over marquetry.
+- **ENDGRAIN** is the calm one: two browns, one fine chequer.
+- **CUBES** is the showpiece: three woods make each block look solid.
 
 **Initials placement:**
 - The mark sits on the back plate, which prints face-down. It therefore uses the same first 4 layers as the other inlays.
@@ -23,7 +34,7 @@ Six designs in the four wood PLA tones from your photo: **Oak, Teak, Cherry, Wal
 ## New inside (all six): your 24 Nov feedback
 | | Before (v7.1) | **Now** |
 |---|---|---|
-| End walls | 9 mm solid blocks | **3 mm**. Channels go from 70 to ~82 mm long, so standard 70 mm papers fit, not just 60 mm rollies. |
+| End walls | 9 mm solid blocks | **2 mm** (24 Nov). Channels go from 70 to ~84 mm long, so standard 70 mm papers fit, not just 60 mm rollies. |
 | Infill | 100% everywhere | **Light: about 15% gyroid** (set when the 3MF is built). With thin walls, most of the case is solid perimeters anyway. |
 | Inside edges | Sharp | **All rounded:**<br>• cavity corners R2.5<br>• floor fillet R1.2<br>• rim round-over R0.5<br>• rib tops and ends fully rounded (capsule ribs)<br>• lip fully rounded on top<br>• chamfered magnet sockets and bosses |
 | Magnets | One Ø9.53 × 2.53 pair, centre of the opening edge | **Two Ø5 × 2 pairs, one at each opening-edge corner.** The case closes evenly at both ends instead of pivoting round one centre magnet. The middle of the opening side becomes **one long filter-tip bay**. |

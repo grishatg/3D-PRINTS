@@ -48,13 +48,13 @@ for n, k in enumerate(order, 1):
         d.text((x, y), title, fill=INK, font=F(15, True)); y += 23
         for line in textwrap.wrap(c[key], 44): d.text((x, y), line, fill=INK, font=F(16)); y += 22
         y += 6
-    d.text((x, 1120), 'rounded inside · 3 mm ends · light infill', fill=SUB, font=F(14))
+    d.text((x, 1120), 'rounded inside · 2 mm ends · light infill', fill=SUB, font=F(14))
     d.text((x, 1142), '2 × Ø5×2 magnets per half, corners, ≈175 g close', fill=SUB, font=F(14))
     d.text((x, 1164), 'crescent thumb scoop · pinch zone · 65 × 13.5 × 88', fill=SUB, font=F(14))
     im.save(f'{OUT}/W{n}_{k}.png')
 im = Image.new('RGB', (1600, 1200), BG); d = ImageDraw.Draw(im)
 d.text((30, 20), 'Rollie Book · wood PLA', fill=INK, font=F(38, True))
-d.text((30, 68), 'six designs in Oak, Teak, Cherry and Walnut · front (top) and back with A·B mark (bottom)', fill=SUB, font=F(18))
+d.text((30, 68), 'six designs in Oak, Teak, Cherry and Walnut · front (top) and back with A·B mark (bottom) · W5 + W6 new', fill=SUB, font=F(18))
 if PHOTO:
     p = fit(Image.open(PHOTO).convert('RGB'), 420, 120); im.paste(p, (1600 - 20 - p.width, 10))
 for i, k in enumerate(order):

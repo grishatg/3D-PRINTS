@@ -1,6 +1,6 @@
 # HANDOVER: EDC rollie case ("AB Rollie Book"). Read this first.
 
-> **Written 22 Nov 2026, 15:40 UTC; updated 23 Nov 2026 for v7.1 (first-print feedback).** This file is self-contained: a new session with only this repository can pick up the work, rebuild every file byte-for-byte, and continue. Every command below was run and checked before handover.
+> **Written 22 Nov 2026, 15:40 UTC; updated 23 Nov 2026 for v7.1 (first-print feedback) and 24 Nov 2026 for the wood PLA line (§0a, read that first).** This file is self-contained: a new session with only this repository can pick up the work, rebuild every file byte-for-byte, and continue. Every command below was run and checked before handover.
 
 ---
 
@@ -16,6 +16,46 @@
 | **Backup fallback files** | `..._geometry_only_<design>.3mf`. Same parts and filaments, no print profile, so it uses the owner's own A1 presets and has **no automatic pauses**: pause by hand at screen layers 25 and 82. |
 | **Repo** | `grishatg/3D-PRINTS`, folder `edc-cigarette-case/`. v7.0 arrived via merged PR grishatg/3D-PRINTS#1. v7.1 is on branch **`claude/hopeful-thompson-ysz39k`**, in draft PR **grishatg/3D-PRINTS#2** (https://github.com/grishatg/3D-PRINTS/pull/2). If that PR has been merged, `main` has everything. |
 | **Backup** | The original home was `grishatg/General-`, branch `claude/elegant-turing-9djtl2`. That branch is kept as a backup, with a copy of this handover; its PR (grishatg/General-#3) was closed, not merged, when the project moved. |
+
+---
+
+## 0a. Wood PLA line (24 Nov 2026): the CURRENT work. Read this before §0
+
+**What the owner prints now:** wood PLA (Bambu PLA Wood: Oak, Teak, Cherry, Walnut) on the **v10 platform**. §0–§8 describe the PETG v7.1 line, which still stands and still rebuilds identically.
+
+**The v10 platform** is `PLATFORM=v10` plus the env that `v8_concepts` / `v9_concepts` / `w_concepts` set:
+- **Shape:** squircle outline, R4.5 rounded long edges, crescent thumb scoop, pinch dishes.
+- **Ends and inside:** **2 mm** end walls (owner: "go 2mm"); rounded inside (cavity R2.5, floor fillet R1.2, capsule ribs, rounded lip).
+- **Magnets:** two **Ø5 × 2** magnets per half, at the opening-edge corners, sealed under **0.8 mm**. The estimated pull is about 175 g (owner target 150–200 g).
+- **A·B:** a maker's mark in the back-plate corner on the hinge side, in the first 4 face-down layers.
+
+| Item | Where / state |
+|---|---|
+| **Designs** | `v7-65x15x88/wood-designs/` (boards W0–W6 + README).<br>• **Approved:** W1 KUMIKO, W2 RIVA, W3 DIAL, W4 PARQUET.<br>• **Awaiting approval:** W5 ENDGRAIN, W6 CUBES (they replace TAMBOUR and INLAY, which the owner rejected).<br>Design code: `src/w_concepts.py` (`DESIGNS`). |
+| **Print files** | `v7-65x15x88/wood-3mf/` (README = owner print guide).<br>• **8 production files:** 4 approved designs × with / without A·B. They pause and chime at **screen layer ≈ 22 (cover, z 3.56)** and **≈ 87 (tray, z 8.36)**; both magnets go in at each pause.<br>• **2 test files:** `TEST_..._glue_magnets.3mf`, KUMIKO + RIVA. `MAGNET_MODE=glue` leaves the pockets open to the face with the floor at the production depth. No pause; 2 walls, 10 % infill, 0.8 mm top minimum (~12–16 % less filament). |
+| **AMS slots** | Fixed for every design: **1 Oak, 2 Teak, 3 Cherry, 4 Walnut**. |
+| **Exporter** | `src/w_export.py <out> <template_dir> <design> <initials\|noinit> <production\|test>`. It reuses `v7_a1_export.layout()` / `pause_block()` and calls `a1_safe.project_config(..., fil_name='Bambu PLA Wood @BBL A1', flush=4x4)`. The template dir is the unzipped v7.0 file `superseded/v7.0-first-print/AB_Rollie_Book_v7_A1_by_object.3mf`. |
+| **Verifier** | `src/w_verify.py <file.3mf> <work_dir>` reads **only the file**:<br>• loader check vs `test-slice/bambu_loader_check_baseline.txt`;<br>• settings and key order;<br>• plate;<br>• R4.5 edges and inlays-in-first-5-layers;<br>• pockets layer by layer (embed or glue);<br>• A1-emulated PrusaSlicer slice of the file's own meshes, with pause positions.<br>It must print `ALL PASS`. The reports for the shipped files are in `wood-3mf/checks/`. |
+| **Expected slicer notes** | • "Floating bridge anchors" on production covers: the sealed-pocket roof.<br>• "Long bridging" / "Loose extrusions" on parts with **engraved** patterns: 45° stepped groove ceilings below z 0.7, proven by A/B clipped slices.<br>Both are benign. |
+| **Next action** | 1. Owner test-prints the two TEST files and glues the magnets.<br>2. Ask about: hinge, closure pull, rollie fit, crescent / pinch feel, inlay and engraving quality in wood PLA, warping.<br>3. Owner approves (or not) ENDGRAIN / CUBES; then build their 3MFs with `w_export.py` and verify. |
+
+**Rebuild one file** (from `v7-65x15x88/`; `tmpl` = the unzipped v7.0 3MF):
+```bash
+(cd src && python3 w_export.py ../wood-3mf <tmpl> kumiko initials production)
+```
+```bash
+QT_QPA_PLATFORM=offscreen python3 src/w_verify.py wood-3mf/AB_Rollie_Book_Kumiko_wood_A1.3mf /tmp/v_kumiko
+```
+
+**Lesson (cost one bad send, 24 Nov): `v7.py` reads its env switches at IMPORT time.**
+- `w_export.py` first imported `v7` before `w_concepts`. That built the files on the **old v7 platform**: round corners, R3 edges, no crescent or pinch, A·B on the bottom end. The renders were right, because `w_concepts` was imported first there.
+- **The fix:**
+  - import `w_concepts` first;
+  - `w_export.py` now **asserts** the platform flags;
+  - `w_verify.py` checks the edge radius (first-layer inset 2.6–2.75 mm a side vs 1.7–2.0 for R3) and that every inlay ends by z 0.84.
+- **Any new entry script must import the concept module before `v7`.**
+
+**Renders:** run `src/w_concepts.py <render_dir> <design> [noinit]`, then `node src/render/shotw.js <render_dir>/w_<design> front,back,open,inside,mark` (needs `http.server` on port 8770 serving `<render_dir>` with `view.html`), then `src/render/w_board.py`.
 
 ---
 
