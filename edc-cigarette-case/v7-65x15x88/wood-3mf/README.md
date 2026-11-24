@@ -1,7 +1,7 @@
 # Rollie Book · wood PLA · print files (A1 + AMS lite)
 
-Ten Bambu Studio projects:
-- **8 production files:** the 4 approved designs, each with and without A·B.
+Fourteen Bambu Studio projects:
+- **12 production files:** all 6 designs, each with and without A·B.
 - **2 test prints** to run before the magnets arrive.
 
 Every file is one plate, printed **by object**, on the **0.16 mm High Quality @BBL A1** profile, with **Bambu PLA Wood @BBL A1** in all four slots.
@@ -23,6 +23,8 @@ Use the **textured PEI plate**. Each file has a 3 mm brim, no supports and no pr
 | **RIVA** | `AB_Rollie_Book_Riva_wood_A1.3mf` | `Rollie_Book_Riva_wood_A1_no_initials.3mf` | Cherry, Oak | 11 | 1 h 44 m | 34 g |
 | **DIAL** | `AB_Rollie_Book_Dial_wood_A1.3mf` | `Rollie_Book_Dial_wood_A1_no_initials.3mf` | Teak, Walnut (+ Oak A·B) | 7 / 2 | 1 h 55 m / 1 h 50 m | 35 g |
 | **PARQUET** | `AB_Rollie_Book_Parquet_wood_A1.3mf` | `Rollie_Book_Parquet_wood_A1_no_initials.3mf` | all four | 16 / 12 | 2 h 09 m / 2 h 05 m | 35 g |
+| **ENDGRAIN** | `AB_Rollie_Book_Endgrain_wood_A1.3mf` | `Rollie_Book_Endgrain_wood_A1_no_initials.3mf` | Teak, Walnut, Oak | 12 / 7 | 2 h 03 m / 1 h 58 m | 34 g |
+| **CUBES** | `AB_Rollie_Book_Cubes_wood_A1.3mf` | `Rollie_Book_Cubes_wood_A1_no_initials.3mf` | all four | 16 / 12 | 2 h 18 m / 2 h 14 m | 35 g |
 
 **Test prints** (magnets glued in afterwards, no pauses):
 
@@ -77,7 +79,7 @@ The case is mostly solid wall, so lighter infill only saves 4–6 g per case. Th
 - **Heat:** PLA softens at about 55–60 °C, so **don't leave the case in a hot car**.
 
 ## How these were checked
-Each file was checked by `src/w_verify.py`, which reads **only the 3MF**. All 10 print **ALL PASS**; the full reports are in `checks/`. The checks:
+Each file was checked by `src/w_verify.py`, which reads **only the 3MF**. All 14 print **ALL PASS**; the full reports are in `checks/`. The checks:
 1. **Bambu loader check**, emulated from Bambu's source at v02.03.01.51, v02.08.04.61 and v02.09.01.70. The output is identical to the 26-flag baseline that loads fine.
 2. **Settings:**
    - the same 366 keys, in the same order, as the v7.0 file that opened in Bambu Studio;
@@ -98,4 +100,4 @@ Each file was checked by `src/w_verify.py`, which reads **only the 3MF**. All 10
 
 **Expected slicer notes (benign):**
 - **"Floating bridge anchors"** on each production cover: this is the 5-layer roof over the sealed magnet pocket. The magnet sits 0.24 mm under it, and the note disappears in the open-pocket test files.
-- **"Long bridging" / "Loose extrusions"** on parts with **engraved** patterns (KUMIKO, the DIAL and PARQUET backs): these are the 45° stepped groove ceilings in the first 3 face-down layers. An A/B slice placed them all below z 0.7 and showed they don't depend on infill. RIVA has no engraving and shows neither.
+- **"Long bridging" / "Loose extrusions"** on parts with **engraved** patterns (KUMIKO, the DIAL and PARQUET backs): these are the 45° stepped groove ceilings in the first 3 face-down layers. An A/B slice placed them all below z 0.7 and showed they don't depend on infill. RIVA has no engraving and shows neither; the ENDGRAIN and CUBES backs (larger engraved areas) didn't trigger them either.

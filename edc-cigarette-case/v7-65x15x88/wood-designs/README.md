@@ -8,8 +8,7 @@ Six designs in the four wood PLA tones from your photo: **Oak, Teak, Cherry, Wal
 - **Every design also comes without initials.**
 
 **Status (24 Nov):**
-- **W1–W4 are approved and built.** Their print files are in [`../wood-3mf/`](../wood-3mf/README.md).
-- **W5 ENDGRAIN and W6 CUBES are new.** They replace TAMBOUR and INLAY and need your approval. Once you approve, their 3MFs come from the same exporter in minutes.
+- **All six are approved and built** (W5 ENDGRAIN and W6 CUBES replace TAMBOUR and INLAY). The print files are in [`../wood-3mf/`](../wood-3mf/README.md).
 
 | # | Design | Inspired by | Woods | A·B typeface |
 |---|---|---|---|---|
@@ -17,8 +16,8 @@ Six designs in the four wood PLA tones from your photo: **Oak, Teak, Cherry, Wal
 | W2 | **RIVA** | Riva Aquarama mahogany decks with pale seams | Cherry, Oak seams | Bodoni (Italian), inlaid Oak |
 | W3 | **DIAL** | Swiss watch dials: sunburst and clous de Paris | Teak lid, Walnut base | Cinzel (Roman capitals, as on casebacks), inlaid Oak |
 | W4 | **PARQUET** | European herringbone parquet (marquetry) | Teak + Cherry staves laid in an Oak lid (oak shows as the joints), Walnut base: **all four woods** | Jost (Futura-like), inlaid Oak |
-| W5 | **ENDGRAIN** · new | End-grain butcher blocks; the quiet two-tone check of old travel trunks | Teak lid with Walnut blocks, Walnut base with the chequer engraved tone-on-tone, Oak hinge | Inter (Helvetica-like), inlaid Oak |
-| W6 | **CUBES** · new | 18th-century French marquetry *à cubes* (tumbling blocks) | Oak / Teak / Walnut cubes on the lid (a 3D illusion), Cherry base with the cube outlines engraved: **all four woods** | Garamond (the French ébénistes' typeface), inlaid Oak |
+| W5 | **ENDGRAIN** | End-grain butcher blocks; the quiet two-tone check of old travel trunks | Teak lid with Walnut blocks, Walnut base with the chequer engraved tone-on-tone, Oak hinge | Inter (Helvetica-like), inlaid Oak |
+| W6 | **CUBES** | 18th-century French marquetry *à cubes* (tumbling blocks) | Oak / Teak / Walnut cubes on the lid (a 3D illusion), Cherry base with the cube outlines engraved: **all four woods** | Garamond (the French ébénistes' typeface), inlaid Oak |
 
 **Why these two:** you kept the four all-over patterns and dropped the two quiet ones (stringing and flutes), so both replacements are all-over marquetry.
 - **ENDGRAIN** is the calm one: two browns, one fine chequer.
