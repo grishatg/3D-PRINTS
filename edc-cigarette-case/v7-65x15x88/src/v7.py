@@ -108,13 +108,27 @@ P['ENV'] = round_env
 if CRESCENT: P['THUMB'] = False
 if PINCH: P['RIB_TOP'] = 55.0
 FACE = BASE.buffer(-(2 * HC + 0.3))                     # flat part of the front/back faces
+CRES_Z = 63.0                                            # crescent thumb scoop centre along the opening edge
+WALL_MIN = 1.2                                           # v10.1: least plastic between any inside feature and the outside
 if PLATFORM == 'v10':
-    # one column near each opening-edge corner: as close to the end wall as the rounded corner allows,
-    # keeping >= 1.1 mm of plastic round the pocket at every height
-    _ok = lambda z: BASE.buffer(-edge_inset(SKIN_OUT)).contains(Point(MX, z).buffer(POCKET_D / 2 + 0.8 + 0.3))   # outline where it cuts in most: at the pocket floor
+    # v10.1 (owner's first wood test print, 24 Nov: open slots at the opening-edge corners + a hole in the thumb scoop).
+    # The squircle corners cut deep into the case, but the cavity, the lip ring / groove and the magnet sockets were still
+    # square-cornered boxes: 0.04 mm walls at the corners. Every inside feature now keeps >= WALL_MIN to the outside.
+    # Magnet columns: the socket's chamfered mouth (r = REC_R + 0.55, at the parting line, where the long edge's rounding
+    # cuts in by edge_inset(TC)) keeps WALL_MIN to the outside; the pocket keeps >= 1.1 mm everywhere.
+    MX = W / 2 - edge_inset(TC) - 2.0 - (REC_R + 0.55)        # 2.0 mm there (not just WALL_MIN): lets the columns sit near the corners (z ~7.5)
+    PILLAR_X0 = MX - REC_R - 1.0
+    _in_pocket, _in_mouth = BASE.buffer(-edge_inset(SKIN_OUT)), BASE.buffer(-(edge_inset(TC) + WALL_MIN))
+    _ok = lambda z: (_in_pocket.contains(Point(MX, z).buffer(POCKET_D / 2 + 0.8 + 0.3))
+                     and _in_mouth.contains(Point(MX, z).buffer(REC_R + 0.55)))
     _zc = END + (REC_R + 1.0) - 0.6
     while not _ok(_zc): _zc += 0.1
     MZS = [round(_zc, 2), round(H - _zc, 2)]
+    # cavity, cover lip ring and tray lip groove follow the rounded outline (END of plastic all round, corners included)
+    P['PLAN_CLIP'] = BASE.buffer(-END, quad_segs=24)
+    P['LIP_CLIP'] = BASE.buffer(-(END + 0.2), quad_segs=24)
+    if CRESCENT:   # no lip ring behind the thumb scoop: a solid backing wall goes there instead
+        P['LIP_CUT'] = sbox(W / 2 - 14.0, CRES_Z - 11.5, W / 2 + 5.0, CRES_Z + 11.5)
 FRONT = FACE.intersection(sbox(XA + R - 0.8, -1, W, H + 1))
 BACK = affinity.scale(FACE, -1, 1, origin=(0, 0))
 
@@ -167,7 +181,9 @@ def build():
         pillar = chbox(PILLAR_X0, CX1 + 0.5, YS, D / 2 - WB + 0.1, MZ - POCKET_D / 2 - 1.4, MZ + POCKET_D / 2 + 1.4, cv=0.1)
     if PLATFORM == 'v10':   # clear the cover's whole lip ring (+GAP) out of the tray: it now crosses two corner columns
         lr = sbox(CX0 + 3.0, END + 0.2, CX1 - 0.2, H - END - 0.2).buffer(-P['LIP_R']).buffer(P['LIP_R'], quad_segs=16)
+        if P.get('LIP_CLIP') is not None: lr = lr.intersection(P['LIP_CLIP'])          # v10.1: same shape as the cover's lip ring
         ring = lr.buffer(GAP, quad_segs=16).difference(lr.buffer(-1.0 - GAP, quad_segs=16))
+        if P.get('LIP_CUT') is not None: ring = ring.difference(P['LIP_CUT'].buffer(-GAP, join_style=2))   # GAP of end clearance
         lip_slot = v5._map_inner(K.shapely_to_cs(ring).extrude(1.4 + GAP + 1.0), YS - 1.0)
         socket = UN([ycyl(REC_R, YS - 1.0, rec_floor, z=mz) + m3.Manifold.cylinder(0.6, REC_R + 0.55, REC_R - 0.05, 72).rotate((-90, 0, 0)).translate((MX, YS - 0.05, mz))
                      for mz in MZS])                                  # socket with a 0.5 mm chamfered mouth
@@ -192,7 +208,12 @@ def build():
         t_pocket = UN([ycyl(POCKET_D / 2, rec_floor - 0.5, D / 2 - (t_top_z - POCKET_H), z=mz) for mz in MZS])
     tray = tray - t_pocket; cover = cover - c_pocket
     if CRESCENT:   # ellipsoid dish centred on the split line at the opening edge, above the clasp
-        cres = m3.Manifold.sphere(1.0, 96).scale((7.0, 5.2, 9.5)).translate((W / 2 + 7.0 - 3.2, YS - 0.3, 63.0))
+        dep = 2.6 if PLATFORM == 'v10' else 3.2                       # v10.1: 3.2 cut through the 2.6 mm side wall
+        ctr = (W / 2 + 7.0 - dep, YS - 0.3, CRES_Z)
+        cres = m3.Manifold.sphere(1.0, 96).scale((7.0, 5.2, 9.5)).translate(ctr)
+        if PLATFORM == 'v10':   # solid backing behind the dish (WALL_MIN all round), so it can never open into the tip bay
+            back = m3.Manifold.sphere(1.0, 96).scale((7.0 + WALL_MIN, 5.2 + WALL_MIN, 9.5 + WALL_MIN)).translate(ctr) ^ env
+            tray = tray + (back ^ chbox(-W, W, YS, D, -1, H + 1, cv=0.1)); cover = cover + (back ^ chbox(-W, W, -D, YS, -1, H + 1, cv=0.1))
         cover = cover - cres; tray = tray - cres
     if PINCH:      # shallow dish in the channel floor under the top end of each rollie (ribs already stop at z 55)
         dishes = []

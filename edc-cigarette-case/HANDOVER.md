@@ -21,6 +21,17 @@
 
 ## 0a. Wood PLA line (24 Nov 2026): the CURRENT work. Read this before §0
 
+> **v10.1 (24 Nov, evening): read this first.** The owner's first wood test print had **open slots at the opening-edge corners and a hole in the thumb scoop.**
+> - **Cause:** the cavity, the cover lip ring and the tray lip groove were square-cornered boxes inside big squircle corners. With 2 mm ends, that left 0.04 mm walls. The socket mouths also kept only about 0.5 mm, and the 3.2 mm crescent cut through the 2.6 mm wall.
+> - **Fix** (`v7.py` / `v5.py`, `PLATFORM=v10` only):
+>   - `PLAN_CLIP` / `LIP_CLIP` make those shapes follow `BASE.buffer(-END)`;
+>   - `MX = W/2 - edge_inset(TC) - 2.0 - (REC_R + 0.55)`, with stricter `_ok`, puts the columns at z 7.47 / 80.53;
+>   - crescent depth is 2.6 with a `WALL_MIN` 1.2 backing, and `LIP_CUT` removes the lip ring behind it.
+> - **The owner now glues every magnet.** The current files are `wood-3mf/` = **6 pair projects** (`src/w_pair_export.py`: 2 designs, 1 plate, pinwheel layout, 74 mm hull gaps, sleeves riding with a same-coloured part), verified by `src/w_pair_verify.py`. That verifier adds a layer-by-layer wall check (≥ 1.1 mm to the outside, tray cavity enclosed floor→rim).
+> - **Pairs:** KUMIKO+DIAL, RIVA+PARQUET, ENDGRAIN+CUBES (the only pairing where every sleeve keeps its accent wood).
+> - **Superseded:** v10.0 files are in `superseded/wood-v10.0-corner-holes/`. The single-design `w_export.py` / `w_verify.py` below are kept for reference.
+> - **Lesson:** `v7.checks()` never measured wall thickness. Any new outline or end-wall change must pass `w_pair_verify.py`'s wall check, not just pieces and overlap.
+
 **What the owner prints now:** wood PLA (Bambu PLA Wood: Oak, Teak, Cherry, Walnut) on the **v10 platform**. §0–§8 describe the PETG v7.1 line, which still stands and still rebuilds identically.
 
 **The v10 platform** is `PLATFORM=v10` plus the env that `v8_concepts` / `v9_concepts` / `w_concepts` set:

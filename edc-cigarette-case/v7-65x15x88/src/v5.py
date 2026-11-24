@@ -92,6 +92,8 @@ def book(surface='knurl', seed=(5, 11), p=P):
     if p.get('CAV_ROUND'):   # v10: no sharp inside edges: rounded plan corners, filleted floor, softened rim
         rc, rf, rm = p['CAV_ROUND']                                   # plan corner radius, floor fillet, mouth round-over
         plan = sbox(cx0, END, cx1, H - END).buffer(-rc).buffer(rc, quad_segs=16)
+        clip = p.get('PLAN_CLIP')                                     # v10.1: follow the rounded outer corners
+        if clip is not None: plan = plan.intersection(clip)
         floor = D / 2 - WB; slabs = [_map_inner(K.shapely_to_cs(plan).extrude(floor - rf - (ys - 1)), ys - 1)]
         n = 10
         for i in range(n):                                            # concave floor fillet
@@ -101,7 +103,9 @@ def book(surface='knurl', seed=(5, 11), p=P):
         for i in range(n):                                            # convex round-over where the rim meets the inside
             a, b = ys + i * rm / n, ys + (i + 1) * rm / n
             t = (a + b) / 2 - ys; out = rm - np.sqrt(max(rm * rm - (rm - t) ** 2, 0)) if t < rm else 0
-            slabs.append(_map_inner(K.shapely_to_cs(plan.buffer(out, quad_segs=16)).extrude(b - a + 0.001), a))
+            ro = plan.buffer(out, quad_segs=16)
+            if clip is not None: ro = ro.intersection(clip)            # no round-over where the wall is only END thick
+            slabs.append(_map_inner(K.shapely_to_cs(ro).extrude(b - a + 0.001), a))
         cav = m3.Manifold.batch_boolean(slabs, m3.OpType.Add)
     else:
         cav = chbox(cx0, cx1, ys - 1, D / 2 - WB, END, H - END, cv=0.4)
@@ -129,11 +133,14 @@ def book(surface='knurl', seed=(5, 11), p=P):
     if p.get('LIP_R'):      # v7.1: rounded lip ring (no square corners)
         rr = p['LIP_R']
         outer = sbox(cx0 + 3.0, END + 0.2, cx1 - 0.2, H - END - 0.2).buffer(-rr).buffer(rr, quad_segs=16)
+        if p.get('LIP_CLIP') is not None: outer = outer.intersection(p['LIP_CLIP'])      # v10.1: follow the rounded corners
+        cut = p.get('LIP_CUT')                                                          # v10.1: no lip behind the thumb scoop
+        nocut = lambda g: g.difference(cut) if cut is not None else g
         if p.get('LIP_ROUND'):   # v10: lip ring with a fully rounded top (r 0.5)
-            rr_ = 0.5; parts_ = [_map_inner(K.shapely_to_cs(outer.difference(outer.buffer(-1.0, quad_segs=16))).extrude(1.9 - rr_), ys - 0.5)]
+            rr_ = 0.5; parts_ = [_map_inner(K.shapely_to_cs(nocut(outer.difference(outer.buffer(-1.0, quad_segs=16)))).extrude(1.9 - rr_), ys - 0.5)]
             for i in range(6):
                 a_ = ys + 1.4 - rr_ + i * rr_ / 6; t_ = (i + 0.5) * rr_ / 6; ins = rr_ - np.sqrt(max(rr_ * rr_ - t_ * t_, 0))
-                ring_ = outer.buffer(-ins, quad_segs=16).difference(outer.buffer(-1.0 + ins, quad_segs=16))
+                ring_ = nocut(outer.buffer(-ins, quad_segs=16).difference(outer.buffer(-1.0 + ins, quad_segs=16)))
                 if not ring_.is_empty: parts_.append(_map_inner(K.shapely_to_cs(ring_).extrude(rr_ / 6 + 0.001), a_))
             lip = m3.Manifold.batch_boolean(parts_, m3.OpType.Add)
         else:

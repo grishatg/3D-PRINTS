@@ -1,0 +1,43 @@
+PASS 1 Bambu loader: identical to the 26-flag baseline at all 3 releases  [26 problem(s) 26 problem(s) 26 problem(s)]
+PASS 2 zip CRC
+PASS 2 settings: same 366 keys, same order as the v7.0 file that opened in Bambu  [366 keys]
+PASS 2 settings: all values strings / string lists
+PASS 2 settings: 4 x Bambu PLA Wood @BBL A1 (GFA16), A1 0.4, by object, no prime tower, textured PEI  [colours ['#CE9775', '#BE6E4E', '#4D211A', '#5E3B31'], nozzle 220 C, bed 65 C]
+PASS 2 settings: flush matrix 4 x 4, vector 8, different_settings_to_system 6
+PASS 2 no pause anywhere (magnets are glued after printing)
+     print: infill 15% gyroid, walls 3, top/bottom 5/4 (top min 1.0 mm), brim outer_only 3 mm
+PASS 3 four objects: cover, tray, cover, tray (= by-object print order)  [KUMIKO cover / KUMIKO tray + sleeve / DIAL cover / DIAL tray + sleeve]
+PASS 3 KUMIKO cover: 1 meshes valid, on the bed, parts do not overlap  [filaments [1], h 5.70, turned 0 deg]
+PASS 3 KUMIKO tray + sleeve: 2 meshes valid, on the bed, parts do not overlap  [filaments [4], h 19.40, turned 90 deg]
+PASS 3 DIAL cover: 1 meshes valid, on the bed, parts do not overlap  [filaments [2], h 5.70, turned 90 deg]
+PASS 3 DIAL tray + sleeve: 2 meshes valid, on the bed, parts do not overlap  [filaments [4], h 19.40, turned 0 deg]
+PASS 3 A1 by-object clearance: every pair of objects >= 73 mm apart (Bambu needs > 72.8), all < 25 mm tall  [min gap 74.0 mm, tallest 19.4 mm]
+PASS 3 everything + brim inside the 256 x 256 bed  [extent 10.9, 10.1, 245.1, 245.9]
+PASS 3 both hinge sleeves on the plate  [KUMIKO hinge sleeve (walnut) with KUMIKO tray; DIAL hinge sleeve (walnut) with DIAL tray]
+PASS 4 KUMIKO cover: every inlay / mark sits in the first 5 layers (z <= 0.84)  [top z 0.00]
+PASS 4 KUMIKO cover: R4.5 rounded long edges (first-layer inset 2.2-3.0 mm a side)  [inset 2.74 mm]
+PASS 4 KUMIKO cover: walls >= 1.1 mm between every inside opening and the outside  [thinnest 2.14 mm at z 1.24, xy (28.2, 37.9)]
+PASS 4 KUMIKO cover: two Ø5.35 pockets open from the floor (z 1.16) to the closing face: glue the magnets in  [Ø5.35, 3.04 mm deep]
+PASS 4 KUMIKO tray + sleeve: every inlay / mark sits in the first 5 layers (z <= 0.84)  [top z 0.00]
+PASS 4 KUMIKO tray + sleeve: R4.5 rounded long edges (first-layer inset 2.2-3.0 mm a side)  [inset 2.59 mm]
+PASS 4 KUMIKO tray + sleeve: cavity fully enclosed on every layer from the floor to the rim (no breach)  [56 layers z 2.68-11.48]
+PASS 4 KUMIKO tray + sleeve: walls >= 1.1 mm between every inside opening and the outside  [thinnest 1.19 mm at z 11.48, xy (34.5, 25.0)]
+PASS 4 KUMIKO tray + sleeve: two Ø5.35 pockets open from the floor (z 5.96) to the closing face: glue the magnets in  [Ø5.35, 3.20 mm deep]
+PASS 4 DIAL cover: every inlay / mark sits in the first 5 layers (z <= 0.84)  [top z 0.00]
+PASS 4 DIAL cover: R4.5 rounded long edges (first-layer inset 2.2-3.0 mm a side)  [inset 2.74 mm]
+PASS 4 DIAL cover: walls >= 1.1 mm between every inside opening and the outside  [thinnest 2.14 mm at z 1.24, xy (28.2, 37.9)]
+PASS 4 DIAL cover: two Ø5.35 pockets open from the floor (z 1.16) to the closing face: glue the magnets in  [Ø5.35, 3.04 mm deep]
+PASS 4 DIAL tray + sleeve: every inlay / mark sits in the first 5 layers (z <= 0.84)  [top z 0.00]
+PASS 4 DIAL tray + sleeve: R4.5 rounded long edges (first-layer inset 2.2-3.0 mm a side)  [inset 2.59 mm]
+PASS 4 DIAL tray + sleeve: cavity fully enclosed on every layer from the floor to the rim (no breach)  [56 layers z 2.68-11.48]
+PASS 4 DIAL tray + sleeve: walls >= 1.1 mm between every inside opening and the outside  [thinnest 1.19 mm at z 11.48, xy (34.5, 25.0)]
+PASS 4 DIAL tray + sleeve: two Ø5.35 pockets open from the floor (z 5.96) to the closing face: glue the magnets in  [Ø5.35, 3.20 mm deep]
+     slice: {"time": "3h 28m 41s", "filament_g": "12.83, 12.79, 0.00, 42.97", "toolchanges": 4, "layers": 121, "pauses": 0, "filaments_used": [1, 2, 4]}
+     slicer says: print warning: Detected print stability issues:
+     slicer says: KUMIKO cover
+     slicer says: Long bridging extrusions
+     slicer says: KUMIKO tray + sleeve
+     slicer says: Loose extrusions
+     slicer says: Consider enabling supports.
+PASS 5 slice: OK (sequential, A1 73 mm clearance accepted), no pauses
+ALL PASS
