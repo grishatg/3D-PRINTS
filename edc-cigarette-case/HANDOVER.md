@@ -21,7 +21,17 @@
 
 ## 0a. Wood PLA line (24 Nov 2026): the CURRENT work. Read this before §0
 
-> **v10.1 (24 Nov, evening): read this first.** The owner's first wood test print had **open slots at the opening-edge corners and a hole in the thumb scoop.**
+> **v10.2 (24 Nov, late): current.** Owner asked for **max quality**: 5–6 h per two-case plate is fine. They also reported the Ø5×2 pull **"extremely weak"** at 2.4 mm face to face.
+> - **Print profile:** `w_export.MAXQ` on Bambu's `0.12mm High Quality @BBL A1`:
+>   - 4 walls, top 8 layers / 1.0 mm, bottom 6, 20 % gyroid;
+>   - outer wall 50 mm/s, top 100, first layer 30 mm/s at 0.42 mm;
+>   - scarf seams (`filament_scarf_seam_type` external; Bambu sets `has_scarf_joint_seam` itself);
+>   - `reduce_crossing_wall` on; seam left at the preset's `aligned`.
+>   - `a1_safe.project_config` gained a `proc_name` parameter and now records filament overrides in `different_settings_to_system`. Defaults are unchanged: v7.1 PETG rebuilds identical.
+> - **Magnets:** `v7.GLUE_RECESS = 0.30`. In v10 glue mode each pocket floor sits MAG_T + 0.3 below the closing face, giving **0.8 mm face to face (~3× the pull)**. `checks()['magnet_gap']` reports it, and `w_pair_verify.py` checks recess and closed gap.
+> - **Times:** KUMIKO+DIAL 4h52, RIVA+PARQUET 5h09, ENDGRAIN+CUBES 5h42 (emulated, plus swaps). All 6 projects: ALL PASS, 37 checks each.
+>
+> **v10.1 (24 Nov, evening):** The owner's first wood test print had **open slots at the opening-edge corners and a hole in the thumb scoop.**
 > - **Cause:** the cavity, the cover lip ring and the tray lip groove were square-cornered boxes inside big squircle corners. With 2 mm ends, that left 0.04 mm walls. The socket mouths also kept only about 0.5 mm, and the 3.2 mm crescent cut through the 2.6 mm wall.
 > - **Fix** (`v7.py` / `v5.py`, `PLATFORM=v10` only):
 >   - `PLAN_CLIP` / `LIP_CLIP` make those shapes follow `BASE.buffer(-END)`;

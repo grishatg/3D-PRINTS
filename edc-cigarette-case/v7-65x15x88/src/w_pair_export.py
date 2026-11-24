@@ -17,7 +17,7 @@ import v7, v6_final, a1_safe, manifold3d as m3
 import numpy as np
 from shapely.geometry import MultiPoint
 from shapely import affinity
-from w_export import SLOTS, FIL, FLUSH, PROFILES, PLATFORM_FLAGS
+from w_export import SLOTS, FIL, FLUSH, PLATFORM_FLAGS, MAXQ, MAXQ_PRESET
 assert (v7.PLATFORM, v7.OUTLINE, v7.EDGE_R, v7.CORNER_OPEN, v7.CORNER_SPINE, v7.CRESCENT, v7.PINCH, v7.INITIALS_POS) == PLATFORM_FLAGS
 
 PAIRS = [('kumiko', 'dial'), ('riva', 'parquet'), ('endgrain', 'cubes')]
@@ -115,7 +115,7 @@ def export_pair(kA, kB, initials, out, orig):
         if any('sleeve' in n_ for q, n_, e in objs[k]): names[k] += ' + sleeve'
     files, rels, res, build, sets, inst = {}, [], [], [], [], []
     pid, top, ident = 1, 1000, 300
-    pr = PROFILES['production']
+    pr = MAXQ
     for k in ('cA', 'tA', 'cB', 'tB'):                         # object-list order = by-object print order
         parts = centre(objs[k]); comps, pcfg = [], []
         for i, (man, nm, ext) in enumerate(parts):
@@ -135,7 +135,7 @@ def export_pair(kA, kB, initials, out, orig):
                     f'      <metadata key="identify_id" value="{ident}"/>\n    </model_instance>')
     nA, nB = A['cfg']['name'].title(), B['cfg']['name'].title()
     stem = ('AB_' if initials else '') + f'Rollie_Book_wood_{nA}_{nB}_A1' + ('' if initials else '_no_initials')
-    title = f'{"AB " if initials else ""}Rollie Book wood PLA: {nA} + {nB} - A1, one plate, by object'
+    title = f'{"AB " if initials else ""}Rollie Book wood PLA: {nA} + {nB} - A1, one plate, by object, max quality 0.12 mm'
     woods = ', '.join(f'{i + 1} {w.title()}' for i, w in enumerate(SLOTS))
     desc = (f'Two slim rollie cases (65x13.5x88 mm) in wood PLA: {A["cfg"]["craft"]}; {B["cfg"]["craft"]}. A1 + AMS lite slots: {woods}. '
             'No pauses: glue 4 x Ø5x2 mm magnets per case into the open pockets after printing (cover marked face UP, tray marked face DOWN). '
@@ -152,12 +152,8 @@ def export_pair(kA, kB, initials, out, orig):
         '    <metadata key="locked" value="false"/>\n    <metadata key="print_sequence" value="by object"/>\n' + '\n'.join(inst) + '\n  </plate>\n</config>\n')
     tmpl = json.load(open(f'{orig}/Metadata/project_settings.config'))
     base_lc = tmpl['layer_change_gcode'].split('\n{if (current_object_idx')[0]
-    overrides = {'layer_height': '0.16', 'initial_layer_print_height': '0.2', 'wall_generator': 'arachne', 'seam_position': 'back',
-                 'elefant_foot_compensation': '0.15', 'enable_support': '0', 'enable_prime_tower': '0', 'print_sequence': 'by object',
-                 'curr_bed_type': 'Textured PEI Plate', 'sparse_infill_pattern': 'gyroid', 'top_surface_pattern': 'concentric',
-                 'layer_change_gcode': base_lc}
-    overrides.update(pr)
-    cfg, _src = a1_safe.project_config(tmpl, [W.WOOD[w].upper() for w in SLOTS], overrides, fil_name=FIL, flush=FLUSH)
+    overrides = dict(MAXQ, layer_change_gcode=base_lc)
+    cfg, _src = a1_safe.project_config(tmpl, [W.WOOD[w].upper() for w in SLOTS], overrides, fil_name=FIL, flush=FLUSH, proc_name=MAXQ_PRESET)
     probs = a1_safe.check(cfg, tmpl); assert not probs, probs
     files['Metadata/project_settings.config'] = json.dumps(cfg, indent=4)
     files['[Content_Types].xml'] = open(f'{orig}/[Content_Types].xml').read()

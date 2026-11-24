@@ -18,7 +18,9 @@ from shapely import affinity
 
 LAYER0, LAYER = 0.2, 0.16
 PLATFORM = os.environ.get('PLATFORM', 'v7')            # 'v7' (v7.1, one Ø9.53 pair, 9 mm ends) | 'v10' (two Ø5x2 pairs at the corners, 2 mm ends, rounded inside)
-MAGNET_MODE = os.environ.get('MAGNET_MODE', 'embed')   # 'embed' (sealed in at a pause) | 'glue' (test prints: pockets open to the closing face, magnets glued at the same depth)
+MAGNET_MODE = os.environ.get('MAGNET_MODE', 'embed')   # 'embed' (sealed in at a pause) | 'glue' (pockets open to the closing face, magnets glued in)
+GLUE_RECESS = 0.30   # v10.1 glue mode: magnet face this far below each closing face. Owner, 24 Nov: at 2.4 mm apart the Ø5x2 pull was
+                     # "extremely weak"; now the faces are GAP + 2 x 0.3 = 0.8 mm apart (~520 g for both pairs, N35 model; was ~177 g)
 MAG_D, MAG_T = 9.53, 2.53            # re-measured by the owner (23 Nov)
 POCKET_D, SKIN, GAP = 9.85, 0.96, 0.2   # drop-in pocket (prints ~9.7); 6 layers (~1.0 mm, owner's choice) over each magnet; boss-to-recess clearance
 SKIN_OUT = 1.16                      # cover: 7 layers between the magnet and the outside face (no dark disc showing through)
@@ -203,9 +205,14 @@ def build():
         cover = cover + (ycyl(BOSS_R, YS - 0.3, boss_top) ^ env)
     tray = max(tray.decompose(), key=lambda q: q.volume()); cover = max(cover.decompose(), key=lambda q: q.volume())
     # pockets AFTER the keep-largest step: a sealed pocket is an internal void, which decompose() returns as its own piece
-    if MAGNET_MODE == 'glue':   # open each pocket up to the closing face; the magnet is glued at the bottom, where it would be sealed
-        c_pocket = UN([ycyl(POCKET_D / 2, c_top_z - POCKET_H - D / 2, boss_top + 0.5, z=mz) for mz in MZS])
-        t_pocket = UN([ycyl(POCKET_D / 2, rec_floor - 0.5, D / 2 - (t_top_z - POCKET_H), z=mz) for mz in MZS])
+    c_floor = t_floor = None
+    if MAGNET_MODE == 'glue':   # open each pocket up to the closing face; the magnet is glued onto the pocket floor
+        if PLATFORM == 'v10':   # v10.1: magnets almost flush (GLUE_RECESS below the boss top / the socket floor), not at the sealed depth
+            c_floor = boss_top - (MAG_T + GLUE_RECESS); t_floor = rec_floor + (MAG_T + GLUE_RECESS)
+        else:
+            c_floor = c_top_z - POCKET_H - D / 2; t_floor = D / 2 - (t_top_z - POCKET_H)
+        c_pocket = UN([ycyl(POCKET_D / 2, c_floor, boss_top + 0.5, z=mz) for mz in MZS])
+        t_pocket = UN([ycyl(POCKET_D / 2, rec_floor - 0.5, t_floor, z=mz) for mz in MZS])
     tray = tray - t_pocket; cover = cover - c_pocket
     if CRESCENT:   # ellipsoid dish centred on the split line at the opening edge, above the clasp
         dep = 2.6 if PLATFORM == 'v10' else 3.2                       # v10.1: 3.2 cut through the 2.6 mm side wall
@@ -360,7 +367,7 @@ def build():
                 badge_black=badge_black, badge_yellow=badge_yellow, badge_t=bt,
                 c_pocket=c_pocket, t_pocket=t_pocket, pause_cover_z=(c_top_z + LAYER) if CAPTURE and MAGNET_MODE == 'embed' else None,
                 pause_tray_z=(t_top_z + LAYER) if CAPTURE and MAGNET_MODE == 'embed' else None, magnet_mode=MAGNET_MODE,
-                c_top_z=c_top_z, t_top_z=t_top_z, zd=zd)
+                c_top_z=c_top_z, t_top_z=t_top_z, zd=zd, c_floor=c_floor, t_floor=t_floor)
 
 def checks(r):
     a, b, s = r['tray'], r['cover'], r['sleeve']
@@ -388,8 +395,9 @@ def checks(r):
                 pocket_material=(pv(a, r['t_pocket']), pv(b, r['c_pocket'])), pocket_unsealed=(sealed(a, r['t_pocket']), sealed(b, r['c_pocket'])),
                 rollups=len(v5.rollups(r['d'])), rollups_vs_tray=round((RR ^ a).volume(), 3), swing_contacts=swing,
                 tray_wall_void=wall(a, r['t_pocket'], which='tray'), cover_wall_void=wall(b, r['c_pocket'], which='cover'),
-                magnet_gap=round(((D / 2 - (r['t_top_z'] - POCKET_H + MAG_T)) - (r['c_top_z'] - POCKET_H + MAG_T - D / 2)) if CAPTURE
-                                 else (D / 2 - r['t_top_z']) - (r['c_top_z'] - D / 2), 2),
+                magnet_gap=round(((r['t_floor'] - MAG_T) - (r['c_floor'] + MAG_T)) if r.get('c_floor') is not None
+                                 else ((D / 2 - (r['t_top_z'] - POCKET_H + MAG_T)) - (r['c_top_z'] - POCKET_H + MAG_T - D / 2)) if CAPTURE
+                                 else (D / 2 - r['t_top_z']) - (r['c_top_z'] - D / 2), 2),   # magnet face to magnet face, case closed
                 pauses=(r['pause_cover_z'], r['pause_tray_z']),
                 cover_front_skin=round(r['c_top_z'] - (POCKET_H if CAPTURE else MAG_T + 0.05), 2), MX=round(MX, 2), slot_x1=round(P['SLOT_X1'], 2),
                 mono=[round(v, 2) for v in r['mono'].bounds] if INITIALS else None, datum_z=r['zd'], badge_mm=round(r['badge_t'], 2),

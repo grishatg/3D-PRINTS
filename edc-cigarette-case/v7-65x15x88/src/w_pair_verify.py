@@ -41,8 +41,10 @@ chk('2 settings: 4 x Bambu PLA Wood @BBL A1 (GFA16), A1 0.4, by object, no prime
 chk('2 settings: flush matrix 4 x 4, vector 8, different_settings_to_system 6', len(cfg['flush_volumes_matrix']) == 16 and len(cfg['flush_volumes_vector']) == 8 and len(cfg['different_settings_to_system']) == 6)
 lg = cfg['layer_change_gcode']
 chk('2 no pause anywhere (magnets are glued after printing)', 'M400 U1' not in lg and 'PAUSE' not in lg and 'M601' not in lg and lg.startswith('; layer num/total_layer_count'))
+chk(f'2 print profile: {cfg["print_settings_id"]}, {cfg["layer_height"]} mm layers, scarf seams {cfg["filament_scarf_seam_type"][0]}, seam {cfg["seam_position"]}',
+    cfg['print_settings_id'] in ('0.12mm High Quality @BBL A1', '0.16mm High Quality @BBL A1') and cfg['layer_height'] in ('0.12', '0.16'))
 print(f'     print: infill {cfg["sparse_infill_density"]} {cfg["sparse_infill_pattern"]}, walls {cfg["wall_loops"]}, top/bottom {cfg["top_shell_layers"]}/{cfg["bottom_shell_layers"]} '
-      f'(top min {cfg["top_shell_thickness"]} mm), brim {cfg["brim_type"]} {cfg["brim_width"]} mm')
+      f'(top min {cfg["top_shell_thickness"]} mm), brim {cfg["brim_type"]} {cfg["brim_width"]} mm, outer wall {cfg["outer_wall_speed"]} mm/s, first layer {cfg["initial_layer_speed"]} mm/s @ {cfg["initial_layer_line_width"]} mm')
 
 # ---- 3 plate
 top = z.read('3D/3dmodel.model').decode(); ms = z.read('Metadata/model_settings.config').decode()
@@ -99,7 +101,9 @@ def pockets(man, zz):
             if 5.1 < d < 5.8 and abs((x1 - x0) - d) < 0.25 and abs((y1 - y0) - d) < 0.25: out.append((round(d, 2), P.centroid))
     return out
 HINGE_W = 7.5                    # spine side (first 7.5 mm from the spine face): hinge knuckles interleave there by design
-mids = [0.1] + [0.2 + 0.08 + 0.16 * k for k in range(160)]
+LH = float(cfg['layer_height'])
+mids = [0.1] + [0.2 + LH / 2 + LH * k for k in range(int(14 / LH))]
+floors = {}
 for o in objs:
     kind = 'cover' if 'cover' in o['name'] else 'tray'
     body_parts = [q for q, n_, e in o['parts'] if 'sleeve' not in n_]
@@ -152,8 +156,17 @@ for o in objs:
     cen = [c for d, c in cnt[[zz for zz, p in cnt].index(z1)][1]]
     solid_above = any(section(body, zz) is not None and section(body, zz).contains(c) for c in cen for zz in np.arange(z1 + 0.04, H, 0.08))
     dia = min(d for zz, p in cnt if len(p) == 2 for d, c in p)
-    chk(f'4 {o["name"]}: two Ø5.35 pockets open from the floor (z {z0 - 0.08:.2f}) to the closing face: glue the magnets in', contiguous and not solid_above and dia > 5.15,
-        f'Ø{dia:.2f}, {(z1 + 0.08) - (z0 - 0.08):.2f} mm deep')
+    floor_z, top_z = z0 - LH / 2, z1 + LH / 2
+    recess = top_z - (floor_z + 2.0)                                  # Ø5 x 2 magnet glued on the floor: its face this far below the closing face
+    floors[(o['name'].split()[0], kind)] = floor_z
+    chk(f'4 {o["name"]}: two Ø5.35 pockets open from the floor (z {floor_z:.2f}) to the closing face; a glued Ø5x2 magnet sits {recess:.2f} mm below the face',
+        contiguous and not solid_above and dia > 5.15 and 0.15 <= recess <= 0.5, f'Ø{dia:.2f}, {top_z - floor_z:.2f} mm deep')
+
+D_CASE = 13.5   # case thickness: cover prints face-down (print z = y + D/2), tray back-down (print z = D/2 - y)
+for dsg in sorted({k[0] for k in floors}):
+    if (dsg, 'cover') in floors and (dsg, 'tray') in floors:
+        gap = D_CASE - (floors[(dsg, 'cover')] + floors[(dsg, 'tray')] + 4.0)
+        chk(f'4 {dsg}: closed case, magnet face to magnet face {gap:.2f} mm (was 2.4 in the test print; ~3x the pull)', 0.6 <= gap <= 1.0)
 
 # ---- 5 slice
 sys.argv = [sys.argv[0], WD]
@@ -165,7 +178,7 @@ prusa = []
 for o in objs:   # bake the plate transform into the meshes (PrusaSlicer project gets plain positions)
     prusa.append((o['name'], [(q.rotate((0, 0, o['ang'])), 'part', e, {}) for q, n_, e in o['parts']], (o['tx'], o['ty'])))
 ST.prusa_3mf(f'{WD}/wood.3mf', prusa, [])
-ini = f'{WD}/a1_wood_0.16.ini'; ST.config(0.16, ini); txt = open(ini).read()
+ini = f'{WD}/a1_wood_{LH}.ini'; ST.config(LH, ini); txt = open(ini).read()
 rep = {'nozzle_diameter': '0.4,0.4,0.4,0.4', 'retract_length': '0.8,0.8,0.8,0.8', 'retract_speed': '30,30,30,30', 'retract_length_toolchange': '2,2,2,2',
        'filament_toolchange_delay': '0,0,0,0', 'filament_cooling_moves': '0,0,0,0', 'filament_diameter': '1.75,1.75,1.75,1.75',
        'wiping_volumes_matrix': ','.join(cfg['flush_volumes_matrix']), 'wiping_volumes_extruders': ','.join(['70'] * 8),
@@ -179,8 +192,9 @@ rep = {'nozzle_diameter': '0.4,0.4,0.4,0.4', 'retract_length': '0.8,0.8,0.8,0.8'
        'machine_max_acceleration_extruding': f"{s(mach['machine_max_acceleration_extruding'])},{s(mach['machine_max_acceleration_extruding'])}",
        'machine_max_acceleration_x': f"{s(mach['machine_max_acceleration_x'])},{s(mach['machine_max_acceleration_x'])}",
        'machine_max_acceleration_y': f"{s(mach['machine_max_acceleration_y'])},{s(mach['machine_max_acceleration_y'])}",
-       'external_perimeter_speed': s(pr['outer_wall_speed']), 'perimeter_speed': s(pr['inner_wall_speed']), 'infill_speed': s(pr['sparse_infill_speed']),
-       'top_solid_infill_speed': s(pr['top_surface_speed']), 'external_perimeter_acceleration': s(pr['outer_wall_acceleration']), 'default_acceleration': s(pr['default_acceleration']),
+       'external_perimeter_speed': cfg['outer_wall_speed'], 'perimeter_speed': cfg['inner_wall_speed'], 'infill_speed': cfg['sparse_infill_speed'],
+       'solid_infill_speed': cfg['internal_solid_infill_speed'], 'top_solid_infill_speed': cfg['top_surface_speed'], 'external_perimeter_acceleration': cfg['outer_wall_acceleration'],
+       'default_acceleration': cfg['default_acceleration'], 'first_layer_speed': cfg['initial_layer_speed'], 'first_layer_extrusion_width': cfg['initial_layer_line_width'],
        'filament_load_time': ','.join([s(mach['machine_load_filament_time'])] * 4), 'filament_unload_time': ','.join([s(mach['machine_unload_filament_time'])] * 4),
        'perimeters': cfg['wall_loops'], 'top_solid_layers': cfg['top_shell_layers'], 'bottom_solid_layers': cfg['bottom_shell_layers'],
        'top_solid_min_thickness': cfg['top_shell_thickness'], 'bottom_solid_min_thickness': cfg['bottom_shell_thickness'],
@@ -191,7 +205,7 @@ for k, v in rep.items():
     if re.search(rf'^{k} = ', txt, flags=re.M): txt = re.sub(rf'^{k} = .*$', lambda _m, k=k, v=v: f'{k} = {v}', txt, flags=re.M)
     else: txt += f'{k} = {v}\n'
 open(ini, 'w').write(txt)
-gc = f'{WD}/wood_0.16.gcode'
+gc = f'{WD}/wood_{LH}.gcode'
 res = ST.slice_one(f'{WD}/wood.3mf', ini, gc)
 if res.returncode != 0:
     chk('5 slice (A1 emulation, sequential with 73 mm clearance)', False, (res.stdout + res.stderr)[-800:]); print('SOMETHING FAILED'); sys.exit(1)

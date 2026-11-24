@@ -27,9 +27,9 @@ def _enum_ok(k, value, defs_list):
         if any(x not in allowed for x in vals if x != ''): return False
     return True
 
-def project_config(template, colours, overrides, fil_name='Bambu PETG HF @BBL A1', flush=None):
+def project_config(template, colours, overrides, fil_name='Bambu PETG HF @BBL A1', flush=None, proc_name='0.16mm High Quality @BBL A1'):
     machine = TP.resolve(TAG_VALUES, 'machine', 'Bambu Lab A1 0.4 nozzle')
-    process = TP.resolve(TAG_VALUES, 'process', '0.16mm High Quality @BBL A1')
+    process = TP.resolve(TAG_VALUES, 'process', proc_name)
     fil = TP.resolve(TAG_VALUES, 'filament', fil_name)
     defs = [BV.optiondefs(t) for t in TAG_CHECK]
     n, n0 = len(colours), len(template['filament_colour'])
@@ -59,7 +59,7 @@ def project_config(template, colours, overrides, fil_name='Bambu PETG HF @BBL A1
     if 'default_filament_colour' in cfg: cfg['default_filament_colour'] = [''] * n
     cfg['filament_settings_id'] = [fil_name] * n
     cfg['filament_ids'] = [str(fil.get('filament_id', 'GFG02'))] * n
-    cfg['print_settings_id'] = '0.16mm High Quality @BBL A1'
+    cfg['print_settings_id'] = proc_name
     cfg['printer_settings_id'] = 'Bambu Lab A1 0.4 nozzle'
     cfg['printer_model'] = 'Bambu Lab A1'
     cfg['printer_variant'] = '0.4'
@@ -71,7 +71,8 @@ def project_config(template, colours, overrides, fil_name='Bambu PETG HF @BBL A1
         assert k in template, f'override {k} is not in the proven key set'
         cfg[k] = v
     PROCESS_DEFAULT_KEYS = {'brim_type'}   # process options the A1 preset leaves at Bambu's built-in default
-    cfg['different_settings_to_system'] = [';'.join(sorted(k for k in overrides if k in process or k in PROCESS_DEFAULT_KEYS))] + [''] * n + [';'.join(sorted(k for k in overrides if k in machine))]
+    fil_over = ';'.join(sorted(k for k in overrides if k in fil and k not in process and k not in machine))   # e.g. scarf seams (per filament)
+    cfg['different_settings_to_system'] = [';'.join(sorted(k for k in overrides if k in process or k in PROCESS_DEFAULT_KEYS))] + [fil_over] * n + [';'.join(sorted(k for k in overrides if k in machine))]
     return cfg, src
 
 def check(cfg, template):
