@@ -109,8 +109,9 @@ def plate(r, with_mods=False):
     badge = drop([(r['badge_black'], 'part', 2, {}), (r['badge_yellow'], 'part', 3, {})]) if r.get('badge_black') is not None else None
     return [('Cover', cover, (110, 128))], [('Tray', tray, (110, 128))], [('Sleeve', sleeve, (128, 128))], ([('Badge', badge, (128, 128))] if badge else [])
 
-def slice_one(p3mf, ini, gcode):
-    cmd = ['prusa-slicer', '--export-gcode', '--load', ini, '--output', gcode, p3mf]
+def slice_one(p3mf, ini, gcode, dont_arrange=False):
+    # dont_arrange: keep the project's own XY positions (the CLI re-arranges by default), so a clearance problem is an error
+    cmd = ['prusa-slicer', '--export-gcode'] + (['--dont-arrange'] if dont_arrange else []) + ['--load', ini, '--output', gcode, p3mf]
     res = subprocess.run(cmd, capture_output=True, text=True, timeout=1800, env=dict(os.environ, QT_QPA_PLATFORM='offscreen'))
     return res
 

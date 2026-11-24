@@ -114,15 +114,15 @@ def w_cubes(k):
 
 DESIGNS = {
  'kumiko':  dict(name='KUMIKO', craft='Japanese kumiko joinery', cover='oak', tray='walnut', sleeve='walnut', mono='engrave',
-                 font='ShipporiMinchoB1-ExtraBold-Latin.ttf', fontname='Shippori Mincho (a Japanese foundry’s serif)', cap=6.0, thick=0.12, fn=w_kumiko,
+                 font='ShipporiMinchoB1-ExtraBold-Latin.ttf', fontname='Shippori Mincho (a Japanese foundry’s serif)', cap=7.0, thick=0.12, fn=w_kumiko,
                  idea='Pale oak lid, dark walnut base, like a hinoki box on a walnut tray. The asanoha lattice (growth, strength) is engraved across the lid.',
                  front='Engraved asanoha lattice across the oak lid', back='A narrow lattice band along the opening edge; A·B engraved in the corner'),
  'riva':    dict(name='RIVA', craft='Riva Aquarama: varnished mahogany decks with pale caulking seams', cover='cherry', tray='cherry', sleeve='oak', acc1='oak', mono='oak',
-                 font='BodoniModa-Bold.ttf', fontname='Bodoni (Italian Didone, after the Italian boatyard)', cap=6.0, thick=0.10, fn=w_riva,
+                 font='BodoniModa-Bold.ttf', fontname='Bodoni (Italian Didone, after the Italian boatyard)', cap=7.0, thick=0.10, fn=w_riva,
                  idea='A deep cherry hull with pale oak seams running bow to stern, edge to edge, like a Riva deck. One oak waterline on the back.',
                  front='Oak deck seams, full length', back='One oak waterline; oak A·B in the corner'),
  'dial':    dict(name='DIAL', craft='Swiss watch dials: guilloché sunburst and clous de Paris', cover='teak', tray='walnut', sleeve='walnut', mono='oak',
-                 font='Cinzel-Bold.ttf', fontname='Cinzel (Roman inscriptional capitals, as on dials and casebacks)', cap=6.0, thick=0.10, fn=w_dial,
+                 font='Cinzel-Bold.ttf', fontname='Cinzel (Roman inscriptional capitals, as on dials and casebacks)', cap=7.0, thick=0.10, fn=w_dial,
                  idea='A warm teak "dial" with sunburst rays from the opening edge; a walnut caseback with clous de Paris and an oak signature in the corner.',
                  front='Engraved sunburst rays on teak', back='Engraved clous de Paris; oak A·B "signature"'),
  'parquet': dict(name='PARQUET', craft='European herringbone parquet', cover='oak', tray='walnut', sleeve='cherry', acc1='cherry', acc2='teak', mono='oak',
@@ -134,7 +134,7 @@ DESIGNS = {
                  idea='Two browns, one fine chequer: walnut blocks set into a teak lid like an end-grain board, the quiet two-tone check of old travel trunks. The walnut base repeats the chequer, engraved tone-on-tone.',
                  front='Teak and walnut chequer, full face', back='Engraved chequer, tone-on-tone; oak A·B in the corner'),
  'cubes':   dict(name='CUBES', craft='18th-century French marquetry à cubes (tumbling blocks)', cover='oak', tray='cherry', sleeve='walnut', acc1='walnut', acc2='teak', mono='oak',
-                 font='CormorantGaramond-Bold.ttf', fontname='Garamond (the French ébénistes’ typeface)', cap=6.0, thick=0.12, fn=w_cubes,
+                 font='CormorantGaramond-Bold.ttf', fontname='Garamond (the French ébénistes’ typeface)', cap=7.0, thick=0.12, fn=w_cubes,
                  idea='Stacked cubes in three woods: oak tops, teak and walnut sides, the 3D illusion of Louis XV marquetry. A cherry base with the cube outlines engraved.',
                  front='Oak / teak / walnut tumbling blocks, full face', back='Engraved cube outlines; oak A·B in the corner'),
 }

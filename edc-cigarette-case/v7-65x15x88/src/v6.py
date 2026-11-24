@@ -38,6 +38,30 @@ def text_poly(txt, height, font, thicken=0.15):
     x0, y0, x1, y1 = g.bounds
     return affinity.translate(g, -(x0 + x1) / 2, -(y0 + y1) / 2)
 
+def text_poly_nz(txt, height, font):
+    """Glyph outline that is robust to how a font draws its contours (v10.5).
+    text_poly() used winding relative to the biggest contour; that filled Cormorant Garamond's B lower bowl (its counter
+    is drawn in the same direction as the outline) and is fragile for fonts built from overlapping strokes (Cinzel).
+    Here contours are classified by NESTING: a contour lying inside another (>= 95 % of its area) at odd depth is a
+    counter; all the others are filled and unioned, so overlapping strokes merge and counters formed between strokes
+    (A between its legs and crossbar, Cinzel's B between stem and bowls) stay open as holes of the union."""
+    from matplotlib.textpath import TextPath
+    from matplotlib.font_manager import FontProperties
+    tp = TextPath((0, 0), txt, size=10, prop=FontProperties(fname=os.path.join(FONTS, font)))
+    P = [Polygon(a).buffer(0) for a in tp.to_polygons() if len(a) > 3]
+    P = [p_ for p_ in P if not p_.is_empty and p_.area > 1e-6]
+    depth = []
+    for i, p_ in enumerate(P):
+        d = sum(1 for j, q in enumerate(P) if j != i and q.area > p_.area and q.intersection(p_).area >= 0.95 * p_.area)
+        depth.append(d)
+    filled = unary_union([p_ for p_, d in zip(P, depth) if d % 2 == 0])
+    counters = [p_ for p_, d in zip(P, depth) if d % 2 == 1]
+    g = (filled.difference(unary_union(counters)) if counters else filled).buffer(0)
+    x0, y0, x1, y1 = g.bounds; s = height / (y1 - y0)
+    g = affinity.scale(g, s, s, origin=(x0, y0))
+    x0, y0, x1, y1 = g.bounds
+    return affinity.translate(g, -(x0 + x1) / 2, -(y0 + y1) / 2)
+
 def stroke_ok(g, min_w=0.8):
     """Fraction of glyph area that survives an inward offset of min_w/2 (thin strokes vanish)."""
     er = g.buffer(-min_w / 2)

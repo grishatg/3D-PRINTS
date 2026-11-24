@@ -2,13 +2,18 @@
 1  Bambu loader check (emulated from Bambu's source at v02.03.01.51 / v02.08.04.61 / v02.09.01.70): identical to the 26-flag baseline.
 2  Settings: proven key set + order, 4 x Bambu PLA Wood @BBL A1, A1 0.4, by object, no prime tower, NO pause (magnets are glued).
 3  Plate: 4 objects (cover, tray, cover, tray), meshes valid and on the bed, every hull >= 73 mm from every other (A1 by-object rule:
-   each hull grows by 36.4 mm), all < 25 mm tall, everything + brim on the 256 x 256 bed; both hinge sleeves present.
+   each hull grows by 36.4 mm), all < 25 mm tall, everything + brim on the 256 x 256 bed. (Hinge-sleeves plate: 6 sleeves, 3 one-wood objects.)
 4  Per cover / tray, in the part's own frame (spine at -x):
    - R4.5 rounded long edges (first-layer inset) and every inlay / mark within the first 5 layers;
    - WALLS (v10.1, after the 24 Nov test print): layer by layer, no inside opening comes closer than 1.1 mm to the outside
      (hinge knuckle zone excepted), and the tray's cavity stays fully enclosed from the floor to the rim (no breach anywhere);
    - two Ø5.35 magnet pockets per half, open from the floor to the closing face (glue-in).
-5  A1-emulated PrusaSlicer slice of the file itself (sequential, A1 clearance 73 mm): time, grams, swaps, layers, no pauses."""
+5  A1-emulated PrusaSlicer slice of the file itself, exactly as laid out (--dont-arrange; sequential, A1 clearance 73 mm):
+   time, grams, swaps, layers, no pauses.
+6  The A·B as SLICED (v10.5, owner: "make sure the B is printed properly, not missing bits"): every first-layer line of each
+   tray at its true width (from E). Inlaid: A, dot, B >= 98 % covered, no bare spot >= 0.3 mm, counters open and filled by the
+   body wood. Engraved (KUMIKO): letters open, islands printed. No-initials files: no A·B anywhere. Writes ab_toolpaths.png.
+   Dev only: REUSE_GCODE=1 re-checks the last slice in <work_dir> without slicing again."""
 import sys, os, re, json, zipfile, subprocess, numpy as np, manifold3d as m3
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from shapely.geometry import Polygon, MultiPoint, Point, box
@@ -16,6 +21,7 @@ from shapely.ops import unary_union, nearest_points
 from shapely import affinity
 import a1_safe as S
 F, WD = os.path.abspath(sys.argv[1]), os.path.abspath(sys.argv[2]); os.makedirs(WD, exist_ok=True)
+INITIALS = os.path.basename(F).startswith('AB_')          # the exporter names A·B projects AB_..., the others ..._no_initials
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(HERE)
 ok = True
 def chk(name, cond, info=''):
@@ -65,8 +71,14 @@ for oid, comp in re.findall(r'<object id="(\d+)" p:UUID="[^"]+" type="model">\s*
     t = items[oid]; ang = np.degrees(np.arctan2(t[1], t[0]))
     assert abs(t[2]) < 1e-9 and abs(t[5]) < 1e-9 and abs(t[8] - 1) < 1e-9 and abs(t[11]) < 1e-9, 'only z rotations + xy shifts expected'
     objs.append(dict(name=name, parts=parts, ang=ang, tx=t[9], ty=t[10]))
-chk('3 four objects: cover, tray, cover, tray (= by-object print order)', [('cover' in o['name']) for o in objs] == [True, False, True, False] and len(objs) == 4,
-    ' / '.join(o['name'] for o in objs))
+SLEEVES = all('sleeve' in o['name'].lower() for o in objs)     # the morning plate: hinge sleeves only
+if SLEEVES:
+    nsl = sum(1 for o in objs for q, n_, e in o['parts'] if 'sleeve' in n_)
+    chk('3 hinge-sleeves plate: six sleeves in three one-wood objects (2 colour changes)', nsl == 6 and len(objs) == 3 and
+        all(len({e for q, n_, e in o['parts']}) == 1 for o in objs), ' / '.join(o['name'] for o in objs))
+else:
+    chk('3 four objects: cover, tray, cover, tray (= by-object print order)', [('cover' in o['name']) for o in objs] == [True, False, True, False] and len(objs) == 4,
+        ' / '.join(o['name'] for o in objs))
 world, used = {}, set()
 for o in objs:
     pts = np.vstack([np.asarray(q.to_mesh().vert_properties)[:, :2] for q, n_, e in o['parts']])
@@ -83,8 +95,8 @@ chk('3 A1 by-object clearance: every pair of objects >= 73 mm apart (Bambu needs
     f'min gap {min(gaps.values()):.1f} mm, tallest {max(h for _, h in world.values()):.1f} mm')
 chk('3 everything + brim inside the 256 x 256 bed', ext[0] - brim >= 0.5 and ext[1] - brim >= 0.5 and ext[2] + brim <= 255.5 and ext[3] + brim <= 255.5,
     'extent ' + ', '.join(f'{v:.1f}' for v in ext))
-chk('3 both hinge sleeves on the plate', sum(1 for o in objs for q, n_, e in o['parts'] if 'sleeve' in n_) == 2,
-    '; '.join(f'{n_.rsplit(" ", 1)[0]} with {o["name"].split(" +")[0]}' for o in objs for q, n_, e in o['parts'] if 'sleeve' in n_))
+if not SLEEVES:
+    chk('3 no hinge sleeves on this plate (they print on their own plate)', sum(1 for o in objs for q, n_, e in o['parts'] if 'sleeve' in n_) == 0)
 
 # ---- 4 per half: edges, inlays, walls, pockets
 def section(man, zz):
@@ -104,7 +116,7 @@ HINGE_W = 7.5                    # spine side (first 7.5 mm from the spine face)
 LH = float(cfg['layer_height'])
 mids = [0.1] + [0.2 + LH / 2 + LH * k for k in range(int(14 / LH))]
 floors = {}
-for o in objs:
+for o in ([] if SLEEVES else objs):
     kind = 'cover' if 'cover' in o['name'] else 'tray'
     body_parts = [q for q, n_, e in o['parts'] if 'sleeve' not in n_]
     body = m3.Manifold.batch_boolean(body_parts, m3.OpType.Add) if len(body_parts) > 1 else body_parts[0]
@@ -216,7 +228,9 @@ for k, v in rep.items():
     else: txt += f'{k} = {v}\n'
 open(ini, 'w').write(txt)
 gc = f'{WD}/wood_{LH}.gcode'
-res = ST.slice_one(f'{WD}/wood.3mf', ini, gc)
+if os.environ.get('REUSE_GCODE') and os.path.exists(gc):            # dev only: re-run the checks on the last slice
+    import types; res = types.SimpleNamespace(returncode=0, stdout='', stderr='')
+else: res = ST.slice_one(f'{WD}/wood.3mf', ini, gc, dont_arrange=True)   # slice the layout exactly as in the file
 if res.returncode != 0:
     chk('5 slice (A1 emulation, sequential with 73 mm clearance)', False, (res.stdout + res.stderr)[-800:]); print('SOMETHING FAILED'); sys.exit(1)
 r5 = ST.report(gc); r5.pop('zs')
@@ -231,4 +245,101 @@ r5['estimate_with_purges'] = f'{int(est // 3600)}h {int(est % 3600 // 60):02d}m'
 print('     slice:', json.dumps(dict(r5, filaments_used=sorted(used))))
 for w in msgs[-8:]: print('     slicer says:', w[:200])
 chk('5 slice: OK (sequential, A1 73 mm clearance accepted), no pauses', r5['pauses'] == 0)
+
+# ---- 6 the A·B as SLICED (owner: "make sure the B is printed properly, not missing bits")
+# The first layer is the visible face (the trays print face-down). Every first-layer extrusion of each tray is read from the
+# G-code and drawn at the width it really lays down: width from the plastic it pushes (E, relative) over the segment length,
+# PrusaSlicer's rounded-rectangle bead (w = area / h + h (1 - pi/4)), round ends.
+#   inlaid mark: its wood must cover each of A, dot and B, with no bare spot a 0.3 mm dot fits in, and must keep out of the
+#                counters (the holes in A and B), which the body wood must fill.
+#   engraved mark: the letters must stay open (no body wood in them).
+from shapely.geometry import LineString
+FIL_AREA, H1 = np.pi * (1.75 / 2) ** 2, float(cfg['initial_layer_print_height'])
+glines = open(gc).read().split('\n'); labels6 = dict(re.findall(r'M486 S(\d+)\nM486 A(.+)', '\n'.join(glines)))
+segs = {}; tool = 0; obj6 = None; zc = 0.0; x = y = 0.0
+for l in glines:
+    if l.startswith('M486 S'): obj6 = None if l.startswith('M486 S-1') else labels6.get(l.split()[1][1:])
+    elif l.startswith(';Z:'): zc = float(l[3:])
+    elif re.match(r'^T\d', l): tool = int(l[1])
+    elif l.startswith('G1 '):
+        mx = re.search(r' X([-\d.]+)', l); my = re.search(r' Y([-\d.]+)', l); me = re.search(r' E([-\d.]+)', l)
+        nx = float(mx.group(1)) if mx else x; ny = float(my.group(1)) if my else y; ln = float(np.hypot(nx - x, ny - y))
+        if me and float(me.group(1)) > 0 and zc <= H1 + 1e-4 and ln > 1e-6:
+            w = float(me.group(1)) * FIL_AREA / (ln * H1) + H1 * (1 - np.pi / 4)
+            segs.setdefault((obj6, tool), []).append((LineString([(x, y), (nx, ny)]), w))
+        x, y = nx, ny
+def laid(key, near):                                   # the plastic one wood lays on the face layer of one object, near the mark
+    return unary_union([ls.buffer(w / 2, quad_segs=8) for ls, w in segs.get(key, []) if ls.distance(near) < 1.0])
+def world(o, g): return affinity.translate(affinity.rotate(g, o['ang'], origin=(0, 0)), o['tx'], o['ty'])
+def first_layer(man):
+    g = None
+    for q in man.slice(0.1).to_polygons():
+        p_ = Polygon(q).buffer(0); g = p_ if g is None else g.symmetric_difference(p_)
+    return g
+marks = []
+for o in ([] if SLEEVES else objs):
+    ab = [(q, e) for q, n_, e in o['parts'] if 'A·B' in n_]
+    body_e = o['parts'][0][2] - 1
+    if ab:                                           # inlaid mark: a part of its own
+        letters = world(o, first_layer(ab[0][0])); mark_e = ab[0][1] - 1; mode = 'inlaid'
+    elif 'KUMIKO tray' in o['name']:                 # engraved mark: the letter-shaped holes in the tray's first layer, in the mark corner
+        fl = first_layer(o['parts'][0][0]); holes_ = [Polygon(h) for q in getattr(fl, 'geoms', [fl]) for h in q.interiors]
+        bbx = fl.bounds; corner = box(bbx[0], bbx[1], bbx[0] + 24, bbx[1] + 14)   # mirrored back face: hinge side, bottom corner
+        # a letter = its hole in the face MINUS the islands standing inside it (the counters of A and B, which print in the body wood)
+        cand = [h for h in holes_ if corner.contains(h.centroid) and h.area > 0.5]
+        if not INITIALS:
+            chk(f'6 {o["name"]}: no-initials file: nothing engraved in the A·B corner', not cand, f'{len(cand)} letter-sized holes there'); continue
+        letters = world(o, unary_union(cand).difference(fl)); mark_e = None; mode = 'engraved'
+    else: continue
+    comps = sorted(getattr(letters, 'geoms', [letters]), key=lambda q: q.centroid.x if abs(o['ang']) < 45 else q.centroid.y)
+    counters6 = unary_union([Polygon(h) for q in comps for h in q.interiors]); ncount = len([1 for q in comps for h in q.interiors])
+    body = laid((o['name'], body_e), letters)
+    if mode == 'inlaid':
+        mk = laid((o['name'], mark_e), letters)
+        cov = [round(mk.intersection(q.buffer(-0.05)).area / q.buffer(-0.05).area, 3) for q in comps]   # up to 0.05 mm in from the outline
+        cov_raw = [round(mk.intersection(q).area / q.area, 3) for q in comps]
+        bare = unary_union([q.buffer(-0.05).difference(mk) for q in comps])          # inside a letter, not covered by its wood
+        holes6 = [g for g in getattr(bare, 'geoms', [bare]) if not g.is_empty and not g.buffer(-0.15).is_empty]   # a 0.3 mm dot fits
+        cin = counters6.buffer(-0.1)
+        spill = mk.intersection(cin).area / max(cin.area, 1e-9); cfill = body.intersection(cin).area / max(cin.area, 1e-9)
+        chk(f'6 {o["name"]}: sliced A·B complete: A, dot and B each >= 98 % covered by their wood (from 0.05 mm inside the outline), no bare spot >= 0.3 mm; '
+            f'the {ncount} counters stay open (<= 3 % letter wood) and are filled by the body wood (>= 95 %)',
+            len(comps) == 3 and ncount == 3 and min(cov) >= 0.98 and not holes6 and spill <= 0.03 and cfill >= 0.95,
+            f'coverage A/dot/B {cov} (to the very edge {cov_raw}), bare spots >= 0.3 mm: {len(holes6)}, letter wood in counters {100*spill:.1f} %, body wood in counters {100*cfill:.1f} %')
+    else:
+        core = unary_union([q.buffer(-0.05) for q in comps]); inside = body.intersection(core).area / core.area
+        isl = counters6.buffer(-0.05); ifill = body.intersection(isl).area / max(isl.area, 1e-9)
+        chk(f'6 {o["name"]}: engraved A·B: letters stay open (>= 98 % free of plastic from 0.05 mm inside the outline) and the {ncount} islands '
+            f'inside A and B print in the body wood (>= 95 %)', len(comps) == 3 and ncount == 3 and inside <= 0.02 and ifill >= 0.95,
+            f'letters {100 * (1 - inside):.1f} % open, islands {100 * ifill:.1f} % printed')
+    marks.append((o['name'], mode, letters, mk if mode == 'inlaid' else body))
+if not SLEEVES:
+    trays6 = [o['name'] for o in objs if 'tray' in o['name']]; marked = [m[0] for m in marks]
+    if INITIALS: chk('6 A·B file: both trays carry the A·B', sorted(marked) == sorted(trays6), f'{marked}')
+    else: chk('6 no-initials file: no A·B part anywhere', not marked and not any('A·B' in n_ for o in objs for _, n_, _ in o['parts']))
+if marks:
+    import matplotlib; matplotlib.use('Agg'); import matplotlib.pyplot as plt
+    from matplotlib.path import Path as MPath; from matplotlib.patches import PathPatch
+    def patch(ax, g, **kw):                          # draws polygons WITH their holes
+        for q in getattr(g, 'geoms', [g]):
+            if q.geom_type != 'Polygon' or q.is_empty: continue
+            vs, cs = [], []
+            for ring in [q.exterior] + list(q.interiors):
+                xy = np.asarray(ring.coords); vs += xy.tolist(); cs += [MPath.MOVETO] + [MPath.LINETO] * (len(xy) - 2) + [MPath.CLOSEPOLY]
+            ax.add_patch(PathPatch(MPath(vs, cs), **kw))
+    fig, axs = plt.subplots(1, len(marks), figsize=(6 * len(marks), 4.6)); axs = np.atleast_1d(axs)
+    for ax, (nm, mode, letters, paths) in zip(axs, marks):
+        bx = letters.bounds; win = box(bx[0] - 1, bx[1] - 1, bx[2] + 1, bx[3] + 1)
+        patch(ax, paths.intersection(win), color='#c08a64' if mode == 'inlaid' else '#5e3b31', lw=0)
+        bad = letters.buffer(-0.05).difference(paths) if mode == 'inlaid' else paths.intersection(letters.buffer(-0.05))
+        patch(ax, bad, color='red', lw=0)
+        for q in getattr(letters, 'geoms', [letters]):
+            xx, yy = q.exterior.xy; ax.plot(xx, yy, 'k-', lw=0.8)
+            for h in q.interiors: xx, yy = h.xy; ax.plot(xx, yy, 'b-', lw=0.8)
+        ax.set_xlim(win.bounds[0], win.bounds[2]); ax.set_ylim(win.bounds[1], win.bounds[3])
+        ax.set_aspect('equal'); ax.set_title(f'{nm}: {mode} A·B, first-layer toolpaths as laid\n'
+            f'({"letter wood" if mode == "inlaid" else "body wood"} filled; black = letter outline, blue = counters; '
+            f'red = {"letter not covered" if mode == "inlaid" else "plastic inside a letter"})', fontsize=8.5)
+    plt.tight_layout(); plt.savefig(f'{WD}/ab_toolpaths.png', dpi=110)
+    print(f'     A·B toolpath picture: {WD}/ab_toolpaths.png')
 print('ALL PASS' if ok else 'SOMETHING FAILED')

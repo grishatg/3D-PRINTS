@@ -21,7 +21,37 @@
 
 ## 0a. Wood PLA line (24 Nov 2026): the CURRENT work. Read this before §0
 
-> **v10.4 (24 Nov): FINAL, current.** The owner set the limits: max 4.5 h per plate, 5 h only for the multi-colour pairs, and these are the last edits.
+> **v10.5 (24 Nov, night): FINAL, current.** Owner: "leave 6h if needed but make quality builds… 2 designs overnight… in the morning I can print the hinge parts". Then, with a Bambu screenshot of the CUBES tray: "make sure the B is printed properly, not missing bits… I want the longer, most complicated prints overnight… check it works, I don't want to come back again".
+> - **Files:** `wood-3mf/` holds **7 projects**: 6 case plates (3 pairs × A·B / no initials, **no sleeves**) and `Rollie_Book_wood_hinge_sleeves_all_six_A1.3mf` (`w_pair_export.py <out> <tmpl> sleeves`: 3 one-wood objects, walnut KUMIKO/DIAL/CUBES, oak RIVA/ENDGRAIN, cherry PARQUET, 50 min).
+> - **Profile:** `w_export.FINAL` is back on `0.12mm High Quality @BBL A1` (4 walls, top 8 / 1.0 mm, bottom 6, 15 % gyroid, concentric top, first layer 40/80 mm/s at 0.42, EFC 0.15, scarf seams, `reduce_crossing_wall`, 3 mm outer brim). `w_pair_export` sets `v7.PRINT_LAYER` from it, so the glue pockets snap to the 0.12 grid: magnet 0.04 below the face, 0.34 mm face to face (~780 g per case, N35 charge model).
+> - **A·B fix:** the screenshot's B had missing bits. Three causes, each fixed on the v10 path only:
+>   1. `v6.text_poly` sorts glyph contours by winding, and Cormorant's B lower counter winds like an outline, so it was filled. New `v6.text_poly_nz` sorts by nesting instead (even depth = solid).
+>   2. `MONO_THICKEN` only widened sideways, leaving serif hairlines under 0.42 mm. New `v7.fit_mark` first closes font gaps (a 0.12 closing handles Cinzel's 0.17 mm B middle-bar gap). It then thickens isotropically in 0.01 steps until strokes are ≥ 0.5 mm (under 1.5 % thinner area, sharp tips only) and there are exactly 3 counters, each ≥ 0.6 mm.
+>   3. Serif caps went from 6 to 7 mm in `w_concepts`.
+>
+>   The PETG v7.1 path still uses `text_poly` and `MONO_THICKEN`, and a rebuild of the shipped B_Rings files was checked identical except UUIDs.
+> - **`w_pair_verify.py` section 5:** slices with `--dont-arrange` (`slicetest.slice_one(..., dont_arrange=True)`). The PrusaSlicer CLI used to re-arrange the plate, so the slicer's A1 clearance check now runs on the file's real layout.
+> - **`w_pair_verify.py` section 6:** reads every first-layer extrusion per (M486 object, tool) from the G-code. Each is drawn at its true width, from relative E: w = E·A_fil/(L·h) + h(1−π/4), round caps.
+>   - Inlaid marks: A, dot and B ≥ 98 % covered by their wood (measured from 0.05 mm inside the outline, since corner rounding is unavoidable), no bare spot ≥ 0.3 mm, counters ≤ 3 % letter wood and ≥ 95 % body wood.
+>   - KUMIKO engraved mark: the letters are the corner holes minus the islands; letters ≥ 98 % open, islands ≥ 95 % printed.
+>   - A·B files must carry marks on both trays; files without initials must have none.
+>   - It writes `ab_toolpaths.png`, shipped as `wood-3mf/checks/ab_toolpaths_*.png`.
+> - **Results:** all 7 projects ALL PASS (40 / 38–39 / 15 checks). The worst marks are PARQUET B and DIAL A at 98.0–98.1 % (corner rounding on sharp sans corners), with 0 bare spots on any file.
+>   - Estimates, with / without A·B (colour changes): ENDGRAIN+CUBES 5h32 / 5h18 (28 / 19), RIVA+PARQUET 4h55 / 4h48 (29 / 25), KUMIKO+DIAL 4h34 / 4h26 (8 / 3), sleeves 50 min (2).
+> - **Print order given to the owner:**
+>   - tonight ENDGRAIN+CUBES;
+>   - tomorrow morning the sleeves;
+>   - daytime KUMIKO+DIAL, the simplest;
+>   - tomorrow night RIVA+PARQUET, the most changes.
+> - **Independent scan** (scratch `wallscan.py` / `thinscan.py` on all 24 lids and trays): no outer wall under 1.1 mm. The flags it raises are all interior platform features, identical on every design:
+>   - lid magnet bosses at 0.8 mm;
+>   - tray socket walls at 1.0 mm facing the cavity;
+>   - tip-bay ribs;
+>   - the hinge-clearance knife edge where the tray's spine wall ends, at z ≈ 8.3.
+> - **"Long bridging" slicer note:** layer 5 (z 0.68) bridges the engraved-groove ceilings on engraved parts (about 10 m of bridge infill on a heavily engraved face). The grooves are about 0.5–0.9 mm wide with solid layers either side: benign.
+> - **Lesson:** check what the slicer will lay down, not only the mesh. Section 6 is the test for any change to marks or inlays.
+>
+> **v10.4 (24 Nov, superseded by v10.5):** The owner set the limits: max 4.5 h per plate, 5 h only for the multi-colour pairs, and these are the last edits.
 > - **Profile:** `w_export.FINAL` on Bambu's `0.16mm High Quality @BBL A1`, the grid the design is built on.
 >   - Extras: 4 walls, 1.0 mm top skin, first layer 40/80 mm/s at 0.42 mm, scarf seams, `reduce_crossing_wall`.
 >   - 0.12 mm was dropped: ENDGRAIN+CUBES came to about 6 h with swaps.

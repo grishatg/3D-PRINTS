@@ -28,16 +28,15 @@ FLUSH_LEAN = [[0, 50, 50, 50],
               [100, 0, 50, 50],
               [150, 110, 0, 60],
               [150, 110, 60, 0]]
-# FINAL print profile (owner, 24 Nov, "these have to be the last edits"): max 4.5 h per plate, 5 h for the multi-colour pairs.
-# 0.12 mm could not meet that (ENDGRAIN + CUBES ~6 h with swaps), so: Bambu's own 0.16mm High Quality @BBL A1 preset (the grid
-# the whole design is built on: 4-layer inlays, 45 deg engraving steps, magnet floors) plus the cheap quality extras:
-# 4 walls, 1.0 mm top skin, slow narrow first layer (the visible face: crisp inlays), scarf seams, no wall crossing. Wall and top
-# speeds stay at the preset's HQ values (outer 60): trials showed 3 walls is slower and 50 mm/s outer costs 7 min on the busiest plate.
-FINAL_PRESET = '0.16mm High Quality @BBL A1'
-FINAL = {'layer_height': '0.16', 'initial_layer_print_height': '0.2', 'wall_generator': 'arachne', 'elefant_foot_compensation': '0.15',
+# FINAL print profile (owner, 24 Nov: "leave 6h if needed but make quality builds", overnight, 2 designs per plate; the hinge
+# sleeves print on their own plate in the morning). Bambu's own 0.12mm High Quality @BBL A1 preset plus: 4 walls, 1.0 mm top
+# skin, 0.8 mm bottom skin, slow narrow first layer (the visible face: crisp inlays), scarf seams, no wall crossing.
+# (A 0.16 version fitted a 4.5 h / 5 h limit; trials then: 3 walls is slower than 4, a faster first layer saves ~1 min.)
+FINAL_PRESET = '0.12mm High Quality @BBL A1'
+FINAL = {'layer_height': '0.12', 'initial_layer_print_height': '0.2', 'wall_generator': 'arachne', 'elefant_foot_compensation': '0.15',
          'enable_support': '0', 'enable_prime_tower': '0', 'print_sequence': 'by object', 'curr_bed_type': 'Textured PEI Plate',
          'sparse_infill_pattern': 'gyroid', 'sparse_infill_density': '15%', 'top_surface_pattern': 'concentric',
-         'wall_loops': '4', 'top_shell_layers': '6', 'top_shell_thickness': '1.0', 'bottom_shell_layers': '4',
+         'wall_loops': '4', 'top_shell_layers': '8', 'top_shell_thickness': '1.0', 'bottom_shell_layers': '6',
          'initial_layer_speed': '40', 'initial_layer_infill_speed': '80', 'initial_layer_line_width': '0.42',
          'reduce_crossing_wall': '1', 'brim_type': 'outer_only', 'brim_width': '3',
          'filament_scarf_seam_type': ['external'] * 4}

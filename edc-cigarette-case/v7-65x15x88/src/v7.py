@@ -21,11 +21,13 @@ PLATFORM = os.environ.get('PLATFORM', 'v7')            # 'v7' (v7.1, one Ø9.53 
 MAGNET_MODE = os.environ.get('MAGNET_MODE', 'embed')   # 'embed' (sealed in at a pause) | 'glue' (pockets open to the closing face, magnets glued in)
 GLUE_RECESS = 0.06   # v10.4 glue mode: magnet FLUSH. Owner, 24 Nov: at 2.4 mm the Ø5x2 pull was "extremely weak", then "not flush, they sink".
                      # Target recess below the closing face AS PRINTED; each pocket floor is snapped to a layer boundary of the
-                     # 0.16 mm print grid (LAYER0 + k * LAYER), so no face ever sits on a slicing plane: prints 0.08 mm below the
-                     # face, faces 0.30 mm apart when closed, never proud (boss-to-socket clearance prints 0.14).
+                     # print grid (LAYER0 + k * PRINT_LAYER), so no face ever sits on a slicing plane. At 0.12 mm: 0.04 mm below
+                     # the face, faces 0.34 mm apart closed, never proud (boss-to-socket clearance prints 0.26).
+PRINT_LAYER = LAYER  # layer height of the print profile (the exporter sets it): glue-pocket floors snap to ITS grid
 def printed_top(z):  # the slicer samples layers at mid-height: a solid region ending at print height z ends at this layer boundary
-    return LAYER0 + LAYER * int(np.ceil((z - LAYER / 2 - LAYER0) / LAYER - 1e-9))
-def layer_boundary(z): return LAYER0 + LAYER * round((z - LAYER0) / LAYER)
+    L = PRINT_LAYER
+    return LAYER0 + L * int(np.ceil((z - L / 2 - LAYER0) / L - 1e-9))
+def layer_boundary(z): return LAYER0 + PRINT_LAYER * round((z - LAYER0) / PRINT_LAYER)
 MAG_D, MAG_T = 9.53, 2.53            # re-measured by the owner (23 Nov)
 POCKET_D, SKIN, GAP = 9.85, 0.96, 0.2   # drop-in pocket (prints ~9.7); 6 layers (~1.0 mm, owner's choice) over each magnet; boss-to-recess clearance
 SKIN_OUT = 1.16                      # cover: 7 layers between the magnet and the outside face (no dark disc showing through)
@@ -148,7 +150,33 @@ def ycyl(r, y0, y1, x=MX, z=MZ, seg=72):
     a, b = min(y0, y1), max(y0, y1)
     return m3.Manifold.cylinder(b - a, r, r, seg).rotate((-90, 0, 0)).translate((x, a, z))
 
+MARK_MIN_STROKE, MARK_MIN_COUNTER, MARK_COUNTERS = 0.50, 0.60, 3   # v10.5: printable A·B (owner: "make sure the B prints properly")
+def _thin_share(g, w):          # share of the outline narrower than w (it would print thin, broken or not at all)
+    return g.difference(g.buffer(-w / 2, join_style=1).buffer(w / 2, join_style=1)).area / g.area
+def _counters(g): return [Polygon(h) for q in getattr(g, 'geoms', [g]) for h in q.interiors if Polygon(h).area > 0.02]
+def _narrowest(hs):             # narrowest counter (largest inscribed width), mm
+    return min(max([r for r in np.arange(0.0, 2.0, 0.01) if not h.buffer(-r).is_empty] or [0]) * 2 for h in hs) if hs else 0.0
+def fit_mark(g0):
+    """Bridge hairline gaps in the font data (Cinzel's B middle bar stops 0.17 mm short of the stem), then thicken evenly
+    (all round, not just sideways: the mark prints flat on the bed) until every stroke is >= MARK_MIN_STROKE, while the A·B
+    keeps exactly MARK_COUNTERS counters (A 1, B 2), each >= MARK_MIN_COUNTER across."""
+    g0 = g0.buffer(0.12, join_style=1).buffer(-0.12, join_style=1)
+    for d in np.arange(0.0, 0.31, 0.01):
+        g = g0.buffer(d, join_style=1) if d > 0 else g0
+        hs = _counters(g)
+        if _thin_share(g, MARK_MIN_STROKE) < 0.015 and len(hs) == MARK_COUNTERS and _narrowest(hs) >= MARK_MIN_COUNTER:
+            return g, round(float(d), 2)
+    raise AssertionError(f'A·B in {FONT} at cap {CAP} cannot be made printable')
+MARK_FIT = {}
 def monogram():
+    if PLATFORM == 'v10':        # v10.5: exact glyph outline (nesting, not winding) + printable fit; the dot stays a Ø1.5 disc
+        raw = v6.text_poly_nz('A·B', CAP, FONT)
+        parts = sorted(getattr(raw, 'geoms', [raw]), key=lambda q: q.area)
+        dot = parts[0].centroid
+        letters, d = fit_mark(unary_union(parts[1:]))
+        MARK_FIT.update(font=FONT, cap=CAP, thicken=d, counters=len(_counters(letters)), narrowest_counter=round(_narrowest(_counters(letters)), 2),
+                        thin_share=round(100 * _thin_share(letters, MARK_MIN_STROKE), 2))
+        return unary_union([letters, Point(dot.x, dot.y).buffer(0.75, quad_segs=16)])
     raw = v6.text_poly('A·B', CAP, FONT, thicken=MONO_THICKEN)
     parts = sorted(getattr(raw, 'geoms', [raw]), key=lambda q: q.area)
     dot = parts[0].centroid
@@ -212,7 +240,7 @@ def build():
     # pockets AFTER the keep-largest step: a sealed pocket is an internal void, which decompose() returns as its own piece
     c_floor = t_floor = None
     if MAGNET_MODE == 'glue':   # open each pocket up to the closing face; the magnet is glued onto the pocket floor
-        if PLATFORM == 'v10':   # v10.4: magnets flush with the PRINTED boss top / socket floor; floors on the 0.16 layer grid
+        if PLATFORM == 'v10':   # v10.4+: magnets flush with the PRINTED boss top / socket floor; floors on the print layer grid
             zc = layer_boundary(printed_top(boss_top + D / 2) - MAG_T - GLUE_RECESS)        # cover prints face-down: z = y + D/2
             zt = layer_boundary(printed_top(D / 2 - rec_floor) - MAG_T - GLUE_RECESS)       # tray prints back-down:  z = D/2 - y
             c_floor = zc - D / 2; t_floor = D / 2 - zt
