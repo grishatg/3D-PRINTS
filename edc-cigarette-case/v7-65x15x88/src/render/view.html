@@ -7,7 +7,8 @@ const V={front:{p:[110,-250,150],l:[0,0,46],u:[0,0,1],fov:20},back:{p:[-110,250,
  open:{p:[40,-460,230],l:[-30,0,46],u:[0,0,1],fov:20},base:{p:[0,-55,-95],l:[0,0,0],u:[0,-1,0],fov:14},
  edge:{p:[230,-150,120],l:[28,-3,56],u:[0,0,1],fov:20},pinch:{p:[70,-200,190],l:[-4,3,58],u:[0,0,1],fov:22},
  mark:{p:[-75,175,55],l:[-19,6.5,11],u:[0,0,1],fov:12},
- inside:{p:[95,-185,215],l:[6,4,50],u:[0,0,1],fov:28}}[v];
+ inside:{p:[95,-185,215],l:[6,4,50],u:[0,0,1],fov:28},
+ traytop:{p:[0,-330,44],l:[0,0,44],u:[0,0,1],fov:17}}[v];
 const cam=new THREE.PerspectiveCamera(V.fov,W/H,1,3000); cam.up.set(...V.u); cam.position.set(...V.p); cam.lookAt(...V.l);
 S.add(new THREE.HemisphereLight(0xffffff,0x444440,0.55));
 const L=new THREE.DirectionalLight(0xffffff,0.9); L.position.set(160,-220,260); S.add(L);
