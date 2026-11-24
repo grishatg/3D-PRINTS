@@ -89,7 +89,22 @@ def book(surface='knurl', seed=(5, 11), p=P):
     halfT = chbox(-W, W, ys, D, -1, H + 1, cv=0.1); halfC = chbox(-W, W, -D, ys, -1, H + 1, cv=0.1)
     tray = env ^ halfT
     cx0, cx1 = -W / 2 + WS, W / 2 - WS
-    cav = chbox(cx0, cx1, ys - 1, D / 2 - WB, END, H - END, cv=0.4)
+    if p.get('CAV_ROUND'):   # v10: no sharp inside edges: rounded plan corners, filleted floor, softened rim
+        rc, rf, rm = p['CAV_ROUND']                                   # plan corner radius, floor fillet, mouth round-over
+        plan = sbox(cx0, END, cx1, H - END).buffer(-rc).buffer(rc, quad_segs=16)
+        floor = D / 2 - WB; slabs = [_map_inner(K.shapely_to_cs(plan).extrude(floor - rf - (ys - 1)), ys - 1)]
+        n = 10
+        for i in range(n):                                            # concave floor fillet
+            a, b = floor - rf + i * rf / n, floor - rf + (i + 1) * rf / n
+            hgt = floor - (a + b) / 2; ins = rf - np.sqrt(max(rf * rf - (rf - hgt) ** 2, 0))
+            slabs.append(_map_inner(K.shapely_to_cs(plan.buffer(-ins, quad_segs=16)).extrude(b - a + 0.001), a))
+        for i in range(n):                                            # convex round-over where the rim meets the inside
+            a, b = ys + i * rm / n, ys + (i + 1) * rm / n
+            t = (a + b) / 2 - ys; out = rm - np.sqrt(max(rm * rm - (rm - t) ** 2, 0)) if t < rm else 0
+            slabs.append(_map_inner(K.shapely_to_cs(plan.buffer(out, quad_segs=16)).extrude(b - a + 0.001), a))
+        cav = m3.Manifold.batch_boolean(slabs, m3.OpType.Add)
+    else:
+        cav = chbox(cx0, cx1, ys - 1, D / 2 - WB, END, H - END, cv=0.4)
     tray -= cav
     # vertical channels
     x_left = XA + R + G + 0.4
@@ -100,6 +115,10 @@ def book(surface='knurl', seed=(5, 11), p=P):
     for i in range(p['SLOTS'] - 1):
         x += p['SLOT_W']; rt = p['RIB_T']
         rtop = p.get('RIB_TOP', H - END - 12)       # v8: lower rib tops leave a pinch zone at the top of each rollie
+        if p.get('RIB_ROUND'):                      # v10: capsule ribs: round top ridge and round ends, no sharp edges
+            r_ = rt / 2; xc = x + r_; yt = D / 2 - WB - p['RIB_H'] + r_; yb = D / 2 - WB + 0.3
+            pts = [m3.Manifold.sphere(r_, 24).translate((xc, yy, zz)) for yy in (yt, yb) for zz in (END + r_ + 0.6, rtop)]
+            ribs.append(m3.Manifold.batch_hull(pts)); x += rt; continue
         ribs.append(prism_xz([(x, END - 0.5), (x + rt, END - 0.5), (x + rt, rtop), (x + rt / 2, rtop + 1), (x, rtop)],
                              D / 2 - WB - p['RIB_H'], D / 2 - WB + 0.1)
                     ^ prism_yz([(D / 2 - WB - p['RIB_H'] - 0.01, END - 1), (D / 2, END - 1), (D / 2, H), (D / 2 - WB - p['RIB_H'] - 0.01, H)], x - 1, x + rt + 1))
@@ -110,7 +129,15 @@ def book(surface='knurl', seed=(5, 11), p=P):
     if p.get('LIP_R'):      # v7.1: rounded lip ring (no square corners)
         rr = p['LIP_R']
         outer = sbox(cx0 + 3.0, END + 0.2, cx1 - 0.2, H - END - 0.2).buffer(-rr).buffer(rr, quad_segs=16)
-        lip = _map_inner(K.shapely_to_cs(outer.difference(outer.buffer(-1.0, quad_segs=16))).extrude(1.9), ys - 0.5)
+        if p.get('LIP_ROUND'):   # v10: lip ring with a fully rounded top (r 0.5)
+            rr_ = 0.5; parts_ = [_map_inner(K.shapely_to_cs(outer.difference(outer.buffer(-1.0, quad_segs=16))).extrude(1.9 - rr_), ys - 0.5)]
+            for i in range(6):
+                a_ = ys + 1.4 - rr_ + i * rr_ / 6; t_ = (i + 0.5) * rr_ / 6; ins = rr_ - np.sqrt(max(rr_ * rr_ - t_ * t_, 0))
+                ring_ = outer.buffer(-ins, quad_segs=16).difference(outer.buffer(-1.0 + ins, quad_segs=16))
+                if not ring_.is_empty: parts_.append(_map_inner(K.shapely_to_cs(ring_).extrude(rr_ / 6 + 0.001), a_))
+            lip = m3.Manifold.batch_boolean(parts_, m3.OpType.Add)
+        else:
+            lip = _map_inner(K.shapely_to_cs(outer.difference(outer.buffer(-1.0, quad_segs=16))).extrude(1.9), ys - 0.5)
     else:
         lip = chbox(cx0 + 3.0, cx1 - 0.2, ys - 0.5, ys + 1.4, END + 0.2, H - END - 0.2, cv=0.5) - \
               chbox(cx0 + 4.0, cx1 - 1.2, ys - 1, ys + 2, END + 1.2, H - END - 1.2, cv=0.3)
@@ -217,9 +244,10 @@ def _map_inner(c, ys):
 
 def rollups(d, dia=6.0):
     p = d['p']; out = []
+    z0 = p['END'] + (p['CAV_ROUND'][1] if p.get('CAV_ROUND') else 0.0)   # v10: rollies rest clear of the floor fillet at the end wall
     for i in range(p['SLOTS']):
         x = d['slot_x0'] + i * (p['SLOT_W'] + p['RIB_T']) + p['SLOT_W'] / 2
-        out.append(m3.Manifold.cylinder(60, dia / 2 - 0.05, dia / 2 - 0.05, 32).translate((x, D / 2 - p['WB'] - dia / 2 - 0.05, p['END'])))
+        out.append(m3.Manifold.cylinder(60, dia / 2 - 0.05, dia / 2 - 0.05, 32).translate((x, D / 2 - p['WB'] - dia / 2 - 0.05, z0)))
     return out
 
 if __name__ == '__main__':

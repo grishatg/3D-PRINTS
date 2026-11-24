@@ -17,10 +17,15 @@ from shapely.ops import unary_union, linemerge
 from shapely import affinity
 
 LAYER0, LAYER = 0.2, 0.16
+PLATFORM = os.environ.get('PLATFORM', 'v7')   # 'v7' (v7.1, one Ø9.53 pair, 9 mm ends) | 'v10' (two Ø5x2 pairs at the corners, 3 mm ends, rounded inside)
 MAG_D, MAG_T = 9.53, 2.53            # re-measured by the owner (23 Nov)
 POCKET_D, SKIN, GAP = 9.85, 0.96, 0.2   # drop-in pocket (prints ~9.7); 6 layers (~1.0 mm, owner's choice) over each magnet; boss-to-recess clearance
 SKIN_OUT = 1.16                      # cover: 7 layers between the magnet and the outside face (no dark disc showing through)
 POCKET_H = 2.72                      # 17 layers: magnet sits 0.19 below the pocket top, so the nozzle never touches it
+if PLATFORM == 'v10':                # owner bought 100 x Ø5 x 2 mm magnets (24 Nov)
+    MAG_D, MAG_T = 5.0, 2.0          # ONE Ø5 x 2 magnet per pocket: owner wants a lighter close (150-200 g; the v7.1 pull felt too strong)
+    POCKET_D, SKIN = 5.35, 0.80      # drop-in pocket; 5 layers (0.8 mm) over each magnet: the first layers bond poorly over metal
+    POCKET_H = 2.24                  # 14 layers: magnet sits 0.24 below the pocket top (nozzle margin) -> ~2.3 mm apart, two pairs ~190 g
 DATUM_W, RIP_W = 2.0, 1.2            # yellow datum line width; yellow ripple stripe width
 RIPPLE = os.environ.get('RIPPLE', 'flow')   # 'flow' (Design 6, connected) | 'rings' | 'topo'
 RIPPLE_STATS = {}
@@ -37,27 +42,35 @@ PATTERN_HOOK = None                                            # concepts: calla
 YD = 0.68                      # visible (bed-face) yellow: 4 layers = 0.2 + 3 x 0.16, stops well short of the grey/black body
 AB_D = 0.68                    # initials inlay depth on the bottom face
 FONT, CAP = 'Inter-Bold.ttf', 5.0
+INITIALS_POS = os.environ.get('INITIALS_POS', 'bottom')   # 'bottom' (v7.1: centred on the bottom end) | 'back' (maker's mark in a back-plate corner)
+MONO_THICKEN = 0.0             # widen vertical stems (mm each side) for thin serif fonts: the bottom face prints upright
 BADGE_LAYERS, BADGE_W, BADGE_H, BADGE_CLR = 6, 17.0, 7.0, 0.10
 USE_BADGE = False              # optional: initials as a separate press-fit badge
 CAPTURE = True                 # True: magnets sealed in; the 3MF pauses itself (by object, via layer-change G-code). False: snap-in pockets
 LIP_H, LIP_INT, LIP_SLOTS, LIP_SLOT_W = 0.4, 0.12, 4, 0.8   # snap lip: height, radial interference, relief slots
 
 P = dict(v5.P)
-P.update(TC=2.0, WB=2.0, WS=2.6, END=9.0, R=2.8, G=0.3, CF=1.6, CB=2.2, CE=1.0, FACET=6.0,
+P.update(TC=2.0, WB=2.0, WS=2.6, END=(3.0 if PLATFORM == 'v10' else 9.0), R=2.8, G=0.3, CF=1.6, CB=2.2, CE=1.0, FACET=6.0,
          PIN_PRESS=1.80, PIN_SLIP=2.0, PIN_SLEEVE=2.1, SLOTS=6, SLOT_W=6.6, RIB_T=0.8, RIB_H=3.0,
          MAG_ENDS=False, INSIDE_PLATE=False, BOTTOM_MONO=False,
          SEGS=[(0, 16), (16, 34), (34, 54), (54, 72), (72, 88)],
          SCOOP_Z=(55, 70), NOTCH_Z=(54, 71),
          LIP_R=3.0, INNER_FRAME=False, GRIP_GROOVES=False, NOTCH_ROUND=True)
+if PLATFORM == 'v10':
+    P.update(CAV_ROUND=(2.5, 1.2, 0.5), RIB_ROUND=True, LIP_ROUND=True, RIB_TOP=52.0)
 TC, WB, WS, END, R = P['TC'], P['WB'], P['WS'], P['END'], P['R']
 YS = -D / 2 + TC
 CX0, CX1 = -W / 2 + WS, W / 2 - WS
 XA = -W / 2 + R + 0.1
 BOSS_R = POCKET_D / 2 + 0.8; BOSS_H = SKIN_OUT + POCKET_H + SKIN - TC; REC_R = BOSS_R + GAP   # boss top = cover magnet skin
 MX = CX1 + (WS - 1.2) - REC_R                 # recess keeps a 1.2 mm side wall
+if PLATFORM == 'v10': MX -= 0.6               # v10: keeps >= 0.8 mm round the pocket where the R4.5 edge rounding curves in
 MZ = H / 2
+MZS = [MZ]                                   # magnet positions along the opening edge
 PILLAR_X0 = MX - REC_R - 1.0                  # 1.0 mm wall between recess and the last channel
 P['SLOT_X1'] = PILLAR_X0 - 0.2
+if PLATFORM == 'v10':                         # channels left-aligned: the whole strip by the opening edge becomes one long tip bay
+    P['SLOT_X1'] = XA + R + P['G'] + 0.4 + P['SLOTS'] * P['SLOT_W'] + (P['SLOTS'] - 1) * P['RIB_T'] + 0.05
 
 # ---- rounded envelope: plan outline with rounded corners, long edges rounded with a 45-degree run-out at each bed face ----
 HC = EDGE_R * (1 - np.sqrt(0.5))                       # height where the fillet reaches 45 deg; below it a 45 deg chamfer meets the bed
@@ -94,18 +107,27 @@ P['ENV'] = round_env
 if CRESCENT: P['THUMB'] = False
 if PINCH: P['RIB_TOP'] = 55.0
 FACE = BASE.buffer(-(2 * HC + 0.3))                     # flat part of the front/back faces
+if PLATFORM == 'v10':
+    # one column near each opening-edge corner: as close to the end wall as the rounded corner allows,
+    # keeping >= 1.1 mm of plastic round the pocket at every height
+    _ok = lambda z: BASE.buffer(-edge_inset(SKIN_OUT)).contains(Point(MX, z).buffer(POCKET_D / 2 + 0.8 + 0.3))   # outline where it cuts in most: at the pocket floor
+    _zc = END + (REC_R + 1.0) - 0.6
+    while not _ok(_zc): _zc += 0.1
+    MZS = [round(_zc, 2), round(H - _zc, 2)]
 FRONT = FACE.intersection(sbox(XA + R - 0.8, -1, W, H + 1))
 BACK = affinity.scale(FACE, -1, 1, origin=(0, 0))
 
 def snap_down(z):
     return LAYER0 + np.floor((z - LAYER0) / LAYER + 1e-9) * LAYER
 
+def UN(ms): return ms[0] if len(ms) == 1 else m3.Manifold.batch_boolean(ms, m3.OpType.Add)
+
 def ycyl(r, y0, y1, x=MX, z=MZ, seg=72):
     a, b = min(y0, y1), max(y0, y1)
     return m3.Manifold.cylinder(b - a, r, r, seg).rotate((-90, 0, 0)).translate((x, a, z))
 
 def monogram():
-    raw = v6.text_poly('A·B', CAP, FONT, thicken=0)
+    raw = v6.text_poly('A·B', CAP, FONT, thicken=MONO_THICKEN)
     parts = sorted(getattr(raw, 'geoms', [raw]), key=lambda q: q.area)
     dot = parts[0].centroid
     return unary_union(parts[1:] + [Point(dot.x, dot.y).buffer(0.75, quad_segs=16)])
@@ -118,9 +140,9 @@ def build():
     rec_floor = YS + BOSS_H + GAP
     if CAPTURE:
         c_top_z = snap_down((boss_top - SKIN) + D / 2)                # cover prints face-down: z = y + D/2
-        c_pocket = ycyl(POCKET_D / 2, c_top_z - POCKET_H - D / 2, c_top_z - D / 2)
+        c_pocket = UN([ycyl(POCKET_D / 2, c_top_z - POCKET_H - D / 2, c_top_z - D / 2, z=mz) for mz in MZS])
         t_top_z = snap_down(D / 2 - (rec_floor + SKIN))               # tray prints back-down: z = D/2 - y
-        t_pocket = ycyl(POCKET_D / 2, D / 2 - t_top_z, D / 2 - (t_top_z - POCKET_H))
+        t_pocket = UN([ycyl(POCKET_D / 2, D / 2 - t_top_z, D / 2 - (t_top_z - POCKET_H), z=mz) for mz in MZS])
     else:
         # snap-in pockets open to the closing faces: magnet clicks past a slotted 0.4 mm lip (no pause, no glue)
         def snap_pocket(face_y, inward):                              # inward = +1 (into tray) or -1 (into cover)
@@ -139,16 +161,29 @@ def build():
         t_pocket, t_lip_y = snap_pocket(rec_floor, +1)
         c_top_z = c_lip_y + D / 2; t_top_z = D / 2 - t_lip_y
     if ROUND_PILLAR:   # v7.1: round magnet column in the tray, matching the cover's round boss (owner request)
-        pillar = ycyl(REC_R + 1.0, YS, D / 2 - WB + 0.1, seg=96)
+        pillar = UN([ycyl(REC_R + 1.0, YS, D / 2 - WB + 0.1, z=mz, seg=96) for mz in MZS])
     else:
         pillar = chbox(PILLAR_X0, CX1 + 0.5, YS, D / 2 - WB + 0.1, MZ - POCKET_D / 2 - 1.4, MZ + POCKET_D / 2 + 1.4, cv=0.1)
-    lip_slot = chbox(CX1 - 1.2 - GAP, CX1 + 0.1, YS - 1.0, YS + 1.4 + GAP, MZ - POCKET_D / 2 - 1.6, MZ + POCKET_D / 2 + 1.6, cv=0.1)
-    tray = (tray + (pillar ^ env)) - ycyl(REC_R, YS - 1.0, rec_floor) - lip_slot
+    if PLATFORM == 'v10':   # clear the cover's whole lip ring (+GAP) out of the tray: it now crosses two corner columns
+        lr = sbox(CX0 + 3.0, END + 0.2, CX1 - 0.2, H - END - 0.2).buffer(-P['LIP_R']).buffer(P['LIP_R'], quad_segs=16)
+        ring = lr.buffer(GAP, quad_segs=16).difference(lr.buffer(-1.0 - GAP, quad_segs=16))
+        lip_slot = v5._map_inner(K.shapely_to_cs(ring).extrude(1.4 + GAP + 1.0), YS - 1.0)
+        socket = UN([ycyl(REC_R, YS - 1.0, rec_floor, z=mz) + m3.Manifold.cylinder(0.6, REC_R + 0.55, REC_R - 0.05, 72).rotate((-90, 0, 0)).translate((MX, YS - 0.05, mz))
+                     for mz in MZS])                                  # socket with a 0.5 mm chamfered mouth
+    else:
+        lip_slot = chbox(CX1 - 1.2 - GAP, CX1 + 0.1, YS - 1.0, YS + 1.4 + GAP, MZ - POCKET_D / 2 - 1.6, MZ + POCKET_D / 2 + 1.6, cv=0.1)
+        socket = ycyl(REC_R, YS - 1.0, rec_floor)
+    tray = (tray + (pillar ^ env)) - socket - lip_slot
     if P.get('INNER_FRAME', True):
         fr_poly = v5.notched_panel(CX0 + 5.0, CX1 - 2.5, END + 3.0, H - END - 3.0, c=3.0, step=3.0)
         frame_ring = fr_poly.buffer(GAP, join_style=2).difference(fr_poly.buffer(-1.6 - GAP, join_style=2))
         tray -= v5._map_inner(K.shapely_to_cs(frame_ring).extrude(0.8 + GAP + 0.5), YS - 0.5)
-    cover = cover + (ycyl(BOSS_R, YS - 0.3, boss_top) ^ env)
+    if PLATFORM == 'v10':   # bosses with a 0.4 mm chamfered top edge
+        boss = UN([ycyl(BOSS_R, YS - 0.3, boss_top - 0.4, z=mz) + m3.Manifold.cylinder(0.4, BOSS_R, BOSS_R - 0.4, 72).rotate((-90, 0, 0)).translate((MX, boss_top - 0.4, mz))
+                   for mz in MZS])
+        cover = cover + (boss ^ env)
+    else:
+        cover = cover + (ycyl(BOSS_R, YS - 0.3, boss_top) ^ env)
     tray = max(tray.decompose(), key=lambda q: q.volume()); cover = max(cover.decompose(), key=lambda q: q.volume())
     # pockets AFTER the keep-largest step: a sealed pocket is an internal void, which decompose() returns as its own piece
     tray = tray - t_pocket; cover = cover - c_pocket
@@ -220,6 +255,11 @@ def build():
         fr = keep(topo(f_reg, 7), f_reg, 6); br = keep(topo(b_reg, 3), b_reg, 6)
     # yellow ripples: filled flush with yellow (4 layers, same layers as the datum: no extra colour swaps)
     acc = []                                                        # (solid, 'c'|'t', colour key) for concept patterns
+    mono_back = zone_back = None
+    if INITIALS and INITIALS_POS == 'back':     # back-face coords (as seen from behind): bottom corner on the hinge side
+        mg = monogram(); mx0, mz0, mx1, mz1 = mg.bounds; fb = BACK.bounds; m_ = 4.0
+        mono_back = affinity.translate(mg, fb[2] - m_ - mx1, fb[1] + m_ - mz0)
+        zone_back = mono_back.envelope.buffer(1.8, join_style=2)
     if PATTERN_HOOK is None:
         cover, y5 = v6.inlay(cover, stripes(fr), 'f', YD)
         tray, y6 = v6.inlay(tray, stripes(br), 'b', YD)
@@ -233,6 +273,7 @@ def build():
                                  XA=XA, R=R, W=W, H=H, D=D, HC=HC, END=END))
         for side, part in (('front', 'c'), ('back', 't')):
             for g, key in pats.get(side, []):
+                if side == 'back' and zone_back is not None: g = g.difference(zone_back)   # clean field round the initials
                 if key == 'engrave':      # tone-on-tone engraving: 3 stepped layers (45 deg), prints support-free face down
                     for k_, dep in enumerate((LAYER0, LAYER0 + LAYER, LAYER0 + 2 * LAYER)):
                         gk = g.buffer(-0.16 * k_, quad_segs=6) if k_ else g
@@ -271,6 +312,14 @@ def build():
         badge_black = base_ - chamfer_cut
         badge_yellow = letters
         y4 = None
+    elif mono_back is not None:                     # maker's mark on the back plate: same 4 bed layers, no upright lettering
+        if INITIALS_MODE == 'engrave':
+            for k_, dep in enumerate((LAYER0, LAYER0 + LAYER, LAYER0 + 2 * LAYER)):
+                gk = mono_back.buffer(-0.1 * k_, quad_segs=6) if k_ else mono_back
+                if not gk.is_empty: tray = v3.recess(tray, gk, 'b', dep)
+            y4 = None
+        else:
+            tray, y4 = v6.inlay(tray, mono_back, 'b', YD)
     elif INITIALS and INITIALS_MODE == 'engrave':   # tone-on-tone, 0.5 mm deep, no extra colour
         cut = v3.cs(mono).extrude(0.5 + 0.5).translate((0, 0, -0.5)).mirror((0, 1, 0)); y4 = None; tray = tray - cut
     elif INITIALS:   # inlaid on the bottom face, dead-centre
@@ -298,7 +347,7 @@ def checks(r):
     swing = [g for g in range(0, 166, 5) if (b.translate((-XA_, -YA_, 0)).rotate((0, 0, -g)).translate((XA_, YA_, 0)) ^ a).volume() > 0.02]
     def wall(part, pocket, grow=0.8, which=None):
         if CAPTURE:
-            bbp = pocket.bounding_box(); g = ycyl(POCKET_D / 2 + grow, bbp[1], bbp[4])
+            bbp = pocket.bounding_box(); g = UN([ycyl(POCKET_D / 2 + grow, bbp[1], bbp[4], z=mz) for mz in MZS])
             return round((g - pocket - part).volume(), 3)
         face, inward = ((YS + BOSS_H, -1) if which == 'cover' else (YS + BOSS_H + GAP, +1))
         y_lip = face + inward * LIP_H; y_bot = y_lip + inward * (MAG_T + 0.05)
@@ -307,7 +356,7 @@ def checks(r):
     solids = lambda m: len([q for q in m.decompose() if q.volume() > 1.0])          # sealed magnet pockets are voids, not pieces
     pv = lambda m, pk: round((pk ^ m).volume(), 3)                                      # 0 = the pocket is really empty
     def sealed(m, pk, t=0.3):                                                           # 0 = >= 0.3 mm of plastic all round
-        bbp = pk.bounding_box(); shell = ycyl(POCKET_D / 2 + t, bbp[1] - t, bbp[4] + t) - pk
+        bbp = pk.bounding_box(); shell = UN([ycyl(POCKET_D / 2 + t, bbp[1] - t, bbp[4] + t, z=mz) for mz in MZS]) - pk
         return round((shell - m).volume(), 3)
     return dict(env=[round(bb[i + 3] - bb[i], 2) for i in range(3)], pieces=(solids(a), solids(b)), overlap=round(ov, 3),
                 pocket_material=(pv(a, r['t_pocket']), pv(b, r['c_pocket'])), pocket_unsealed=(sealed(a, r['t_pocket']), sealed(b, r['c_pocket'])),
