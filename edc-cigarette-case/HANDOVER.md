@@ -21,7 +21,13 @@
 
 ## 0a. Wood PLA line (24 Nov 2026): the CURRENT work. Read this before §0
 
-> **v10.2 (24 Nov, late): current.** Owner asked for **max quality**: 5–6 h per two-case plate is fine. They also reported the Ø5×2 pull **"extremely weak"** at 2.4 mm face to face.
+> **v10.3 (24 Nov, latest): current.** The owner glued magnets into the old test print: "not flush, they sink". `GLUE_RECESS` 0.30 → **0.10** nominal.
+> - **Printed result at 0.12 mm layers:** the magnet sits 0.04 mm below the face (flush, never proud); the closed face-to-face gap is 0.34 mm, about 780 g N35 model, the maximum.
+> - **Lid:** the pocket is now entirely inside the boss, so the lid plate has no opening.
+> - **Checks:** `w_pair_verify` expects a 0–0.15 mm recess and a 0.2–0.5 mm closed gap. All 6 projects pass (37 checks).
+> - **If too strong:** tape on the lid magnets, as in the print guide.
+>
+> **v10.2 (24 Nov, late):** Owner asked for **max quality**: 5–6 h per two-case plate is fine. They also reported the Ø5×2 pull **"extremely weak"** at 2.4 mm face to face.
 > - **Print profile:** `w_export.MAXQ` on Bambu's `0.12mm High Quality @BBL A1`:
 >   - 4 walls, top 8 layers / 1.0 mm, bottom 6, 20 % gyroid;
 >   - outer wall 50 mm/s, top 100, first layer 30 mm/s at 0.42 mm;

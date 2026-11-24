@@ -1,4 +1,4 @@
-# Rollie Book · wood PLA · print files (v10.2, 24 Nov): max quality, stronger magnets
+# Rollie Book · wood PLA · print files (v10.3, 24 Nov): max quality, FLUSH magnets
 
 **Six Bambu Studio projects:**
 - Each project holds **two designs (two complete cases) on one plate**, printed **by object**.
@@ -16,7 +16,10 @@
   - **A slow, narrow first layer:** it's the visible face, so the inlays, engraving and A·B come out crisper.
   - **Scarf seams** on the outer walls, which blend the seam line away on the smooth curved sides.
   - Travel avoids crossing walls.
-- **Magnets much closer: 0.8 mm face to face** instead of 2.4 mm. Each pocket is now only as deep as the magnet plus 0.3 mm, so the glued magnet sits just under the closing face. That's about **3× the pull** of the test print (N35 model: ~520 g for both pairs, against ~177 g). The lid still has 1.9 mm of wood over each magnet on the outside.
+- **Magnets FLUSH:** each pocket is now only as deep as the magnet. The glued magnet sits **0.04 mm below the face** as printed, so it's flush to the eye and can never stick out and stop the case closing.
+  - **Distance:** with the case closed, the magnet faces are **0.34 mm apart** (the test print had 2.4 mm).
+  - **Pull:** about **4.4× the test print** (N35 model: ~780 g for both pairs, against ~177 g). That's the most these magnets can give.
+  - **Lid:** each lid magnet now sits entirely inside its round boss, with the full 2 mm lid plate behind it.
 - **Corner and thumb-scoop fix** from v10.1: walls are ≥ 1.2 mm everywhere, and the tray cavity is enclosed on every layer.
 
 ## Load the AMS lite once, the same for every project
@@ -61,10 +64,18 @@ If the halves push apart instead of snapping shut, one pair is flipped.
 **Gluing:**
 1. Lay each part **inside-up**.
 2. Put a small drop of super glue (CA gel is easiest) on the **floor** of each pocket.
-3. Press the magnet in until it sits on the floor, about 0.3 mm below the surface. Use a **toothpick**, not steel tweezers.
-4. **Let the glue cure for 5–10 minutes before you close the case.** At this distance the magnets pull hard and will jump out of wet glue.
+3. Use **only a small drop** so glue doesn't well up round the edge. The pocket is just magnet-deep.
+4. Press the magnet in until it sits **flush with the surface**. Use a **toothpick**, not steel tweezers, and wipe off any glue that comes up.
+5. **Let the glue cure for 10 minutes before you close the case.** Flush magnets pull very hard and will jump out of wet glue.
 
-**Too strong?** Stick a small dot of tape or thin felt on each lid magnet. Every 0.1 mm of padding takes off roughly 5–8 % of the pull, without reprinting.
+**Too strong?** This is the maximum. To soften it, stick a small dot of tape or thin felt on each **lid** magnet:
+
+| Padding on each lid magnet | Approximate pull |
+|---|---|
+| 0.15 mm (e.g. one layer of electrical tape) | ~670 g |
+| 0.45 mm | ~520 g |
+
+No reprint is needed.
 
 **Hinge pin:** 1.75 mm PETG filament.
 
@@ -85,9 +96,10 @@ In Bambu Studio: **Filament settings → Seam → Scarf seam type → None**, fo
 4. **Each lid and tray:**
    - R4.5 rounded edges;
    - colour work only in the first 5 layers;
-   - walls checked layer by layer: nothing within 1.1 mm of the outside (thinnest 1.19 mm on the trays, 2.73 mm on the lids), and the tray cavity is enclosed on every layer;
-   - two Ø5.35 pockets with the glued magnet 0.28 mm below the face.
-   - **Closed case: magnet face to magnet face 0.82 mm.**
+   - walls checked layer by layer: nothing within 1.1 mm of the outside (thinnest 1.19 mm on the trays), and the tray cavity is enclosed on every layer;
+   - two Ø5.35 pockets, magnet-deep: the glued magnet sits 0.04 mm below the face.
+   - **Closed case: magnet face to magnet face 0.34 mm.**
+   - Each lid magnet sits inside its boss, so the 2 mm lid plate has no openings at all.
 5. **A1-emulated slice** of each file at 0.12 mm: it slices by object with the A1's 73 mm clearance, with no pauses.
 
 **Expected slicer notes (benign):** "Long bridging" / "Loose extrusions" on parts with **engraved** patterns (KUMIKO, the DIAL, PARQUET and ENDGRAIN backs). These are the stepped groove ceilings in the first face-down layers.

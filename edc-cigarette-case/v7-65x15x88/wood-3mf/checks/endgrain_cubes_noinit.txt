@@ -17,25 +17,25 @@ PASS 3 everything + brim inside the 256 x 256 bed  [extent 15.0, 10.1, 241.0, 24
 PASS 3 both hinge sleeves on the plate  [CUBES hinge sleeve (walnut) with ENDGRAIN tray; ENDGRAIN hinge sleeve (oak) with CUBES cover]
 PASS 4 ENDGRAIN cover: every inlay / mark sits in the first 5 layers (z <= 0.84)  [top z 0.68]
 PASS 4 ENDGRAIN cover: R4.5 rounded long edges (first-layer inset 2.2-3.0 mm a side)  [inset 2.74 mm]
-PASS 4 ENDGRAIN cover: walls >= 1.1 mm between every inside opening and the outside  [thinnest 2.73 mm at z 1.94, xy (28.2, -37.9)]
-PASS 4 ENDGRAIN cover: two Ø5.35 pockets open from the floor (z 1.88) to the closing face; a glued Ø5x2 magnet sits 0.28 mm below the face  [Ø5.35, 2.28 mm deep]
+PASS 4 ENDGRAIN cover: walls >= 1.1 mm between every inside opening and the outside  [thinnest 99.00 mm at z 0.98, xy None]
+PASS 4 ENDGRAIN cover: two Ø5.35 pockets open from the floor (z 2.12) to the closing face; a glued Ø5x2 magnet sits 0.04 mm below the face  [Ø5.35, 2.04 mm deep (flush, never proud)]
 PASS 4 ENDGRAIN tray + sleeve: every inlay / mark sits in the first 5 layers (z <= 0.84)  [top z 0.00]
 PASS 4 ENDGRAIN tray + sleeve: R4.5 rounded long edges (first-layer inset 2.2-3.0 mm a side)  [inset 2.59 mm]
 PASS 4 ENDGRAIN tray + sleeve: cavity fully enclosed on every layer from the floor to the rim (no breach)  [74 layers z 2.66-11.42]
 PASS 4 ENDGRAIN tray + sleeve: walls >= 1.1 mm between every inside opening and the outside  [thinnest 1.19 mm at z 11.42, xy (34.5, 24.9)]
-PASS 4 ENDGRAIN tray + sleeve: two Ø5.35 pockets open from the floor (z 6.80) to the closing face; a glued Ø5x2 magnet sits 0.28 mm below the face  [Ø5.35, 2.28 mm deep]
+PASS 4 ENDGRAIN tray + sleeve: two Ø5.35 pockets open from the floor (z 7.04) to the closing face; a glued Ø5x2 magnet sits 0.04 mm below the face  [Ø5.35, 2.04 mm deep (flush, never proud)]
 PASS 4 CUBES cover + sleeve: every inlay / mark sits in the first 5 layers (z <= 0.84)  [top z 0.68]
 PASS 4 CUBES cover + sleeve: R4.5 rounded long edges (first-layer inset 2.2-3.0 mm a side)  [inset 2.74 mm]
-PASS 4 CUBES cover + sleeve: walls >= 1.1 mm between every inside opening and the outside  [thinnest 2.73 mm at z 1.94, xy (32.6, -37.9)]
-PASS 4 CUBES cover + sleeve: two Ø5.35 pockets open from the floor (z 1.88) to the closing face; a glued Ø5x2 magnet sits 0.28 mm below the face  [Ø5.35, 2.28 mm deep]
+PASS 4 CUBES cover + sleeve: walls >= 1.1 mm between every inside opening and the outside  [thinnest 99.00 mm at z 0.98, xy None]
+PASS 4 CUBES cover + sleeve: two Ø5.35 pockets open from the floor (z 2.12) to the closing face; a glued Ø5x2 magnet sits 0.04 mm below the face  [Ø5.35, 2.04 mm deep (flush, never proud)]
 PASS 4 CUBES tray: every inlay / mark sits in the first 5 layers (z <= 0.84)  [top z 0.00]
 PASS 4 CUBES tray: R4.5 rounded long edges (first-layer inset 2.2-3.0 mm a side)  [inset 2.59 mm]
 PASS 4 CUBES tray: cavity fully enclosed on every layer from the floor to the rim (no breach)  [74 layers z 2.66-11.42]
 PASS 4 CUBES tray: walls >= 1.1 mm between every inside opening and the outside  [thinnest 1.19 mm at z 11.42, xy (30.1, 24.9)]
-PASS 4 CUBES tray: two Ø5.35 pockets open from the floor (z 6.80) to the closing face; a glued Ø5x2 magnet sits 0.28 mm below the face  [Ø5.35, 2.28 mm deep]
-PASS 4 CUBES: closed case, magnet face to magnet face 0.82 mm (was 2.4 in the test print; ~3x the pull)
-PASS 4 ENDGRAIN: closed case, magnet face to magnet face 0.82 mm (was 2.4 in the test print; ~3x the pull)
-     slice: {"time": "5h 32m 55s", "filament_g": "11.29, 12.92, 21.75, 24.70", "toolchanges": 20, "layers": 161, "pauses": 0, "filaments_used": [1, 2, 3, 4]}
+PASS 4 CUBES tray: two Ø5.35 pockets open from the floor (z 7.04) to the closing face; a glued Ø5x2 magnet sits 0.04 mm below the face  [Ø5.35, 2.04 mm deep (flush, never proud)]
+PASS 4 CUBES: closed case, magnet face to magnet face 0.34 mm (was 2.4 in the test print)
+PASS 4 ENDGRAIN: closed case, magnet face to magnet face 0.34 mm (was 2.4 in the test print)
+     slice: {"time": "5h 32m 56s", "filament_g": "11.31, 12.94, 21.76, 24.71", "toolchanges": 20, "layers": 161, "pauses": 0, "filaments_used": [1, 2, 3, 4]}
      slicer says: print warning: Detected print stability issues:
      slicer says: ENDGRAIN tray + sleeve
      slicer says: Long bridging extrusions

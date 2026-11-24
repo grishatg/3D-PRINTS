@@ -19,8 +19,8 @@ from shapely import affinity
 LAYER0, LAYER = 0.2, 0.16
 PLATFORM = os.environ.get('PLATFORM', 'v7')            # 'v7' (v7.1, one Ø9.53 pair, 9 mm ends) | 'v10' (two Ø5x2 pairs at the corners, 2 mm ends, rounded inside)
 MAGNET_MODE = os.environ.get('MAGNET_MODE', 'embed')   # 'embed' (sealed in at a pause) | 'glue' (pockets open to the closing face, magnets glued in)
-GLUE_RECESS = 0.30   # v10.1 glue mode: magnet face this far below each closing face. Owner, 24 Nov: at 2.4 mm apart the Ø5x2 pull was
-                     # "extremely weak"; now the faces are GAP + 2 x 0.3 = 0.8 mm apart (~520 g for both pairs, N35 model; was ~177 g)
+GLUE_RECESS = 0.10   # v10.3 glue mode: magnet FLUSH (0.1 nominal, prints ~0.04 at 0.12 mm layers, never proud). Owner, 24 Nov: at 2.4 mm the Ø5x2 pull was
+                     # "extremely weak", then "not flush, they sink": faces now ~0.34 mm apart as printed (was 2.4)
 MAG_D, MAG_T = 9.53, 2.53            # re-measured by the owner (23 Nov)
 POCKET_D, SKIN, GAP = 9.85, 0.96, 0.2   # drop-in pocket (prints ~9.7); 6 layers (~1.0 mm, owner's choice) over each magnet; boss-to-recess clearance
 SKIN_OUT = 1.16                      # cover: 7 layers between the magnet and the outside face (no dark disc showing through)

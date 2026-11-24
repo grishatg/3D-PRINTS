@@ -160,13 +160,13 @@ for o in objs:
     recess = top_z - (floor_z + 2.0)                                  # Ø5 x 2 magnet glued on the floor: its face this far below the closing face
     floors[(o['name'].split()[0], kind)] = floor_z
     chk(f'4 {o["name"]}: two Ø5.35 pockets open from the floor (z {floor_z:.2f}) to the closing face; a glued Ø5x2 magnet sits {recess:.2f} mm below the face',
-        contiguous and not solid_above and dia > 5.15 and 0.15 <= recess <= 0.5, f'Ø{dia:.2f}, {top_z - floor_z:.2f} mm deep')
+        contiguous and not solid_above and dia > 5.15 and 0.0 <= recess <= 0.15, f'Ø{dia:.2f}, {top_z - floor_z:.2f} mm deep (flush, never proud)')
 
 D_CASE = 13.5   # case thickness: cover prints face-down (print z = y + D/2), tray back-down (print z = D/2 - y)
 for dsg in sorted({k[0] for k in floors}):
     if (dsg, 'cover') in floors and (dsg, 'tray') in floors:
         gap = D_CASE - (floors[(dsg, 'cover')] + floors[(dsg, 'tray')] + 4.0)
-        chk(f'4 {dsg}: closed case, magnet face to magnet face {gap:.2f} mm (was 2.4 in the test print; ~3x the pull)', 0.6 <= gap <= 1.0)
+        chk(f'4 {dsg}: closed case, magnet face to magnet face {gap:.2f} mm (was 2.4 in the test print)', 0.2 <= gap <= 0.5)
 
 # ---- 5 slice
 sys.argv = [sys.argv[0], WD]

@@ -17,25 +17,25 @@ PASS 3 everything + brim inside the 256 x 256 bed  [extent 10.9, 10.1, 245.1, 24
 PASS 3 both hinge sleeves on the plate  [KUMIKO hinge sleeve (walnut) with KUMIKO tray; DIAL hinge sleeve (walnut) with DIAL tray]
 PASS 4 KUMIKO cover: every inlay / mark sits in the first 5 layers (z <= 0.84)  [top z 0.00]
 PASS 4 KUMIKO cover: R4.5 rounded long edges (first-layer inset 2.2-3.0 mm a side)  [inset 2.74 mm]
-PASS 4 KUMIKO cover: walls >= 1.1 mm between every inside opening and the outside  [thinnest 2.73 mm at z 1.94, xy (28.2, -37.9)]
-PASS 4 KUMIKO cover: two Ø5.35 pockets open from the floor (z 1.88) to the closing face; a glued Ø5x2 magnet sits 0.28 mm below the face  [Ø5.35, 2.28 mm deep]
+PASS 4 KUMIKO cover: walls >= 1.1 mm between every inside opening and the outside  [thinnest 99.00 mm at z 0.98, xy None]
+PASS 4 KUMIKO cover: two Ø5.35 pockets open from the floor (z 2.12) to the closing face; a glued Ø5x2 magnet sits 0.04 mm below the face  [Ø5.35, 2.04 mm deep (flush, never proud)]
 PASS 4 KUMIKO tray + sleeve: every inlay / mark sits in the first 5 layers (z <= 0.84)  [top z 0.00]
 PASS 4 KUMIKO tray + sleeve: R4.5 rounded long edges (first-layer inset 2.2-3.0 mm a side)  [inset 2.59 mm]
 PASS 4 KUMIKO tray + sleeve: cavity fully enclosed on every layer from the floor to the rim (no breach)  [74 layers z 2.66-11.42]
 PASS 4 KUMIKO tray + sleeve: walls >= 1.1 mm between every inside opening and the outside  [thinnest 1.19 mm at z 11.42, xy (34.5, 24.9)]
-PASS 4 KUMIKO tray + sleeve: two Ø5.35 pockets open from the floor (z 6.80) to the closing face; a glued Ø5x2 magnet sits 0.28 mm below the face  [Ø5.35, 2.28 mm deep]
+PASS 4 KUMIKO tray + sleeve: two Ø5.35 pockets open from the floor (z 7.04) to the closing face; a glued Ø5x2 magnet sits 0.04 mm below the face  [Ø5.35, 2.04 mm deep (flush, never proud)]
 PASS 4 DIAL cover: every inlay / mark sits in the first 5 layers (z <= 0.84)  [top z 0.00]
 PASS 4 DIAL cover: R4.5 rounded long edges (first-layer inset 2.2-3.0 mm a side)  [inset 2.74 mm]
-PASS 4 DIAL cover: walls >= 1.1 mm between every inside opening and the outside  [thinnest 2.73 mm at z 1.94, xy (28.2, -37.9)]
-PASS 4 DIAL cover: two Ø5.35 pockets open from the floor (z 1.88) to the closing face; a glued Ø5x2 magnet sits 0.28 mm below the face  [Ø5.35, 2.28 mm deep]
+PASS 4 DIAL cover: walls >= 1.1 mm between every inside opening and the outside  [thinnest 99.00 mm at z 0.98, xy None]
+PASS 4 DIAL cover: two Ø5.35 pockets open from the floor (z 2.12) to the closing face; a glued Ø5x2 magnet sits 0.04 mm below the face  [Ø5.35, 2.04 mm deep (flush, never proud)]
 PASS 4 DIAL tray + sleeve: every inlay / mark sits in the first 5 layers (z <= 0.84)  [top z 0.00]
 PASS 4 DIAL tray + sleeve: R4.5 rounded long edges (first-layer inset 2.2-3.0 mm a side)  [inset 2.59 mm]
 PASS 4 DIAL tray + sleeve: cavity fully enclosed on every layer from the floor to the rim (no breach)  [74 layers z 2.66-11.42]
 PASS 4 DIAL tray + sleeve: walls >= 1.1 mm between every inside opening and the outside  [thinnest 1.19 mm at z 11.42, xy (34.5, 24.9)]
-PASS 4 DIAL tray + sleeve: two Ø5.35 pockets open from the floor (z 6.80) to the closing face; a glued Ø5x2 magnet sits 0.28 mm below the face  [Ø5.35, 2.28 mm deep]
-PASS 4 DIAL: closed case, magnet face to magnet face 0.82 mm (was 2.4 in the test print; ~3x the pull)
-PASS 4 KUMIKO: closed case, magnet face to magnet face 0.82 mm (was 2.4 in the test print; ~3x the pull)
-     slice: {"time": "4h 46m 20s", "filament_g": "13.28, 13.35, 0.00, 43.96", "toolchanges": 4, "layers": 161, "pauses": 0, "filaments_used": [1, 2, 4]}
+PASS 4 DIAL tray + sleeve: two Ø5.35 pockets open from the floor (z 7.04) to the closing face; a glued Ø5x2 magnet sits 0.04 mm below the face  [Ø5.35, 2.04 mm deep (flush, never proud)]
+PASS 4 DIAL: closed case, magnet face to magnet face 0.34 mm (was 2.4 in the test print)
+PASS 4 KUMIKO: closed case, magnet face to magnet face 0.34 mm (was 2.4 in the test print)
+     slice: {"time": "4h 46m 17s", "filament_g": "13.30, 13.36, 0.00, 43.99", "toolchanges": 4, "layers": 161, "pauses": 0, "filaments_used": [1, 2, 4]}
      slicer says: print warning: Detected print stability issues:
      slicer says: KUMIKO cover
      slicer says: Long bridging extrusions
