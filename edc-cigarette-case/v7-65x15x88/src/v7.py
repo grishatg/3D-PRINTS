@@ -19,8 +19,13 @@ from shapely import affinity
 LAYER0, LAYER = 0.2, 0.16
 PLATFORM = os.environ.get('PLATFORM', 'v7')            # 'v7' (v7.1, one Ø9.53 pair, 9 mm ends) | 'v10' (two Ø5x2 pairs at the corners, 2 mm ends, rounded inside)
 MAGNET_MODE = os.environ.get('MAGNET_MODE', 'embed')   # 'embed' (sealed in at a pause) | 'glue' (pockets open to the closing face, magnets glued in)
-GLUE_RECESS = 0.10   # v10.3 glue mode: magnet FLUSH (0.1 nominal, prints ~0.04 at 0.12 mm layers, never proud). Owner, 24 Nov: at 2.4 mm the Ø5x2 pull was
-                     # "extremely weak", then "not flush, they sink": faces now ~0.34 mm apart as printed (was 2.4)
+GLUE_RECESS = 0.06   # v10.4 glue mode: magnet FLUSH. Owner, 24 Nov: at 2.4 mm the Ø5x2 pull was "extremely weak", then "not flush, they sink".
+                     # Target recess below the closing face AS PRINTED; each pocket floor is snapped to a layer boundary of the
+                     # 0.16 mm print grid (LAYER0 + k * LAYER), so no face ever sits on a slicing plane: prints 0.08 mm below the
+                     # face, faces 0.30 mm apart when closed, never proud (boss-to-socket clearance prints 0.14).
+def printed_top(z):  # the slicer samples layers at mid-height: a solid region ending at print height z ends at this layer boundary
+    return LAYER0 + LAYER * int(np.ceil((z - LAYER / 2 - LAYER0) / LAYER - 1e-9))
+def layer_boundary(z): return LAYER0 + LAYER * round((z - LAYER0) / LAYER)
 MAG_D, MAG_T = 9.53, 2.53            # re-measured by the owner (23 Nov)
 POCKET_D, SKIN, GAP = 9.85, 0.96, 0.2   # drop-in pocket (prints ~9.7); 6 layers (~1.0 mm, owner's choice) over each magnet; boss-to-recess clearance
 SKIN_OUT = 1.16                      # cover: 7 layers between the magnet and the outside face (no dark disc showing through)
@@ -207,8 +212,10 @@ def build():
     # pockets AFTER the keep-largest step: a sealed pocket is an internal void, which decompose() returns as its own piece
     c_floor = t_floor = None
     if MAGNET_MODE == 'glue':   # open each pocket up to the closing face; the magnet is glued onto the pocket floor
-        if PLATFORM == 'v10':   # v10.1: magnets almost flush (GLUE_RECESS below the boss top / the socket floor), not at the sealed depth
-            c_floor = boss_top - (MAG_T + GLUE_RECESS); t_floor = rec_floor + (MAG_T + GLUE_RECESS)
+        if PLATFORM == 'v10':   # v10.4: magnets flush with the PRINTED boss top / socket floor; floors on the 0.16 layer grid
+            zc = layer_boundary(printed_top(boss_top + D / 2) - MAG_T - GLUE_RECESS)        # cover prints face-down: z = y + D/2
+            zt = layer_boundary(printed_top(D / 2 - rec_floor) - MAG_T - GLUE_RECESS)       # tray prints back-down:  z = D/2 - y
+            c_floor = zc - D / 2; t_floor = D / 2 - zt
         else:
             c_floor = c_top_z - POCKET_H - D / 2; t_floor = D / 2 - (t_top_z - POCKET_H)
         c_pocket = UN([ycyl(POCKET_D / 2, c_floor, boss_top + 0.5, z=mz) for mz in MZS])

@@ -5,8 +5,8 @@ PASS 2 settings: all values strings / string lists
 PASS 2 settings: 4 x Bambu PLA Wood @BBL A1 (GFA16), A1 0.4, by object, no prime tower, textured PEI  [colours ['#CE9775', '#BE6E4E', '#4D211A', '#5E3B31'], nozzle 220 C, bed 65 C]
 PASS 2 settings: flush matrix 4 x 4, vector 8, different_settings_to_system 6
 PASS 2 no pause anywhere (magnets are glued after printing)
-PASS 2 print profile: 0.12mm High Quality @BBL A1, 0.12 mm layers, scarf seams external, seam aligned
-     print: infill 20% gyroid, walls 4, top/bottom 8/6 (top min 1.0 mm), brim outer_only 3 mm, outer wall 50 mm/s, first layer 30 mm/s @ 0.42 mm
+PASS 2 print profile: 0.16mm High Quality @BBL A1, 0.16 mm layers, scarf seams external, seam aligned
+     print: infill 15% gyroid, walls 4, top/bottom 6/4 (top min 1.0 mm), brim outer_only 3 mm, outer wall 60 mm/s, first layer 40 mm/s @ 0.42 mm
 PASS 3 four objects: cover, tray, cover, tray (= by-object print order)  [KUMIKO cover / KUMIKO tray + sleeve / DIAL cover / DIAL tray + sleeve]
 PASS 3 KUMIKO cover: 1 meshes valid, on the bed, parts do not overlap  [filaments [1], h 5.70, turned 0 deg]
 PASS 3 KUMIKO tray + sleeve: 2 meshes valid, on the bed, parts do not overlap  [filaments [4], h 19.40, turned 90 deg]
@@ -17,25 +17,25 @@ PASS 3 everything + brim inside the 256 x 256 bed  [extent 10.9, 10.1, 245.1, 24
 PASS 3 both hinge sleeves on the plate  [KUMIKO hinge sleeve (walnut) with KUMIKO tray; DIAL hinge sleeve (walnut) with DIAL tray]
 PASS 4 KUMIKO cover: every inlay / mark sits in the first 5 layers (z <= 0.84)  [top z 0.00]
 PASS 4 KUMIKO cover: R4.5 rounded long edges (first-layer inset 2.2-3.0 mm a side)  [inset 2.74 mm]
-PASS 4 KUMIKO cover: walls >= 1.1 mm between every inside opening and the outside  [thinnest 99.00 mm at z 0.98, xy None]
-PASS 4 KUMIKO cover: two Ø5.35 pockets open from the floor (z 2.12) to the closing face; a glued Ø5x2 magnet sits 0.04 mm below the face  [Ø5.35, 2.04 mm deep (flush, never proud)]
+PASS 4 KUMIKO cover: walls >= 1.1 mm between every inside opening and the outside  [thinnest 99.00 mm at z 0.92, xy None]
+PASS 4 KUMIKO cover: two Ø5.35 pockets open from the floor (z 2.12) to the closing face; a glued Ø5x2 magnet sits 0.08 mm below the face  [Ø5.35, 2.08 mm deep (flush, never proud)]
 PASS 4 KUMIKO tray + sleeve: every inlay / mark sits in the first 5 layers (z <= 0.84)  [top z 0.00]
 PASS 4 KUMIKO tray + sleeve: R4.5 rounded long edges (first-layer inset 2.2-3.0 mm a side)  [inset 2.59 mm]
-PASS 4 KUMIKO tray + sleeve: cavity fully enclosed on every layer from the floor to the rim (no breach)  [74 layers z 2.66-11.42]
-PASS 4 KUMIKO tray + sleeve: walls >= 1.1 mm between every inside opening and the outside  [thinnest 1.19 mm at z 11.42, xy (34.5, 24.9)]
-PASS 4 KUMIKO tray + sleeve: two Ø5.35 pockets open from the floor (z 7.04) to the closing face; a glued Ø5x2 magnet sits 0.04 mm below the face  [Ø5.35, 2.04 mm deep (flush, never proud)]
+PASS 4 KUMIKO tray + sleeve: cavity fully enclosed on every layer from the floor to the rim (no breach)  [56 layers z 2.68-11.48]
+PASS 4 KUMIKO tray + sleeve: walls >= 1.1 mm between every inside opening and the outside  [thinnest 1.19 mm at z 11.48, xy (34.5, 25.0)]
+PASS 4 KUMIKO tray + sleeve: two Ø5.35 pockets open from the floor (z 7.08) to the closing face; a glued Ø5x2 magnet sits 0.08 mm below the face  [Ø5.35, 2.08 mm deep (flush, never proud)]
 PASS 4 DIAL cover: every inlay / mark sits in the first 5 layers (z <= 0.84)  [top z 0.00]
 PASS 4 DIAL cover: R4.5 rounded long edges (first-layer inset 2.2-3.0 mm a side)  [inset 2.74 mm]
-PASS 4 DIAL cover: walls >= 1.1 mm between every inside opening and the outside  [thinnest 99.00 mm at z 0.98, xy None]
-PASS 4 DIAL cover: two Ø5.35 pockets open from the floor (z 2.12) to the closing face; a glued Ø5x2 magnet sits 0.04 mm below the face  [Ø5.35, 2.04 mm deep (flush, never proud)]
+PASS 4 DIAL cover: walls >= 1.1 mm between every inside opening and the outside  [thinnest 99.00 mm at z 0.92, xy None]
+PASS 4 DIAL cover: two Ø5.35 pockets open from the floor (z 2.12) to the closing face; a glued Ø5x2 magnet sits 0.08 mm below the face  [Ø5.35, 2.08 mm deep (flush, never proud)]
 PASS 4 DIAL tray + sleeve: every inlay / mark sits in the first 5 layers (z <= 0.84)  [top z 0.00]
 PASS 4 DIAL tray + sleeve: R4.5 rounded long edges (first-layer inset 2.2-3.0 mm a side)  [inset 2.59 mm]
-PASS 4 DIAL tray + sleeve: cavity fully enclosed on every layer from the floor to the rim (no breach)  [74 layers z 2.66-11.42]
-PASS 4 DIAL tray + sleeve: walls >= 1.1 mm between every inside opening and the outside  [thinnest 1.19 mm at z 11.42, xy (34.5, 24.9)]
-PASS 4 DIAL tray + sleeve: two Ø5.35 pockets open from the floor (z 7.04) to the closing face; a glued Ø5x2 magnet sits 0.04 mm below the face  [Ø5.35, 2.04 mm deep (flush, never proud)]
-PASS 4 DIAL: closed case, magnet face to magnet face 0.34 mm (was 2.4 in the test print)
-PASS 4 KUMIKO: closed case, magnet face to magnet face 0.34 mm (was 2.4 in the test print)
-     slice: {"time": "4h 46m 17s", "filament_g": "13.30, 13.36, 0.00, 43.99", "toolchanges": 4, "layers": 161, "pauses": 0, "filaments_used": [1, 2, 4]}
+PASS 4 DIAL tray + sleeve: cavity fully enclosed on every layer from the floor to the rim (no breach)  [56 layers z 2.68-11.48]
+PASS 4 DIAL tray + sleeve: walls >= 1.1 mm between every inside opening and the outside  [thinnest 1.19 mm at z 11.48, xy (34.5, 25.0)]
+PASS 4 DIAL tray + sleeve: two Ø5.35 pockets open from the floor (z 7.08) to the closing face; a glued Ø5x2 magnet sits 0.08 mm below the face  [Ø5.35, 2.08 mm deep (flush, never proud)]
+PASS 4 DIAL: closed case, magnet face to magnet face 0.30 mm (was 2.4 in the test print)
+PASS 4 KUMIKO: closed case, magnet face to magnet face 0.30 mm (was 2.4 in the test print)
+     slice: {"time": "3h 33m 28s", "filament_g": "12.83, 12.87, 0.00, 43.13", "toolchanges": 4, "layers": 121, "pauses": 0, "estimate_with_purges": "3h 34m", "filaments_used": [1, 2, 4]}
      slicer says: print warning: Detected print stability issues:
      slicer says: KUMIKO cover
      slicer says: Long bridging extrusions

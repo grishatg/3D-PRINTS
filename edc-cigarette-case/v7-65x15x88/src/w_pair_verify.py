@@ -174,6 +174,10 @@ import slicetest as ST
 mach = S.TP.resolve(S.TAG_VALUES, 'machine', 'Bambu Lab A1 0.4 nozzle'); pr = S.TP.resolve(S.TAG_VALUES, 'process', '0.16mm High Quality @BBL A1')
 s = lambda v: str(v[0] if isinstance(v, list) else v)
 L = lambda key: ','.join(cfg[key])
+def acc(k):
+    v = str(cfg.get(k, '0')); d = float(cfg['default_acceleration'])
+    if v.endswith('%'): return f'{d * float(v[:-1]) / 100:g}'
+    return f'{d:g}' if float(v) == 0 else v
 prusa = []
 for o in objs:   # bake the plate transform into the meshes (PrusaSlicer project gets plain positions)
     prusa.append((o['name'], [(q.rotate((0, 0, o['ang'])), 'part', e, {}) for q, n_, e in o['parts']], (o['tx'], o['ty'])))
@@ -200,7 +204,13 @@ rep = {'nozzle_diameter': '0.4,0.4,0.4,0.4', 'retract_length': '0.8,0.8,0.8,0.8'
        'top_solid_min_thickness': cfg['top_shell_thickness'], 'bottom_solid_min_thickness': cfg['bottom_shell_thickness'],
        'fill_density': cfg['sparse_infill_density'], 'fill_pattern': 'gyroid', 'top_fill_pattern': 'concentric',
        'brim_width': cfg['brim_width'] if cfg['brim_type'] != 'no_brim' else '0', 'brim_type': 'outer_only' if cfg['brim_type'] != 'no_brim' else 'no_brim',
-       'layer_gcode': 'G92 E0'}
+       'layer_gcode': 'G92 E0',
+       # Bambu's own per-feature motion values from the file (0 / % = relative to the default), so the time is a fair stand-in for Bambu's estimate
+       'perimeter_acceleration': acc('inner_wall_acceleration'), 'infill_acceleration': acc('sparse_infill_acceleration'),
+       'solid_infill_acceleration': acc('sparse_infill_acceleration'), 'top_solid_infill_acceleration': acc('top_surface_acceleration'),
+       'first_layer_acceleration': acc('initial_layer_acceleration'), 'travel_acceleration': s(cfg['machine_max_acceleration_travel']),
+       'travel_speed': cfg['travel_speed'], 'gap_fill_speed': cfg['gap_infill_speed'], 'bridge_speed': cfg['bridge_speed'],
+       'small_perimeter_speed': cfg['small_perimeter_speed'], 'first_layer_infill_speed': cfg['initial_layer_infill_speed']}
 for k, v in rep.items():
     if re.search(rf'^{k} = ', txt, flags=re.M): txt = re.sub(rf'^{k} = .*$', lambda _m, k=k, v=v: f'{k} = {v}', txt, flags=re.M)
     else: txt += f'{k} = {v}\n'
@@ -211,6 +221,13 @@ if res.returncode != 0:
     chk('5 slice (A1 emulation, sequential with 73 mm clearance)', False, (res.stdout + res.stderr)[-800:]); print('SOMETHING FAILED'); sys.exit(1)
 r5 = ST.report(gc); r5.pop('zs')
 msgs = [l.strip() for l in (res.stdout + res.stderr).splitlines() if l.strip() and not l.startswith('Slicing') and not re.match(r'^\d+ =>', l.strip())]
+# purge time on the A1 (not in the emulation, which already counts 54 s load + unload per swap): flush volume at ~12 mm3/s + ~10 s cut / wipe
+seq = [int(t) for t in re.findall(r'^T(\d)', open(gc).read(), flags=re.M)]
+FM = [float(v) for v in cfg['flush_volumes_matrix']]
+purge_s = sum(FM[a * 4 + b] / 12.0 + 10.0 for a, b in zip(seq, seq[1:]))
+hms = re.findall(r'(\d+)([dhms])', r5['time']); emu_s = sum(int(v) * {'d': 86400, 'h': 3600, 'm': 60, 's': 1}[u] for v, u in hms)
+est = emu_s + purge_s
+r5['estimate_with_purges'] = f'{int(est // 3600)}h {int(est % 3600 // 60):02d}m'
 print('     slice:', json.dumps(dict(r5, filaments_used=sorted(used))))
 for w in msgs[-8:]: print('     slicer says:', w[:200])
 chk('5 slice: OK (sequential, A1 73 mm clearance accepted), no pauses', r5['pauses'] == 0)

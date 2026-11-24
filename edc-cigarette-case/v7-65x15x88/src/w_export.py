@@ -28,19 +28,20 @@ FLUSH_LEAN = [[0, 50, 50, 50],
               [100, 0, 50, 50],
               [150, 110, 0, 60],
               [150, 110, 60, 0]]
-# Max quality (owner, 24 Nov: "max quality", 5-6 h per two-case plate is fine). Bambu's own 0.12mm High Quality @BBL A1 preset plus:
-# 4 walls (no infill showing through 2 mm walls), 1.0 mm top skin, 0.8 mm bottom skin, 20 % gyroid, slower walls / top skin,
-# a slow narrow first layer (it is the visible face: crisper inlay and engraving edges), scarf seams on the outer walls (seam
-# line blended away on the smooth squircle walls; Bambu sets has_scarf_joint_seam itself), seam 'aligned' (preset), no wall crossing.
-MAXQ_PRESET = '0.12mm High Quality @BBL A1'
-MAXQ = {'layer_height': '0.12', 'initial_layer_print_height': '0.2', 'wall_generator': 'arachne', 'elefant_foot_compensation': '0.15',
-        'enable_support': '0', 'enable_prime_tower': '0', 'print_sequence': 'by object', 'curr_bed_type': 'Textured PEI Plate',
-        'sparse_infill_pattern': 'gyroid', 'sparse_infill_density': '20%', 'top_surface_pattern': 'concentric',
-        'wall_loops': '4', 'top_shell_layers': '8', 'top_shell_thickness': '1.0', 'bottom_shell_layers': '6',
-        'outer_wall_speed': '50', 'inner_wall_speed': '150', 'top_surface_speed': '100',
-        'initial_layer_speed': '30', 'initial_layer_infill_speed': '60', 'initial_layer_line_width': '0.42',
-        'reduce_crossing_wall': '1', 'brim_type': 'outer_only', 'brim_width': '3',
-        'filament_scarf_seam_type': ['external'] * 4}
+# FINAL print profile (owner, 24 Nov, "these have to be the last edits"): max 4.5 h per plate, 5 h for the multi-colour pairs.
+# 0.12 mm could not meet that (ENDGRAIN + CUBES ~6 h with swaps), so: Bambu's own 0.16mm High Quality @BBL A1 preset (the grid
+# the whole design is built on: 4-layer inlays, 45 deg engraving steps, magnet floors) plus the cheap quality extras:
+# 4 walls, 1.0 mm top skin, slow narrow first layer (the visible face: crisp inlays), scarf seams, no wall crossing. Wall and top
+# speeds stay at the preset's HQ values (outer 60): trials showed 3 walls is slower and 50 mm/s outer costs 7 min on the busiest plate.
+FINAL_PRESET = '0.16mm High Quality @BBL A1'
+FINAL = {'layer_height': '0.16', 'initial_layer_print_height': '0.2', 'wall_generator': 'arachne', 'elefant_foot_compensation': '0.15',
+         'enable_support': '0', 'enable_prime_tower': '0', 'print_sequence': 'by object', 'curr_bed_type': 'Textured PEI Plate',
+         'sparse_infill_pattern': 'gyroid', 'sparse_infill_density': '15%', 'top_surface_pattern': 'concentric',
+         'wall_loops': '4', 'top_shell_layers': '6', 'top_shell_thickness': '1.0', 'bottom_shell_layers': '4',
+         'initial_layer_speed': '40', 'initial_layer_infill_speed': '80', 'initial_layer_line_width': '0.42',
+         'reduce_crossing_wall': '1', 'brim_type': 'outer_only', 'brim_width': '3',
+         'filament_scarf_seam_type': ['external'] * 4}
+if os.environ.get('WOOD_PROFILE_TRIAL'): FINAL.update(json.loads(os.environ['WOOD_PROFILE_TRIAL']))   # timing trials only
 PROFILES = {
     'production': dict(wall_loops='3', top_shell_layers='5', bottom_shell_layers='4', sparse_infill_density='15%', brim_type='outer_only', brim_width='3'),
     # test: ~15% less filament, ~10 min quicker. Same outside look; thinner inner shells (Bambu's 1.0 mm top-shell minimum -> 0.8 mm)

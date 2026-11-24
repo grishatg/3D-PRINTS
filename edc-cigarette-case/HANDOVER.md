@@ -21,7 +21,17 @@
 
 ## 0a. Wood PLA line (24 Nov 2026): the CURRENT work. Read this before §0
 
-> **v10.3 (24 Nov, latest): current.** The owner glued magnets into the old test print: "not flush, they sink". `GLUE_RECESS` 0.30 → **0.10** nominal.
+> **v10.4 (24 Nov): FINAL, current.** The owner set the limits: max 4.5 h per plate, 5 h only for the multi-colour pairs, and these are the last edits.
+> - **Profile:** `w_export.FINAL` on Bambu's `0.16mm High Quality @BBL A1`, the grid the design is built on.
+>   - Extras: 4 walls, 1.0 mm top skin, first layer 40/80 mm/s at 0.42 mm, scarf seams, `reduce_crossing_wall`.
+>   - 0.12 mm was dropped: ENDGRAIN+CUBES came to about 6 h with swaps.
+>   - Trials: 3 walls is *slower* than 4. 50 mm/s outer walls cost 7 min. A faster first layer saves only 1 min, because it's acceleration-bound at 500.
+> - **Magnet floors:** snapped to the 0.16 layer grid (`printed_top()` / `layer_boundary()` in `v7.py`, `GLUE_RECESS` 0.06), so no face sits on a slicing plane. Prints 0.08 mm below the face, 0.30 mm face to face closed.
+> - **Time estimates:** `w_pair_verify` now emulates Bambu's per-feature accelerations (first layer 500, outer/top 2000, rest 4000, travel 9000) and adds purge time (flush volume / 12 mm³/s + 10 s per swap). The emulation already counts the 54 s load + unload per swap.
+> - **Estimates** (with / without A·B): KUMIKO+DIAL 3h43 / 3h34, RIVA+PARQUET 4h05 / 3h58, ENDGRAIN+CUBES 4h37 / 4h23.
+> - **Checks:** all 6 projects pass all 37; the independent wall scan reports 0 thin outer walls.
+>
+> **v10.3 (24 Nov):** The owner glued magnets into the old test print: "not flush, they sink". `GLUE_RECESS` 0.30 → **0.10** nominal.
 > - **Printed result at 0.12 mm layers:** the magnet sits 0.04 mm below the face (flush, never proud); the closed face-to-face gap is 0.34 mm, about 780 g N35 model, the maximum.
 > - **Lid:** the pocket is now entirely inside the boss, so the lid plate has no opening.
 > - **Checks:** `w_pair_verify` expects a 0–0.15 mm recess and a 0.2–0.5 mm closed gap. All 6 projects pass (37 checks).
