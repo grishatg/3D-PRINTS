@@ -63,15 +63,60 @@ def w_inlay(k):
     key = butterfly(-6.0, k['zd'])
     return {'front': [(band(F, 1.0, 1.0).union(key), 'acc1')], 'back': [(band(B, 1.0, 1.0), 'acc1')]}
 
+def _printable(g, min_w=0.9):
+    """keep only pieces at least min_w wide everywhere that matters (no slivers where a cell is clipped by the edge)"""
+    keep = [q for q in getattr(g, 'geoms', [g]) if not q.is_empty and not q.buffer(-min_w / 2).is_empty]
+    return unary_union(keep) if keep else Polygon()
+
+def chequer(region, c=6.2, gap=0.4):
+    """End-grain chequer: every other square (gap/2 inset so diagonal neighbours never touch), centred on the face."""
+    x0, z0, x1, z1 = region.bounds; cx, cz = (x0 + x1) / 2, (z0 + z1) / 2
+    sq = []
+    for i in range(-12, 13):
+        for j in range(-16, 17):
+            if (i + j) % 2: continue
+            a, b = cx + (i - 0.5) * c, cz + (j - 0.5) * c
+            sq.append(sbox(a + gap / 2, b + gap / 2, a + c - gap / 2, b + c - gap / 2))
+    return _printable(unary_union(sq).intersection(region))
+
+def grid_lines(region, c=6.2, w=0.9):
+    x0, z0, x1, z1 = region.bounds; cx, cz = (x0 + x1) / 2, (z0 + z1) / 2
+    L = [sbox(cx + (i - 0.5) * c - w / 2, z0 - 5, cx + (i - 0.5) * c + w / 2, z1 + 5) for i in range(-12, 14)]
+    L += [sbox(x0 - 5, cz + (j - 0.5) * c - w / 2, x1 + 5, cz + (j - 0.5) * c + w / 2) for j in range(-16, 18)]
+    return unary_union(L).intersection(region)
+
+def tumbling_blocks(region, s=4.0, gap=0.4):
+    """Marquetry a cubes (tumbling blocks): pointy-top hexagons, each split into top / left / right rhombi.
+    Returns (left faces, right faces, all face outlines); the top faces are the lid's own wood."""
+    x0, z0, x1, z1 = region.bounds; cx, cz = (x0 + x1) / 2, (z0 + z1) / 2
+    v = lambda x, z, a: (x + s * np.cos(np.radians(a)), z + s * np.sin(np.radians(a)))
+    Lf, Rf, edges = [], [], []
+    dx, dz = s * np.sqrt(3), 1.5 * s
+    for j in range(-12, 13):
+        for i in range(-9, 10):
+            x = cx + i * dx + (dx / 2 if j % 2 else 0); z = cz + j * dz
+            top = Polygon([(x, z), v(x, z, 30), v(x, z, 90), v(x, z, 150)])
+            left = Polygon([(x, z), v(x, z, 150), v(x, z, 210), v(x, z, 270)])
+            right = Polygon([(x, z), v(x, z, 270), v(x, z, 330), v(x, z, 30)])
+            Lf.append(left.buffer(-gap / 2, join_style=2)); Rf.append(right.buffer(-gap / 2, join_style=2))
+            edges += [top.exterior, left.exterior, right.exterior]
+    clip = lambda g: _printable(unary_union(g).intersection(region))
+    return clip(Lf), clip(Rf), unary_union(edges)
+
+def w_endgrain(k):
+    F, B = full(k, 'f'), full(k, 'b')
+    return {'front': [(chequer(F), 'acc1')], 'back': [(grid_lines(B), 'engrave')]}
+def w_cubes(k):
+    F, B = full(k, 'f'), full(k, 'b')
+    lf, rf, _ = tumbling_blocks(F)
+    _a, _b, eb = tumbling_blocks(B)
+    return {'front': [(lf, 'acc2'), (rf, 'acc1')], 'back': [(eb.buffer(0.45, quad_segs=4).intersection(B), 'engrave')]}
+
 DESIGNS = {
  'kumiko':  dict(name='KUMIKO', craft='Japanese kumiko joinery', cover='oak', tray='walnut', sleeve='walnut', mono='engrave',
                  font='ShipporiMinchoB1-ExtraBold-Latin.ttf', fontname='Shippori Mincho (a Japanese foundry’s serif)', cap=6.0, thick=0.12, fn=w_kumiko,
                  idea='Pale oak lid, dark walnut base, like a hinoki box on a walnut tray. The asanoha lattice (growth, strength) is engraved across the lid.',
                  front='Engraved asanoha lattice across the oak lid', back='A narrow lattice band along the opening edge; A·B engraved in the corner'),
- 'tambour': dict(name='TAMBOUR', craft='B&O Beosound Balance oak lamellas; tambour cabinets', cover='oak', tray='oak', sleeve='walnut', mono='walnut',
-                 font='Inter-Bold.ttf', fontname='Inter (Helvetica-like, as B&O’s clean sans)', cap=5.0, thick=0.0, fn=w_tambour,
-                 idea='All oak, fluted like a tambour cabinet or the oak fins of a Beosound Balance. Walnut is used only for the hinge and the A·B mark.',
-                 front='Full-face engraved flutes', back='Five flutes at the opening edge; walnut A·B in the corner'),
  'riva':    dict(name='RIVA', craft='Riva Aquarama: varnished mahogany decks with pale caulking seams', cover='cherry', tray='cherry', sleeve='oak', acc1='oak', mono='oak',
                  font='BodoniModa-Bold.ttf', fontname='Bodoni (Italian Didone, after the Italian boatyard)', cap=6.0, thick=0.10, fn=w_riva,
                  idea='A deep cherry hull with pale oak seams running bow to stern, edge to edge, like a Riva deck. One oak waterline on the back.',
@@ -84,10 +129,14 @@ DESIGNS = {
                  font='Jost-Bold.ttf', fontname='Jost (Futura-like, European modernism)', cap=5.0, thick=0.0, fn=w_parquet,
                  idea='Marquetry: a herringbone of teak and cherry staves laid into an oak lid, the oak showing as fine joints. All four woods in one case; the walnut back carries the pattern engraved.',
                  front='Teak and cherry herringbone with oak joints', back='Engraved herringbone outlines; oak A·B in the corner'),
- 'inlay':   dict(name='INLAY', craft='English cabinetmaking: stringing lines and a butterfly key', cover='walnut', tray='walnut', sleeve='oak', acc1='oak', mono='oak',
-                 font='CormorantGaramond-Bold.ttf', fontname='Garamond (classic book and cabinet-label serif)', cap=6.0, thick=0.12, fn=w_inlay,
-                 idea='A walnut jewellery box: a fine oak stringing line just inside each edge and an oak butterfly key at the golden section, the woodworker’s signature joint.',
-                 front='Oak stringing + oak butterfly key', back='Oak stringing; oak A·B in the corner'),
+ 'endgrain': dict(name='ENDGRAIN', craft='Danish end-grain butcher blocks', cover='oak', tray='teak', sleeve='walnut', acc1='walnut', mono='walnut',
+                 font='Inter-Bold.ttf', fontname='Inter (Helvetica-like, Scandinavian modern)', cap=5.0, thick=0.0, fn=w_endgrain,
+                 idea='The lid is a butcher block seen end-on: an oak and walnut chequer, edge to edge. The teak base carries the block joints as a fine engraved grid.',
+                 front='Oak and walnut chequer, full face', back='Engraved block grid; walnut A·B in the corner'),
+ 'cubes':   dict(name='CUBES', craft='18th-century French marquetry à cubes (tumbling blocks)', cover='oak', tray='cherry', sleeve='walnut', acc1='walnut', acc2='teak', mono='oak',
+                 font='CormorantGaramond-Bold.ttf', fontname='Garamond (the French ébénistes’ typeface)', cap=6.0, thick=0.12, fn=w_cubes,
+                 idea='Stacked cubes in three woods: oak tops, teak and walnut sides, the 3D illusion of Louis XV marquetry. A cherry base with the cube outlines engraved.',
+                 front='Oak / teak / walnut tumbling blocks, full face', back='Engraved cube outlines; oak A·B in the corner'),
 }
 
 def build(key, initials=True):

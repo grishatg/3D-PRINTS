@@ -17,7 +17,8 @@ from shapely.ops import unary_union, linemerge
 from shapely import affinity
 
 LAYER0, LAYER = 0.2, 0.16
-PLATFORM = os.environ.get('PLATFORM', 'v7')   # 'v7' (v7.1, one Ø9.53 pair, 9 mm ends) | 'v10' (two Ø5x2 pairs at the corners, 3 mm ends, rounded inside)
+PLATFORM = os.environ.get('PLATFORM', 'v7')            # 'v7' (v7.1, one Ø9.53 pair, 9 mm ends) | 'v10' (two Ø5x2 pairs at the corners, 2 mm ends, rounded inside)
+MAGNET_MODE = os.environ.get('MAGNET_MODE', 'embed')   # 'embed' (sealed in at a pause) | 'glue' (test prints: pockets open to the closing face, magnets glued at the same depth)
 MAG_D, MAG_T = 9.53, 2.53            # re-measured by the owner (23 Nov)
 POCKET_D, SKIN, GAP = 9.85, 0.96, 0.2   # drop-in pocket (prints ~9.7); 6 layers (~1.0 mm, owner's choice) over each magnet; boss-to-recess clearance
 SKIN_OUT = 1.16                      # cover: 7 layers between the magnet and the outside face (no dark disc showing through)
@@ -50,7 +51,7 @@ CAPTURE = True                 # True: magnets sealed in; the 3MF pauses itself 
 LIP_H, LIP_INT, LIP_SLOTS, LIP_SLOT_W = 0.4, 0.12, 4, 0.8   # snap lip: height, radial interference, relief slots
 
 P = dict(v5.P)
-P.update(TC=2.0, WB=2.0, WS=2.6, END=(3.0 if PLATFORM == 'v10' else 9.0), R=2.8, G=0.3, CF=1.6, CB=2.2, CE=1.0, FACET=6.0,
+P.update(TC=2.0, WB=2.0, WS=2.6, END=(2.0 if PLATFORM == 'v10' else 9.0), R=2.8, G=0.3, CF=1.6, CB=2.2, CE=1.0, FACET=6.0,
          PIN_PRESS=1.80, PIN_SLIP=2.0, PIN_SLEEVE=2.1, SLOTS=6, SLOT_W=6.6, RIB_T=0.8, RIB_H=3.0,
          MAG_ENDS=False, INSIDE_PLATE=False, BOTTOM_MONO=False,
          SEGS=[(0, 16), (16, 34), (34, 54), (54, 72), (72, 88)],
@@ -186,6 +187,9 @@ def build():
         cover = cover + (ycyl(BOSS_R, YS - 0.3, boss_top) ^ env)
     tray = max(tray.decompose(), key=lambda q: q.volume()); cover = max(cover.decompose(), key=lambda q: q.volume())
     # pockets AFTER the keep-largest step: a sealed pocket is an internal void, which decompose() returns as its own piece
+    if MAGNET_MODE == 'glue':   # open each pocket up to the closing face; the magnet is glued at the bottom, where it would be sealed
+        c_pocket = UN([ycyl(POCKET_D / 2, c_top_z - POCKET_H - D / 2, boss_top + 0.5, z=mz) for mz in MZS])
+        t_pocket = UN([ycyl(POCKET_D / 2, rec_floor - 0.5, D / 2 - (t_top_z - POCKET_H), z=mz) for mz in MZS])
     tray = tray - t_pocket; cover = cover - c_pocket
     if CRESCENT:   # ellipsoid dish centred on the split line at the opening edge, above the clasp
         cres = m3.Manifold.sphere(1.0, 96).scale((7.0, 5.2, 9.5)).translate((W / 2 + 7.0 - 3.2, YS - 0.3, 63.0))
@@ -333,7 +337,8 @@ def build():
         yel_cover = yel_cover + [y for y, p, k in acc if p == 'c']; yel_tray = yel_tray + [y for y, p, k in acc if p == 't']
     return dict(d=d, tray=tray, cover=cover, sleeve=d['sleeve'], yel_cover=yel_cover, yel_tray=yel_tray, mono=mono, acc=acc, y4=y4,
                 badge_black=badge_black, badge_yellow=badge_yellow, badge_t=bt,
-                c_pocket=c_pocket, t_pocket=t_pocket, pause_cover_z=(c_top_z + LAYER) if CAPTURE else None, pause_tray_z=(t_top_z + LAYER) if CAPTURE else None,
+                c_pocket=c_pocket, t_pocket=t_pocket, pause_cover_z=(c_top_z + LAYER) if CAPTURE and MAGNET_MODE == 'embed' else None,
+                pause_tray_z=(t_top_z + LAYER) if CAPTURE and MAGNET_MODE == 'embed' else None, magnet_mode=MAGNET_MODE,
                 c_top_z=c_top_z, t_top_z=t_top_z, zd=zd)
 
 def checks(r):
