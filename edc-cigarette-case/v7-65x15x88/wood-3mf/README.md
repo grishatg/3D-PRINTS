@@ -58,9 +58,16 @@ The two halves then attract when the case is closed. 0.8 mm of wood (5 layers) s
 | Walls / infill | 3 walls, 15 % gyroid | **2 walls, 10 % gyroid** |
 | Shells | Top 5 (min 1.0 mm), bottom 4 | **Top 5 (min 0.8 mm), bottom 3** |
 | Shape, patterns, A·B, hinge | — | **Identical** |
-| Filament | — | **About 12–16 % less** |
+| Purge table (filament-change waste) | Standard: 120–380 mm³ per swap | **Lean: 50 (light→dark) to 150 (dark→light) mm³, about 60 % less** |
+| Filament | — | **About 12–16 % less**, plus less purge |
 
-The case is mostly solid wall, so lighter infill only saves 4–6 g per case. The test is still representative:
+The case is mostly solid wall, so lighter infill only saves 4–6 g per case.
+
+**Purge waste:** KUMIKO changes filament only once (oak to walnut), so its purge is already tiny: about 0.2 g, now 0.1 g. RIVA swaps 10 times, cherry to oak and back, and the lean table cuts its purge from about 3.1 g to 1.2 g.
+- **The trade-off:** the first few centimetres of each oak seam after cherry may come out a shade darker. That's cosmetic and doesn't affect the test.
+- **Don't press Re-calculate** in Bambu's purge dialog, and leave the Multiplier at 1. Either would overwrite the lean values.
+
+The test is still representative:
 - **Fit:** the hinge, closure and rollie fit are exactly as in production.
 - **Pull:** the pocket floor is at the production magnet depth, so with the magnet glued to the floor the pull matches production.
 

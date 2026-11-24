@@ -22,6 +22,12 @@ FLUSH = [[0, 120, 140, 140],
          [220, 0, 130, 130],
          [380, 300, 0, 160],
          [360, 280, 160, 0]]
+# test prints: minimum waste (owner, 24 Nov). Light -> dark at Bambu's suggested floor (~50: the dark wood hides the oak left in the
+# 92 mm3 melt zone); dark -> light kept at 100-150 so the oak seams / marks don't come out muddy. ~60 % less purge than FLUSH.
+FLUSH_LEAN = [[0, 50, 50, 50],
+              [100, 0, 50, 50],
+              [150, 110, 0, 60],
+              [150, 110, 60, 0]]
 PROFILES = {
     'production': dict(wall_loops='3', top_shell_layers='5', bottom_shell_layers='4', sparse_infill_density='15%', brim_type='outer_only', brim_width='3'),
     # test: ~15% less filament, ~10 min quicker. Same outside look; thinner inner shells (Bambu's 1.0 mm top-shell minimum -> 0.8 mm)
@@ -99,7 +105,7 @@ def export(key, initials, profile, out, orig, geometry_only=False):
                  'curr_bed_type': 'Textured PEI Plate', 'sparse_infill_pattern': 'gyroid', 'top_surface_pattern': 'concentric'}
     overrides.update(PROFILES[profile])
     overrides['layer_change_gcode'] = base_lc + (pause_block(r['pause_cover_z'], r['pause_tray_z']) if profile == 'production' else '')
-    cfg, _src = a1_safe.project_config(tmpl, [W.WOOD[w].upper() for w in SLOTS], overrides, fil_name=FIL, flush=FLUSH)
+    cfg, _src = a1_safe.project_config(tmpl, [W.WOOD[w].upper() for w in SLOTS], overrides, fil_name=FIL, flush=FLUSH_LEAN if profile == 'test' else FLUSH)
     probs = a1_safe.check(cfg, tmpl); assert not probs, probs
     if not geometry_only: files['Metadata/project_settings.config'] = json.dumps(cfg, indent=4)
     files['[Content_Types].xml'] = open(f'{orig}/[Content_Types].xml').read()
