@@ -27,10 +27,10 @@ def _enum_ok(k, value, defs_list):
         if any(x not in allowed for x in vals if x != ''): return False
     return True
 
-def project_config(template, colours, overrides):
+def project_config(template, colours, overrides, fil_name='Bambu PETG HF @BBL A1', flush=None, proc_name='0.16mm High Quality @BBL A1'):
     machine = TP.resolve(TAG_VALUES, 'machine', 'Bambu Lab A1 0.4 nozzle')
-    process = TP.resolve(TAG_VALUES, 'process', '0.16mm High Quality @BBL A1')
-    fil = TP.resolve(TAG_VALUES, 'filament', 'Bambu PETG HF @BBL A1')
+    process = TP.resolve(TAG_VALUES, 'process', proc_name)
+    fil = TP.resolve(TAG_VALUES, 'filament', fil_name)
     defs = [BV.optiondefs(t) for t in TAG_CHECK]
     n, n0 = len(colours), len(template['filament_colour'])
     cfg, src = {}, {}
@@ -57,20 +57,22 @@ def project_config(template, colours, overrides):
         cfg[k] = val
     cfg['filament_colour'] = list(colours)
     if 'default_filament_colour' in cfg: cfg['default_filament_colour'] = [''] * n
-    cfg['filament_settings_id'] = ['Bambu PETG HF @BBL A1'] * n
+    cfg['filament_settings_id'] = [fil_name] * n
     cfg['filament_ids'] = [str(fil.get('filament_id', 'GFG02'))] * n
-    cfg['print_settings_id'] = '0.16mm High Quality @BBL A1'
+    cfg['print_settings_id'] = proc_name
     cfg['printer_settings_id'] = 'Bambu Lab A1 0.4 nozzle'
     cfg['printer_model'] = 'Bambu Lab A1'
     cfg['printer_variant'] = '0.4'
     cfg['print_compatible_printers'] = ['Bambu Lab A1 0.4 nozzle']
-    M = [[0, 150, 320], [280, 0, 460], [150, 150, 0]]
+    M = flush or [[0, 150, 320], [280, 0, 460], [150, 150, 0]]      # row = from, column = to (mm3)
     cfg['flush_volumes_matrix'] = [str(x) for row in M for x in row]
     cfg['flush_volumes_vector'] = ['140'] * (2 * n)
     for k, v in overrides.items():
         assert k in template, f'override {k} is not in the proven key set'
         cfg[k] = v
-    cfg['different_settings_to_system'] = [';'.join(sorted(k for k in overrides if k in process))] + [''] * n + [';'.join(sorted(k for k in overrides if k in machine))]
+    PROCESS_DEFAULT_KEYS = {'brim_type'}   # process options the A1 preset leaves at Bambu's built-in default
+    fil_over = ';'.join(sorted(k for k in overrides if k in fil and k not in process and k not in machine))   # e.g. scarf seams (per filament)
+    cfg['different_settings_to_system'] = [';'.join(sorted(k for k in overrides if k in process or k in PROCESS_DEFAULT_KEYS))] + [fil_over] * n + [';'.join(sorted(k for k in overrides if k in machine))]
     return cfg, src
 
 def check(cfg, template):

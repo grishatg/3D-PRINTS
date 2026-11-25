@@ -13,8 +13,10 @@ LH = [float(x) for x in (sys.argv[2:] or ['0.16'])]
 def mesh(man):
     mm = man.to_mesh(); return np.asarray(mm.vert_properties)[:, :3].astype(float), np.asarray(mm.tri_verts).astype(int)
 
-def prusa_3mf(path, objects, pauses):
-    """objects: list of (name, [(manifold, kind, extruder, settings)], (x, y))"""
+def prusa_3mf(path, objects, pauses, ranges=None):
+    """objects: list of (name, [(manifold, kind, extruder, settings)], (x, y))
+    ranges: optional {object index (1-based): [(min_z, max_z, {option: value})]} = PrusaSlicer height-range modifiers
+    (used to emulate Bambu's per-object "only one wall on first layer")."""
     model = io.StringIO(); cfg = io.StringIO()
     model.write('<?xml version="1.0" encoding="UTF-8"?>\n<model unit="millimeter" xml:lang="en-US" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" '
                 'xmlns:slic3rpe="http://schemas.slic3r.org/3mf/2017/06">\n <metadata name="slic3rpe:Version3mf">1</metadata>\n <resources>\n')
@@ -52,6 +54,11 @@ def prusa_3mf(path, objects, pauses):
                    '<Relationship Target="/3D/3dmodel.model" Id="rel0" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/></Relationships>')
         z.writestr('3D/3dmodel.model', model.getvalue()); z.writestr('Metadata/Slic3r_PE_model.config', cfg.getvalue())
         z.writestr('Metadata/Prusa_Slicer_custom_gcode_per_print_z.xml', pz)
+        if ranges:
+            rx = '<?xml version="1.0" encoding="utf-8"?>\n<objects>\n' + ''.join(
+                f' <object id="{oid}">\n' + ''.join(f'  <range min_z="{a_}" max_z="{b_}">\n' + ''.join(f'   <option opt_key="{k}">{v}</option>\n' for k, v in o_.items()) + '  </range>\n'
+                                                 for a_, b_, o_ in rs) + ' </object>\n' for oid, rs in ranges.items()) + '</objects>\n'
+            z.writestr('Metadata/Prusa_Slicer_layer_config_ranges.xml', rx)
 
 def config(lh, path):
     """Bambu P1S + AMS approximated in PrusaSlicer terms. PETG-HF on Textured PEI."""
@@ -88,7 +95,7 @@ def config(lh, path):
     with open(path, 'w') as f:
         for k, v in c.items(): f.write(f'{k} = {v}\n')
 
-def plate(r):
+def plate(r, with_mods=False):
     P = v7.P
     U = lambda vs: m3.Manifold.batch_boolean(vs, m3.OpType.Add) if len(vs) > 1 else vs[0]
     end_blocks = chbox(-v7.W / 2 - 1, v7.W / 2 + 1, -v7.D, v7.D, -1, P['END'] + 0.5, cv=0.1) + chbox(-v7.W / 2 - 1, v7.W / 2 + 1, -v7.D, v7.D, v7.H - P['END'] - 0.5, v7.H + 1, cv=0.1)
@@ -102,14 +109,16 @@ def plate(r):
             out.append((q, k, e, s))
         return out
     M100 = {'fill_density': '100%', 'perimeters': '6'}
-    tray = drop([(tray_rot(r['tray']), 'part', 2, {})] + [(tray_rot(y), 'part', 3, {}) for y in r['yel_tray']] + [(tray_rot(mod), 'mod', 0, M100)])
-    cover = drop([(cover_rot(r['cover']), 'part', 1, {})] + [(cover_rot(y), 'part', 3, {}) for y in r['yel_cover']] + [(cover_rot(mod), 'mod', 0, M100)])
+    mods = lambda rot: [(rot(mod), 'mod', 0, M100)] if with_mods else []      # v7.1 prints 100% everywhere: no modifiers
+    tray = drop([(tray_rot(r['tray']), 'part', 2, {})] + [(tray_rot(y), 'part', 3, {}) for y in r['yel_tray']] + mods(tray_rot))
+    cover = drop([(cover_rot(r['cover']), 'part', 1, {})] + [(cover_rot(y), 'part', 3, {}) for y in r['yel_cover']] + mods(cover_rot))
     sleeve = drop([(r['sleeve'], 'part', 3, {})])
     badge = drop([(r['badge_black'], 'part', 2, {}), (r['badge_yellow'], 'part', 3, {})]) if r.get('badge_black') is not None else None
     return [('Cover', cover, (110, 128))], [('Tray', tray, (110, 128))], [('Sleeve', sleeve, (128, 128))], ([('Badge', badge, (128, 128))] if badge else [])
 
-def slice_one(p3mf, ini, gcode):
-    cmd = ['prusa-slicer', '--export-gcode', '--load', ini, '--output', gcode, p3mf]
+def slice_one(p3mf, ini, gcode, dont_arrange=False):
+    # dont_arrange: keep the project's own XY positions (the CLI re-arranges by default), so a clearance problem is an error
+    cmd = ['prusa-slicer', '--export-gcode'] + (['--dont-arrange'] if dont_arrange else []) + ['--load', ini, '--output', gcode, p3mf]
     res = subprocess.run(cmd, capture_output=True, text=True, timeout=1800, env=dict(os.environ, QT_QPA_PLATFORM='offscreen'))
     return res
 

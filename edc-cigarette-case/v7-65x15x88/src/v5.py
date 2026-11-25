@@ -84,12 +84,32 @@ def book(surface='knurl', seed=(5, 11), p=P):
     ys = -D / 2 + TC
     XA, YA = -W / 2 + R + 0.1, -D / 2 + R + 0.1
     segs = p.get('SEGS', [(0, 15), (15, 33), (33, 52), (52, 70), (70, 85)])
-    own = ['T', 'C', 'S', 'C', 'T']
-    env = envelope(p)
+    own = p.get('OWN', ['T', 'C', 'S', 'C', 'T'])            # v10.6: 'M' = a third tray knuckle in the middle instead of the loose sleeve
+    NB = p.get('BARREL_SEG', 48)                              # v10.6: 192 on v10 (48 printed as 0.37 mm facets: visible bands on the knuckles)
+    env = p['ENV'](p) if p.get('ENV') else envelope(p)          # v7.1: optional rounded envelope
     halfT = chbox(-W, W, ys, D, -1, H + 1, cv=0.1); halfC = chbox(-W, W, -D, ys, -1, H + 1, cv=0.1)
     tray = env ^ halfT
     cx0, cx1 = -W / 2 + WS, W / 2 - WS
-    cav = chbox(cx0, cx1, ys - 1, D / 2 - WB, END, H - END, cv=0.4)
+    if p.get('CAV_ROUND'):   # v10: no sharp inside edges: rounded plan corners, filleted floor, softened rim
+        rc, rf, rm = p['CAV_ROUND']                                   # plan corner radius, floor fillet, mouth round-over
+        plan = sbox(cx0, END, cx1, H - END).buffer(-rc).buffer(rc, quad_segs=16)
+        clip = p.get('PLAN_CLIP')                                     # v10.1: follow the rounded outer corners
+        if clip is not None: plan = plan.intersection(clip)
+        floor = D / 2 - WB; slabs = [_map_inner(K.shapely_to_cs(plan).extrude(floor - rf - (ys - 1)), ys - 1)]
+        n = 10
+        for i in range(n):                                            # concave floor fillet
+            a, b = floor - rf + i * rf / n, floor - rf + (i + 1) * rf / n
+            hgt = floor - (a + b) / 2; ins = rf - np.sqrt(max(rf * rf - (rf - hgt) ** 2, 0))
+            slabs.append(_map_inner(K.shapely_to_cs(plan.buffer(-ins, quad_segs=16)).extrude(b - a + 0.001), a))
+        for i in range(n):                                            # convex round-over where the rim meets the inside
+            a, b = ys + i * rm / n, ys + (i + 1) * rm / n
+            t = (a + b) / 2 - ys; out = rm - np.sqrt(max(rm * rm - (rm - t) ** 2, 0)) if t < rm else 0
+            ro = plan.buffer(out, quad_segs=16)
+            if clip is not None: ro = ro.intersection(clip)            # no round-over where the wall is only END thick
+            slabs.append(_map_inner(K.shapely_to_cs(ro).extrude(b - a + 0.001), a))
+        cav = m3.Manifold.batch_boolean(slabs, m3.OpType.Add)
+    else:
+        cav = chbox(cx0, cx1, ys - 1, D / 2 - WB, END, H - END, cv=0.4)
     tray -= cav
     # vertical channels
     x_left = XA + R + G + 0.4
@@ -99,30 +119,52 @@ def book(surface='knurl', seed=(5, 11), p=P):
     x = slot_x0; ribs = []
     for i in range(p['SLOTS'] - 1):
         x += p['SLOT_W']; rt = p['RIB_T']
-        ribs.append(prism_xz([(x, END - 0.5), (x + rt, END - 0.5), (x + rt, H - END - 12), (x + rt / 2, H - END - 11), (x, H - END - 12)],
+        rtop = p.get('RIB_TOP', H - END - 12)       # v8: lower rib tops leave a pinch zone at the top of each rollie
+        if p.get('RIB_ROUND'):                      # v10: capsule ribs: round top ridge and round ends, no sharp edges
+            r_ = rt / 2; xc = x + r_; yt = D / 2 - WB - p['RIB_H'] + r_; yb = D / 2 - WB + 0.3
+            pts = [m3.Manifold.sphere(r_, 24).translate((xc, yy, zz)) for yy in (yt, yb) for zz in (END + r_ + 0.6, rtop)]
+            ribs.append(m3.Manifold.batch_hull(pts)); x += rt; continue
+        ribs.append(prism_xz([(x, END - 0.5), (x + rt, END - 0.5), (x + rt, rtop), (x + rt / 2, rtop + 1), (x, rtop)],
                              D / 2 - WB - p['RIB_H'], D / 2 - WB + 0.1)
                     ^ prism_yz([(D / 2 - WB - p['RIB_H'] - 0.01, END - 1), (D / 2, END - 1), (D / 2, H), (D / 2 - WB - p['RIB_H'] - 0.01, H)], x - 1, x + rt + 1))
         x += rt
     tray += m3.Manifold.batch_boolean(ribs, m3.OpType.Add)
     # cover + lip
     cover = env ^ halfC
-    lip = chbox(cx0 + 3.0, cx1 - 0.2, ys - 0.5, ys + 1.4, END + 0.2, H - END - 0.2, cv=0.5) - \
-          chbox(cx0 + 4.0, cx1 - 1.2, ys - 1, ys + 2, END + 1.2, H - END - 1.2, cv=0.3)
+    if p.get('LIP_R'):      # v7.1: rounded lip ring (no square corners)
+        rr = p['LIP_R']
+        outer = sbox(cx0 + 3.0, END + 0.2, cx1 - 0.2, H - END - 0.2).buffer(-rr).buffer(rr, quad_segs=16)
+        if p.get('LIP_CLIP') is not None: outer = outer.intersection(p['LIP_CLIP'])      # v10.1: follow the rounded corners
+        cut = p.get('LIP_CUT')                                                          # v10.1: no lip behind the thumb scoop
+        nocut = lambda g: g.difference(cut) if cut is not None else g
+        if p.get('LIP_ROUND'):   # v10: lip ring with a fully rounded top (r 0.5)
+            rr_ = 0.5; parts_ = [_map_inner(K.shapely_to_cs(nocut(outer.difference(outer.buffer(-1.0, quad_segs=16)))).extrude(1.9 - rr_), ys - 0.5)]
+            for i in range(6):
+                a_ = ys + 1.4 - rr_ + i * rr_ / 6; t_ = (i + 0.5) * rr_ / 6; ins = rr_ - np.sqrt(max(rr_ * rr_ - t_ * t_, 0))
+                ring_ = nocut(outer.buffer(-ins, quad_segs=16).difference(outer.buffer(-1.0 + ins, quad_segs=16)))
+                if not ring_.is_empty: parts_.append(_map_inner(K.shapely_to_cs(ring_).extrude(rr_ / 6 + 0.001), a_))
+            lip = m3.Manifold.batch_boolean(parts_, m3.OpType.Add)
+        else:
+            lip = _map_inner(K.shapely_to_cs(outer.difference(outer.buffer(-1.0, quad_segs=16))).extrude(1.9), ys - 0.5)
+    else:
+        lip = chbox(cx0 + 3.0, cx1 - 0.2, ys - 0.5, ys + 1.4, END + 0.2, H - END - 0.2, cv=0.5) - \
+              chbox(cx0 + 4.0, cx1 - 1.2, ys - 1, ys + 2, END + 1.2, H - END - 1.2, cv=0.3)
     cover += lip
-    # inside-of-cover stiffening frame (raised 0.8, notched octagon) + data plate inlay
-    inner_frame_poly = notched_panel(cx0 + 5.0, cx1 - 2.5, END + 3.0, H - END - 3.0, c=3.0, step=3.0)
-    ring = inner_frame_poly.difference(inner_frame_poly.buffer(-1.6, join_style=2))
-    cover += _map_inner(K.shapely_to_cs(ring).extrude(1.1), ys - 0.3)
+    if p.get('INNER_FRAME', True):
+        # inside-of-cover stiffening frame (raised 0.8, notched octagon) + data plate inlay
+        inner_frame_poly = notched_panel(cx0 + 5.0, cx1 - 2.5, END + 3.0, H - END - 3.0, c=3.0, step=3.0)
+        ring = inner_frame_poly.difference(inner_frame_poly.buffer(-1.6, join_style=2))
+        cover += _map_inner(K.shapely_to_cs(ring).extrude(1.1), ys - 0.3)
     # hinge
     sleeve = None
     for (z0, z1), o in zip(segs, own):
         g0, g1 = (z0 + (G if z0 > 0 else 0)), (z1 - (G if z1 < H else 0))
-        barrel = m3.Manifold.cylinder(g1 - g0, R, R, 48).translate((XA, YA, g0)) ^ env
-        clear = m3.Manifold.cylinder(z1 - z0 + 2 * G, R + G, R + G, 48).translate((XA, YA, z0 - G))
-        if o == 'T':
+        barrel = m3.Manifold.cylinder(g1 - g0, R, R, NB).translate((XA, YA, g0)) ^ env
+        clear = m3.Manifold.cylinder(z1 - z0 + 2 * G, R + G, R + G, NB).translate((XA, YA, z0 - G))
+        if o in ('T', 'M'):     # tray knuckle: barrel on a pillar that stands on the back plate. 'T' grips the pin, 'M' lets it slide through
             cover -= clear
             tray += barrel + (chbox(-W / 2, XA + R - 0.1, YA, D / 2 - WB + 0.1, g0, g1, cv=0.1) ^ env ^ halfT)
-            tray -= teardrop(XA, YA, p['PIN_PRESS'] / 2, -1, z0 - 1, z1 + 1)
+            tray -= teardrop(XA, YA, p['PIN_PRESS' if o == 'T' else 'PIN_SLEEVE'] / 2, -1, z0 - 1, z1 + 1)
         elif o == 'C':
             tray -= clear
             cover += barrel + (chbox(XA, XA + R + 1.5, YA - R, ys, g0, g1, cv=0.1) ^ env)
@@ -131,10 +173,24 @@ def book(surface='knurl', seed=(5, 11), p=P):
             tray -= clear; cover -= clear
             hexs = m3.Manifold.cylinder(g1 - g0, R, R, 6).rotate((0, 0, 30)).translate((XA, YA, g0))
             sleeve = hexs - m3.Manifold.cylinder(H + 2, p['PIN_SLEEVE'] / 2, p['PIN_SLEEVE'] / 2, 32).translate((XA, YA, -1))
-    keep = chbox(XA, W, -D, D, -1, H + 1, cv=0.1) + m3.Manifold.cylinder(H + 2, R, R, 48).translate((XA, YA, -1))
+    rk = R + p.get('KEEP_EXTRA', 0.0)                          # v10.6: lets the lid knuckle's first layer follow the edge chamfer (it was 0.36 mm short)
+    keep = chbox(XA, W, -D, D, -1, H + 1, cv=0.1) + m3.Manifold.cylinder(H + 2, rk, rk, NB).translate((XA, YA, -1))
     cover = cover ^ keep
-    SW = m3.Manifold.batch_boolean([cover.translate((-XA, -YA, 0)).rotate((0, 0, -a)).translate((XA, YA, 0)) for a in range(2, 168, 2)], m3.OpType.Add)
-    tray -= SW
+    if p.get('SWEEP_R'):      # v10.6: same swing clearance, computed copy by copy from the lid's hinge zone (the one big union of 83
+        rs = p['SWEEP_R']     # overlapping lids took 137 s once the barrels were smooth). Nothing further than 4.2 mm from the pin can
+        cov_s = cover ^ m3.Manifold.cylinder(H + 2, rs, rs, 96).translate((XA, YA, -1))      # reach the tray inside 166 degrees.
+        clr = p.get('SWEEP_CLR', 0.0)
+        if clr:               # running clearance at wide-open angles: the lid's hinge-side edge is a concave arc at r = R + G around the
+            # pin, and the swing cut left the tray knuckles at exactly that radius (zero gap from ~111 deg on). Cut them to R + G - clr.
+            ann = m3.Manifold.cylinder(H + 2, R + G, R + G, NB).translate((XA, YA, -1)) - m3.Manifold.cylinder(H + 4, R + G - clr, R + G - clr, NB).translate((XA, YA, -2))
+            fat = [chbox(XA, W, -D, ys, z0 - G, z1 + G, cv=0.01) for (z0, z1), o in zip(segs, own) if o in ('T', 'M')]
+            cov_s = cov_s + (m3.Manifold.batch_boolean(fat, m3.OpType.Add) ^ env ^ ann)
+        for a in range(2, 168, 2):
+            tray = tray - cov_s.translate((-XA, -YA, 0)).rotate((0, 0, -a)).translate((XA, YA, 0))
+            tray.num_tri()    # evaluate now: keeps each cut small instead of one union of all the copies
+    else:
+        SW = m3.Manifold.batch_boolean([cover.translate((-XA, -YA, 0)).rotate((0, 0, -a)).translate((XA, YA, 0)) for a in range(2, 168, 2)], m3.OpType.Add)
+        tray -= SW
     # magnets 6x2 discs in the 8.5 mm end blocks
     mx = cx1 - 4.6; mags = []
     for z in ((END / 2, H - END / 2) if p.get('MAG_ENDS', True) else ()):
@@ -143,12 +199,20 @@ def book(surface='knurl', seed=(5, 11), p=P):
         mags.append((mx, z))
     # thumb access: notch in the cover inner edge + 45 deg scoop in the tray front edge (z 34-51)
     nz0, nz1 = p.get('NOTCH_Z', (33, 52))
-    cover -= prism_xz([(W / 2 + 1, nz0), (W / 2 + 1, nz1), (W / 2 - 2.0, (nz0 + nz1) / 2)], ys - 1.4, ys + 0.01)
+    if not p.get('THUMB', True):   # v8: replaced by one crescent across both halves (added in v7.build)
+        pass
+    elif p.get('NOTCH_ROUND'):   # v7.1: smooth arc instead of a sharp V
+        zc, half = (nz0 + nz1) / 2, (nz1 - nz0) / 2; dep = 2.0; rad = (half ** 2 + dep ** 2) / (2 * dep)
+        arc = Point(W / 2 + rad - dep, zc).buffer(rad, quad_segs=48)
+        cover -= _map_inner(K.shapely_to_cs(arc).extrude(1.2 + 0.01), ys - 1.2)
+    else:
+        cover -= prism_xz([(W / 2 + 1, nz0), (W / 2 + 1, nz1), (W / 2 - 2.0, (nz0 + nz1) / 2)], ys - 1.4, ys + 0.01)
     sz0, sz1 = p.get('SCOOP_Z', (34, 51))
-    scoop = prism_xy([(W / 2 + 1, ys - 0.1), (W / 2 - 3.2, ys - 0.1), (W / 2 + 1, ys + 4.2)], sz0, sz1)
-    tray -= scoop
+    if p.get('THUMB', True):
+        scoop = prism_xy([(W / 2 + 1, ys - 0.1), (W / 2 - 3.2, ys - 0.1), (W / 2 + 1, ys + 4.2)], sz0, sz1)
+        tray -= scoop
     # top grip grooves (echo the reference lid bars)
-    for gx in (-6, 0, 6):
+    for gx in ((-6, 0, 6) if p.get('GRIP_GROOVES', True) else ()):
         g = chbox(gx - 0.6, gx + 0.6, -D / 2 + 2.6, D / 2 - 2.6, H - 0.6, H + 1, cv=0.3)
         tray -= g; cover -= g
     yel_c, yel_t = [], []
@@ -202,9 +266,10 @@ def _map_inner(c, ys):
 
 def rollups(d, dia=6.0):
     p = d['p']; out = []
+    z0 = p['END'] + (p['CAV_ROUND'][1] if p.get('CAV_ROUND') else 0.0)   # v10: rollies rest clear of the floor fillet at the end wall
     for i in range(p['SLOTS']):
         x = d['slot_x0'] + i * (p['SLOT_W'] + p['RIB_T']) + p['SLOT_W'] / 2
-        out.append(m3.Manifold.cylinder(60, dia / 2 - 0.05, dia / 2 - 0.05, 32).translate((x, D / 2 - p['WB'] - dia / 2 - 0.05, p['END'])))
+        out.append(m3.Manifold.cylinder(60, dia / 2 - 0.05, dia / 2 - 0.05, 32).translate((x, D / 2 - p['WB'] - dia / 2 - 0.05, z0)))
     return out
 
 if __name__ == '__main__':

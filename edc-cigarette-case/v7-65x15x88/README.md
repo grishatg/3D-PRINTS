@@ -1,86 +1,86 @@
-# AB Rollie Book v7: 65 × 15 × 88 mm, Bambu Lab A1 (current)
+# AB Rollie Book v7.1: 65 × 13.5 × 88 mm, Bambu Lab A1 (current)
 
-![v7](v7_a1_sheet.png)
+![v7.1 ripple options](ripple_options_v7.1.png)
 
-| File | Use |
+v7.1 is the first-print revision: it applies the feedback from the v7.0 test print (23 Nov 2026). It comes in **three ripple designs**. Everything else is identical: geometry, magnets, hinge, settings and print time.
+
+| File | Ripple design |
 |---|---|
-| **`AB_Rollie_Book_v7_A1_by_object.3mf`** | **Open this one.** A full Bambu Studio project for the **A1 + AMS lite**: one plate, by object, every setting included. |
-| `AB_Rollie_Book_v7_A1_geometry_only.3mf` | **Fallback.** Identical parts, colours, modifiers and plate, but no print profile: it uses your own A1 presets, so it cannot raise a config error. |
+| **`AB_Rollie_Book_v7_A1_by_object_A_Flow.3mf`** | **A · Flow:** Design 6 ripples, now unbroken on the front, edge to edge |
+| **`AB_Rollie_Book_v7_A1_by_object_B_Rings.3mf`** | **B · Rings:** a stone dropped at the clasp; rings spread and thin out, front and back |
+| **`AB_Rollie_Book_v7_A1_by_object_C_Topo.3mf`** | **C · Topo:** contour lines, a nod to the v1 Topo Edition |
+| `AB_Rollie_Book_v7_A1_geometry_only_<design>.3mf` | **Fallback** if a main file ever refuses to open: same parts, colours and plate, but your own A1 presets. **It has no automatic magnet pauses**, so pause by hand (see below). |
+
+**MakerWorld (public) version:** `makerworld/3mf/Rollie_Book_v7_A1_by_object_<design>.3mf`. It's identical to the files above but has **no A·B initials** and no "AB" in any name. That cuts the colour swaps from 47 to **15** and the print to about **2 h 10 m** sliced (about 2¼–2½ h real). The listing text and images are in `makerworld/`.
+
+Each main file is a complete Bambu Studio project: A1 + AMS lite, one plate, print **by object**. `stl/<design>/` holds the loose STLs. The v7.0 files you printed are in `superseded/v7.0-first-print/`.
 
 ![plate](v7_a1_plate.png)
 
-## Fix in this revision: "Invalid configuration file"
-- **Problem:** the previous A1 file failed to open ("Invalid configuration file", then "no geometry data").
-- **Cause:** its settings were built from Bambu's **development** profiles.
-  - That added 193 options beyond the creator's file. Released versions flag 43 to 123 of them as unknown.
-  - It also added the new dual-nozzle (H2D) "extruder variant" keys.
-  - As a result, the filament colours never loaded, and Bambu Studio rejects a project with no filaments.
-- **Fix:** the project now uses **only the exact settings layout of the creator's original file**, which your Bambu Studio already opens (366 options, same order).
-  - The values are Bambu's **released** A1 presets: Bambu Lab A1 0.4 nozzle, 0.16mm High Quality @BBL A1, and Bambu PETG HF @BBL A1 ×3.
-  - **Removed:** no multi-extruder keys and no unknown options.
-- **Geometry is unchanged:** the STLs are byte-identical.
+## What changed from v7.0 (your first-print feedback)
+| Feedback | v7.1 |
+|---|---|
+| Magnets didn't fit; they measure 9.53 × 2.53 | Pockets are now **Ø9.85** drop-in (they print at about 9.7), **sealed inside** the cover and tray during the print under **≈ 1.0 mm (6 layers)**. No snap lip. |
+| Tray magnet holder was square | Now a **round column**, matching the grey cover's round boss. The Ø11.85 circle on top is the socket the grey boss sits in; the magnet is sealed **below** it ([cut-through](magnet_section_v7.1.png)). |
+| "Stop by itself and give me a signal" | The printer **chimes and pauses itself** at the right layer of each part. Drop the magnet in, press Resume. |
+| Panels too thick | Cover and back are **2.0 mm** (were 3.0 / 2.6) with **100% infill**. The case is **13.5 mm** deep (was 15). Rollie space is unchanged. |
+| "Squares" on the surfaces | They were the outlines of the 100%-infill blocks and the octagon frame. Both are gone. Top surfaces now print **concentric**. |
+| Sharp edges | Long edges are **rounded** (R3, with a 45° run-out at the bed so they print cleanly). Corners are R6 on the opening side and R1 on the spine. The lip is rounded and the thumb notch is a smooth arc. The 3 grip notches that printed as lumps are removed. |
+| Warped on one side | **4 mm brim**; parts are now **114 mm** apart. Clean the plate with dish soap, and dry the filament (see below). |
+| Yellow line thicker | Datum lines are **2.0 mm** wide (were 1.0). |
+| Yellow in the ripple slits; ripples connected; reach the edges | Ripples are **filled flush with yellow** on the cover **and** tray back. They run top edge to bottom edge, in 3 designs. |
 
 ## The only extra parts you need
 | Part | Qty | Notes |
 |---|---|---|
-| Round magnets **Ø9.51 × 2.51 mm** | 2 | **Snap into** the printed pockets after printing |
-| **1.75 mm filament** (PETG-HF) | ≈ 87 mm | Hinge pin |
-| PETG-HF **grey / black / yellow** | AMS lite slots 1 / 2 / 3 | Cover / tray / yellow details and spine sleeve |
+| Round magnets **Ø9.53 × 2.53 mm** | 2 | Dropped in during the print (the printer stops for them) |
+| **1.75 mm filament** (PETG) | ≈ 87 mm | Hinge pin |
+| PETG **grey / black / yellow** | AMS lite slots 1 / 2 / 3 | Cover / tray / yellow details and spine sleeve |
 
 ## How to print
-1. Open `AB_Rollie_Book_v7_A1_by_object.3mf`.
-   - If Bambu Studio asks about **customised presets**, keep the project's settings; this file deliberately differs from the stock presets.
-   - Load **grey, black and yellow PETG-HF** into AMS lite slots 1, 2 and 3, then press **Sync AMS**.
-2. Check that the plate shows **Print sequence: By object** and the **Textured PEI** plate. Slice and print. No pauses, no supports.
-3. **Magnets:** stick the two magnets together and mark the two faces that touch. Press each magnet into its pocket **marked face OUT** until it clicks, so the magnets attract when the case closes.
-4. **Hinge:** slide the yellow sleeve between the cover knuckles, then push the filament pin through from the top and trim it flush. Optionally, heat the ends briefly to flare them so the pin stays put.
+1. **Dry the filament first:** 65 °C for 4–6 h. Damp PETG causes the blobs, zits and strings seen on the first print, and makes warping worse.
+2. Open the 3MF for the design you want. If Bambu Studio asks about **customised presets**, keep the project's settings.
+3. **Don't press Sync AMS.** Your spools (Elegoo Rapid PETG yellow, generic PETG black) have no Bambu RFID tag, so Sync would swap in each slot's preset. Instead, in the **Print** dialog, map Filament 1 / 2 / 3 to your **grey / black / yellow** slots. This keeps the project's profile: 240 °C, plate 70 °C, black capped at 15 mm³/s.
+4. Check the plate shows **By object** and **Textured PEI**. Slice and print.
+5. **Magnets:** before printing, stick the two magnets together and mark both touching faces. The printer stops twice, with a short chime each time:
+   - **Pause 1, cover** (screen ≈ **layer 25**): drop a magnet into the round pocket, **marked face UP**, press it flat, then **Resume**.
+   - **Pause 2, tray** (screen ≈ **layer 82**): same again, **marked face UP**, then **Resume**.
+   - The next layers seal the magnets in. With both marked faces up, they attract when the case closes.
+   - **If a pause doesn't happen:** pause by hand when the screen reaches layer 25 or 82, as soon as that layer number appears. The pocket is still open at that point.
+6. **Hinge:** slide the yellow sleeve between the cover knuckles, then push the filament pin through from the top and trim it flush. Optionally, heat the ends briefly to flare them.
 
-**If the main file still refuses to open,** use `..._geometry_only.3mf`.
-- **What comes with it:** Bambu keeps each part's filament, the 100% modifiers, and the per-object walls and infill. This is confirmed in its source; it adds the filament slots itself.
-- **What you set:**
-  - **Presets:** printer **Bambu Lab A1 0.4 nozzle**, process **0.16mm High Quality @BBL A1**, filaments **Bambu PETG HF** ×3.
-  - **Plate:** Textured PEI.
-  - **Plate settings:** print sequence **By object**.
-  - **Prime tower:** off.
-  - **Shells:** top 6 / bottom 5.
-  - **Seam:** back.
-  - **Elephant foot:** 0.15.
+## Print profile (in the main files)
+- **Base:** Bambu's **0.16mm High Quality @BBL A1**, filament **Bambu PETG HF @BBL A1** ×3. Your spools (Elegoo Rapid PETG, generic PETG rated 240–260 °C) sit in its 240 °C window. Don't use "Generic PETG HF": it runs at 220 °C, below the black spool's 230 °C minimum.
+- **Overrides:** 4 walls (arachne), 6 top / 5 bottom shells, **100% infill**, **concentric top surfaces**, seam at the back, elephant foot 0.15, **outer brim 4 mm**, no supports, no prime tower, flush into infill.
+- **Black:** max volumetric speed capped at **15 mm³/s**; its label rates it to 200 mm/s.
+- **Magnet pauses:** a short block appended to the A1's layer-change G-code. It plays the first notes of the A1 start-up tune, then sends `M400 U1`, the same command as Bambu's own "Pause". It fires only on the first object (cover) at z 4.04 and the second (tray) at z 7.56. By object, Bambu prints the parts in object-list order; this was checked in Bambu Studio 2.03, 2.08 and 2.09 source. Bambu's own per-layer pauses are ignored when printing by object, which is why the block is needed.
 
-## Print profile (in the main file)
-- **Base:** Bambu's **0.16mm High Quality @BBL A1** (outer wall 60 mm/s at 2000 mm/s², default acceleration 4000, nozzle 240 °C, Textured PEI 70 °C).
-- **Walls and shells:** 4 walls (arachne), 6 top / 5 bottom shells.
-- **Infill:** 50% gyroid, with **100% infill and 6 walls** on the hinge, end blocks and magnet clasp.
-- **Seam and first layer:** seam at the back (the top end of the case); elephant-foot compensation 0.15.
-- **By object on the A1:** parts sit 74 mm apart (clearance 73 mm), and all are under the 25 mm rod height.
-- **Purge:** prime tower off; flush into infill on the cover and tray.
+## Test slice and re-slice (PrusaSlicer 2.7.2 set up to match the A1, by object)
+| Design | Slice from CAD | **Re-slice of the shipped 3MF** | Filament in parts (grey / black / yellow) |
+|---|---|---|---|
+| A · Flow | 2 h 38 m 39 s | **2 h 38 m 34 s** | 13.9 / 33.1 / 2.1 g |
+| B · Rings | 2 h 38 m 33 s | **2 h 38 m 28 s** | 14.1 / 33.4 / 1.6 g |
+| C · Topo | 2 h 40 m 58 s | **2 h 40 m 54 s** | 14.0 / 33.2 / 2.0 g |
 
-## Test slice and re-slice (PrusaSlicer 2.7.2 with A1 clearances, speeds and limits, sequential)
-| | Slice from CAD | **Re-slice of the shipped 3MF** (meshes, filaments and modifiers read back out of the file) |
-|---|---|---|
-| Time (incl. AMS lite load/unload) | 3 h 44 m 11 s | **3 h 44 m 08 s** |
-| Colour swaps / layers | 47 / 121 | 47 / 121 |
-| Filament in parts (grey / black / yellow) | 19.5 / 36.6 / 0.6 g | 19.5 / 36.6 / 0.6 g |
+- **All three:** 47 colour swaps, 121 layers, **exactly 2 magnet pauses**, on the cover at z 4.04 (screen layer 25) and the tray at z 7.56 (screen layer 82).
+- **Real-world time:** add the A1 purge (≈ 15–30 s per swap) and your two pauses, giving **≈ 2¾–3 h**, down from about 4 h. Purge adds ≈ 15–20 g to the chute.
+- **Slicer warning "floating bridge anchors" (cover):** benign. It is the 6-layer roof over the cover magnet pocket, which the slicer sees as a bridge over air. In the real print the magnet sits 0.19 mm under it. With the pocket filled in, the warning disappears.
 
-- **Real-world time:** add the A1 purge (≈ 15–30 s per swap), giving **≈ 4 to 4¼ h**. Purge adds ≈ 15–20 g to the chute.
-- **Swaps:** most of them come from the A·B on the bottom face, which stands upright in print.
-- **"Long bridging" note:** this is benign. It is the 0.6 mm groove ceilings at z 0.68, plus the first solid layer over the gyroid inside the 3.0 / 2.6 mm floors. No supports are needed.
-- **Reproduce:** `prusa-slicer --export-gcode --load test-slice/a1_hq_petghf_0.16.ini test-slice/roundtrip_from_shipped_3mf.3mf`
-
-## Verification
+## Verification (all three designs)
 | Check | Status |
 |---|---|
-| Envelope 65 × 15 × 88, single solid parts, no overlaps | PASS |
+| Envelope 65 × 13.5 × 88; single solid parts; no overlaps | PASS |
 | 6 rollies clear; cover swings to 165° without contact | PASS |
-| Magnet pockets: walls ≥ 0.8 mm, slotted snap lips present | PASS |
-| Settings vs Bambu's option rules at releases **2.03, 2.08 and 2.09** | PASS: no flag that the creator's (working) file doesn't also raise. The previous file raised 60 to 123 more, plus the dual-nozzle keys |
-| 3MF integrity: 9 manifold meshes, part filaments 1/2/3, 2 modifiers, 1 plate by object | PASS (read back from the shipped file) |
-| Re-slice of the shipped file | PASS (see above) |
-| Opened and sliced in real Bambu Studio (owner, A1) | PASS: "opened fine, sliced great" (22 Nov 2026) |
-| Test print | PENDING: printer busy; first print planned for 23 Nov 2026 |
+| Magnet pockets empty and sealed by ≥ 0.3 mm of plastic all round; walls ≥ 0.8 mm; 1.16 mm grey under the cover magnet | PASS |
+| Pockets open up to the layer before each pause, closed from the pause layer on (exported meshes sliced layer by layer) | PASS |
+| Yellow stripes: ≥ 0.6 mm of grey between stripes, stripes ≥ 0.95 mm wide, 4 layers deep (0.68 mm) | PASS |
+| Settings vs Bambu's option rules at **2.03, 2.08 and 2.09** | PASS: identical to the baseline (the same 26 legacy flags as the file that opened fine) |
+| 3MF integrity: 9 meshes, part filaments 1/2/3, 1 plate by object | PASS (read back from the shipped files) |
+| Re-slice of the shipped files | PASS (see above) |
+| Independent re-check of each shipped file (`src/recheck_3mf.py`): zip/XML/JSON, key set = v7.0, print order, clearances, pause block, pockets open up to each pause and sealed after, magnet fit, exactly 2 G-code pauses on the right parts | **ALL PASS ×3** |
+| Opened in real Bambu Studio | v7.0 PASS (22 Nov). **v7.1 not yet**: please open one and check the preview shows the 2 pauses |
+| Test print | v7.0 printed 23 Nov (cover only); v7.1 pending |
 
-`src/` holds the generators:
-- `a1_safe.py`: settings builder
-- `bbsvalidate.py`: loader check
-- `roundtrip_reslice.py`: re-slice of the shipped file
+**Magnet cover: about 1.0 mm (6 layers) over each magnet, as you chose.** The magnets sit **2.60 mm apart** when closed: an estimated ≈ 400 g of pull for N35 magnets (real magnets are often about 30% less). That's a clear, firm snap. See the cut-through: `magnet_section_v7.1.png`.
 
-`superseded/` holds the earlier P1S three-plate file.
+`src/` holds the generators. Set `RIPPLE=flow|rings|topo` before running `v7_a1_export.py` to build each design. The v7.0 file and its renders are in `superseded/v7.0-first-print/`.

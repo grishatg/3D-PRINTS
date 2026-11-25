@@ -1,0 +1,30 @@
+PASS 1 Bambu loader: identical to the 26-flag baseline at all 3 releases  [26 problem(s) 26 problem(s) 26 problem(s)]
+PASS 2 zip CRC
+PASS 2 settings: same 366 keys, same order as the v7.0 file that opened in Bambu  [366 keys]
+PASS 2 settings: all values strings / string lists
+PASS 2 settings: 4 x Bambu PLA Wood @BBL A1 (GFA16), A1 0.4, by object, no prime tower, textured PEI  [colours ['#CE9775', '#BE6E4E', '#4D211A', '#5E3B31'], nozzle 220 C, bed 65 C]
+PASS 2 settings: flush matrix 4 x 4, vector 8, different_settings_to_system 6
+     profile: production (sealed magnets); infill 15% gyroid, walls 3, top/bottom 5/4 (top min 1.0 mm), brim outer_only 3
+PASS 2 production file: pause block once, ends with M400 U1, chimes first
+PASS 3 object order cover -> tray -> sleeve (= by-object print order)  [Cover / Tray / Spine sleeve]
+PASS 3 Cover: 2 meshes valid, on the bed, parts do not overlap  [filaments [1, 3], h 5.70, overlap -0.0000]
+PASS 3 Cover: every inlay / mark sits in the first 5 layers (z <= 0.84)  [1 inlay parts, top z 0.68]
+PASS 3 Cover: R4.5 rounded long edges (first layer inset 2.2-3.0 mm a side)  [inset 2.74 mm]
+PASS 3 Tray: 3 meshes valid, on the bed, parts do not overlap  [filaments [1, 3], h 13.40, overlap -0.0000]
+PASS 3 Tray: every inlay / mark sits in the first 5 layers (z <= 0.84)  [2 inlay parts, top z 0.68]
+PASS 3 Tray: R4.5 rounded long edges (first layer inset 2.2-3.0 mm a side)  [inset 2.59 mm]
+PASS 3 Spine sleeve: 1 meshes valid, on the bed, parts do not overlap  [filaments [1], h 19.40, overlap 0.0000]
+PASS 3 A1 by-object clearance: hull gaps >= 73, heights < 25, inside the bed with the brim  [min gap 108.0, max h 19.4]
+PASS 4 cover: two pockets open on every layer up to the pause, sealed by the layer the printer pauses before (layer top z 3.56)  [open z 1.16 -> 3.40]
+PASS 4 cover: each pocket fits a Ø5 x 2 magnet (Ø > 5.15, depth > 2.1)  [Ø5.35 x 2.24 mm]
+     cover: pocket floor z 1.16, top of pocket z 3.40, part height 5.70
+PASS 4 tray: two pockets open on every layer up to the pause, sealed by the layer the printer pauses before (layer top z 8.36)  [open z 5.96 -> 8.20]
+PASS 4 tray: each pocket fits a Ø5 x 2 magnet (Ø > 5.15, depth > 2.1)  [Ø5.35 x 2.24 mm]
+     tray: pocket floor z 5.96, top of pocket z 8.20, part height 13.40
+     slice: {"time": "1h 44m 15s", "filament_g": "1.16, 0.00, 33.23, 0.00", "toolchanges": 11, "layers": 121, "pauses": 2, "pauses_at": [["Cover", 3.56], ["Tray", 8.36]], "filaments_used": [1, 3]}
+     slicer says: print warning: Detected print stability issues:
+     slicer says: Cover
+     slicer says: Floating bridge anchors
+     slicer says: Consider enabling supports.
+PASS 5 slice: exactly 2 pauses, cover then tray, on the first sealing layer  [[('Cover', 3.56), ('Tray', 8.36)]]
+ALL PASS

@@ -19,15 +19,16 @@ for name, (cx, cy), (w, h), col in [('COVER  grey + yellow', pos['cover'], (65, 
                                     ('SLEEVE', pos['sleeve'], (5, 5), (255, 208, 11))]:
     d.rectangle([T(cx - w / 2, cy + h / 2), T(cx + w / 2, cy - h / 2)], fill=col, outline=(20, 20, 20))
     d.text((T(cx - w / 2, cy + h / 2)[0], T(cx - w / 2, cy + h / 2)[1] - 18), name, fill=(30, 30, 30), font=fr)
-d.line([T(73, 60), T(147, 60)], fill=(200, 60, 40), width=2); d.text(T(92, 66), '74 mm ≥ 73 mm clearance', fill=(200, 60, 40), font=fr)
-d.text((20, int(256 * S) + 52), 'order: cover → tray → sleeve · all parts < 25 mm rod height · no prime tower (A1 purges to chute)', fill=(70, 70, 70), font=fr)
+x0, x1 = pos['cover'][0] + 32.5, pos['tray'][0] - 32.5
+d.line([T(x0, 60), T(x1, 60)], fill=(200, 60, 40), width=2); d.text(T(x0 + 18, 66), f'{x1 - x0:.0f} mm ≥ 73 mm clearance', fill=(200, 60, 40), font=fr)
+d.text((20, int(256 * S) + 52), 'order: cover → tray → sleeve · auto-pause per magnet · 4 mm brim · all < 25 mm', fill=(70, 70, 70), font=fr)
 img.save(f'{rd}/v7_a1_plate.png')
 
 ims = [Image.open(f'{rd}/v7_{v}.png').resize((400, 520)) for v in ['front', 'open', 'back', 'base']]
 s = Image.new('RGB', (1600, 576), (236, 234, 228)); dd = ImageDraw.Draw(s)
 ft = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 24)
-t = 'v7 · 65 × 15 × 88 mm · Bambu A1'; dd.text((14, 10), t, fill=(30, 30, 30), font=ft)
-dd.text((14 + dd.textlength(t, font=ft) + 18, 16), 'one plate · by object · snap-in magnets · 4-layer yellow · test-sliced ≈ 4 h', fill=(70, 70, 70), font=fr)
+t = 'v7.1 · 65 × 13.5 × 88 mm · Bambu A1'; dd.text((14, 10), t, fill=(30, 30, 30), font=ft)
+dd.text((14 + dd.textlength(t, font=ft) + 18, 16), 'one plate · by object · magnets sealed in (self-pausing) · 100% infill · test-sliced ≈ 2¾–3 h', fill=(70, 70, 70), font=fr)
 for i, im in enumerate(ims): s.paste(im, (i * 400, 56))
 s.save(f'{rd}/v7_a1_sheet.png')
 print('wrote', f'{rd}/v7_a1_plate.png', f'{rd}/v7_a1_sheet.png')
