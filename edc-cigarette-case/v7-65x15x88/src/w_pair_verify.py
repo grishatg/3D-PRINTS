@@ -1,18 +1,27 @@
 """Verify a two-design wood-PLA project made by w_pair_export.py, reading ONLY the 3MF. Usage: python3 src/w_pair_verify.py <file.3mf> <work_dir>
 1  Bambu loader check (emulated from Bambu's source at v02.03.01.51 / v02.08.04.61 / v02.09.01.70): identical to the 26-flag baseline.
-2  Settings: proven key set + order, 4 x Bambu PLA Wood @BBL A1, A1 0.4, by object, no prime tower, NO pause (magnets are glued).
+2  Settings: proven key set + order, 4 x Bambu PLA Wood @BBL A1, A1 0.4, by object, no prime tower, NO pause (magnets are glued),
+   no brim, first-layer flow 1.05 (v10.6).
 3  Plate: 4 objects (cover, tray, cover, tray), meshes valid and on the bed, every hull >= 73 mm from every other (A1 by-object rule:
-   each hull grows by 36.4 mm), all < 25 mm tall, everything + brim on the 256 x 256 bed. (Hinge-sleeves plate: 6 sleeves, 3 one-wood objects.)
+   each hull grows by 36.4 mm), all < 25 mm tall, everything inside the 256 x 256 bed. No sleeve parts. Per object: the plate-side
+   face is laid as one outline + straight lines along the case where the pattern has compact cells (never on a tray with initials).
 4  Per cover / tray, in the part's own frame (spine at -x):
    - R4.5 rounded long edges (first-layer inset) and every inlay / mark within the first 5 layers;
+   - the rounded edges step evenly from layer to layer (v10.6: no double steps = no bands on the hinge side);
    - WALLS (v10.1, after the 24 Nov test print): layer by layer, no inside opening comes closer than 1.1 mm to the outside
      (hinge knuckle zone excepted), and the tray's cavity stays fully enclosed from the floor to the rim (no breach anywhere);
    - two Ø5.35 magnet pockets per half, open from the floor to the closing face (glue-in).
+   HINGE (v10.6): 3 knuckles on the tray (the middle one replaces the loose sleeve), 2 on the lid, 0.6 mm between neighbours; a
+   straight Ø1.75 pin passes through all five (grips in the two end knuckles, slides in the other three); the lid swings 0-165 deg
+   with no contact and >= 0.11 mm running clearance at every knuckle (10-150 deg; the stop is at 166).
 5  A1-emulated PrusaSlicer slice of the file itself, exactly as laid out (--dont-arrange; sequential, A1 clearance 73 mm):
-   time, grams, swaps, layers, no pauses.
+   time, grams, swaps, layers, no pauses. Bambu's per-object "only one wall on first layer" is emulated with a height range.
 6  The A·B as SLICED (v10.5, owner: "make sure the B is printed properly, not missing bits"): every first-layer line of each
    tray at its true width (from E). Inlaid: A, dot, B >= 98 % covered, no bare spot >= 0.3 mm, counters open and filled by the
    body wood. Engraved (KUMIKO): letters open, islands printed. No-initials files: no A·B anywhere. Writes ab_toolpaths.png.
+7  The plate-side FACES as sliced (v10.6, owner: "make it so the layers don't show up ... the side where it touches the plate"):
+   every part's face covered by its own wood, no bare spot a 0.5 mm dot fits in (at most 2 of 0.3 mm), and no rings where the
+   face is laid as lines: those objects have no inner wall loops on the first layer. Writes face_toolpaths.png.
    Dev only: REUSE_GCODE=1 re-checks the last slice in <work_dir> without slicing again."""
 import sys, os, re, json, zipfile, subprocess, numpy as np, manifold3d as m3
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -49,6 +58,8 @@ lg = cfg['layer_change_gcode']
 chk('2 no pause anywhere (magnets are glued after printing)', 'M400 U1' not in lg and 'PAUSE' not in lg and 'M601' not in lg and lg.startswith('; layer num/total_layer_count'))
 chk(f'2 print profile: {cfg["print_settings_id"]}, {cfg["layer_height"]} mm layers, scarf seams {cfg["filament_scarf_seam_type"][0]}, seam {cfg["seam_position"]}',
     cfg['print_settings_id'] in ('0.12mm High Quality @BBL A1', '0.16mm High Quality @BBL A1') and cfg['layer_height'] in ('0.12', '0.16'))
+chk('2 no brim; first-layer flow 1.05 (v10.6: plate-side faces close up)', cfg['brim_type'] == 'no_brim' and cfg['initial_layer_flow_ratio'] == '1.05',
+    f'brim {cfg["brim_type"]}, first-layer flow {cfg["initial_layer_flow_ratio"]}')
 print(f'     print: infill {cfg["sparse_infill_density"]} {cfg["sparse_infill_pattern"]}, walls {cfg["wall_loops"]}, top/bottom {cfg["top_shell_layers"]}/{cfg["bottom_shell_layers"]} '
       f'(top min {cfg["top_shell_thickness"]} mm), brim {cfg["brim_type"]} {cfg["brim_width"]} mm, outer wall {cfg["outer_wall_speed"]} mm/s, first layer {cfg["initial_layer_speed"]} mm/s @ {cfg["initial_layer_line_width"]} mm')
 
@@ -70,7 +81,10 @@ for oid, comp in re.findall(r'<object id="(\d+)" p:UUID="[^"]+" type="model">\s*
         parts.append((mesh(path), re.search(r'key="name" value="([^"]+)"', pdef).group(1), int(re.search(r'key="extruder" value="(\d)"', pdef).group(1))))
     t = items[oid]; ang = np.degrees(np.arctan2(t[1], t[0]))
     assert abs(t[2]) < 1e-9 and abs(t[5]) < 1e-9 and abs(t[8] - 1) < 1e-9 and abs(t[11]) < 1e-9, 'only z rotations + xy shifts expected'
-    objs.append(dict(name=name, parts=parts, ang=ang, tx=t[9], ty=t[10]))
+    ohead = oset.split('<part')[0]
+    one_wall = re.search(r'key="only_one_wall_first_layer" value="1"', ohead) is not None
+    fdir = re.search(r'key="infill_direction" value="(\d+)"', ohead)
+    objs.append(dict(name=name, parts=parts, ang=ang, tx=t[9], ty=t[10], one_wall=one_wall, fdir=int(fdir.group(1)) if fdir else None))
 SLEEVES = all('sleeve' in o['name'].lower() for o in objs)     # the morning plate: hinge sleeves only
 if SLEEVES:
     nsl = sum(1 for o in objs for q, n_, e in o['parts'] if 'sleeve' in n_)
@@ -96,7 +110,16 @@ chk('3 A1 by-object clearance: every pair of objects >= 73 mm apart (Bambu needs
 chk('3 everything + brim inside the 256 x 256 bed', ext[0] - brim >= 0.5 and ext[1] - brim >= 0.5 and ext[2] + brim <= 255.5 and ext[3] + brim <= 255.5,
     'extent ' + ', '.join(f'{v:.1f}' for v in ext))
 if not SLEEVES:
-    chk('3 no hinge sleeves on this plate (they print on their own plate)', sum(1 for o in objs for q, n_, e in o['parts'] if 'sleeve' in n_) == 0)
+    chk('3 no sleeve part anywhere (v10.6: the middle hinge knuckle is part of the tray)', sum(1 for o in objs for q, n_, e in o['parts'] if 'sleeve' in n_.lower()) == 0)
+    FACE_LINES = {'KUMIKO': ('cover', 'tray'), 'RIVA': ('cover', 'tray'), 'DIAL': ('cover',), 'PARQUET': (), 'ENDGRAIN': ('cover', 'tray'), 'CUBES': ('cover', 'tray')}
+    want_ow = {o['name']: (o['name'].split()[1] in FACE_LINES.get(o['name'].split()[0], ()) and ('cover' in o['name'] or not INITIALS)) for o in objs}
+    chk('3 plate-side faces: one outline + straight lines where the pattern has compact cells; full wall loops on PARQUET (staves), on the DIAL back (studs)'
+        + (' and on every tray with initials (letters)' if INITIALS else ''),
+        all(o['one_wall'] == want_ow[o['name']] for o in objs), ', '.join(f'{o["name"]}: {"lines" if o["one_wall"] else "walls"}' for o in objs))
+    own = lambda o: None if o['fdir'] is None else round((o['fdir'] - o['ang']) % 180)     # line direction in the part's own frame (90 = along the case)
+    chk('3 plate-side faces: the first-layer lines run along the case, like grain (PARQUET: 45 deg, with its staves)',
+        all(own(o) == (90 if 'PARQUET' not in o['name'] else own(o)) and own(o) in (90, 45, 135) for o in objs),
+        ', '.join(f'{o["name"]}: {o["fdir"]} deg on the bed = {own(o)} deg in the part' for o in objs))
 
 # ---- 4 per half: edges, inlays, walls, pockets
 def section(man, zz):
@@ -180,6 +203,93 @@ for dsg in sorted({k[0] for k in floors}):
         gap = D_CASE - (floors[(dsg, 'cover')] + floors[(dsg, 'tray')] + 4.0)
         chk(f'4 {dsg}: closed case, magnet face to magnet face {gap:.2f} mm (was 2.4 in the test print)', 0.2 <= gap <= 0.5)
 
+# ---- 4h hinge (v10.6): 3 knuckles on the tray, 2 on the lid, one straight pin, free swing; rounded edges step evenly
+from shapely.geometry import LineString
+R_PIN = 1.75 / 2
+def whole(o):
+    ps = [q for q, n_, e in o['parts']]
+    return m3.Manifold.batch_boolean(ps, m3.OpType.Add) if len(ps) > 1 else ps[0]
+def ysec(man, y0):          # cross-section at one place along the length -> polygons in (x, -z)
+    g = None
+    for q in man.rotate((90, 0, 0)).slice(y0).to_polygons():
+        p_ = Polygon(q).buffer(0); g = p_ if g is None else g.symmetric_difference(p_)
+    return g
+def bore_axis(body, y0):    # centre (x, z) of the pin bore at one place along the length, measured on the part itself
+    g = ysec(body, y0); out = []
+    for q in getattr(g, 'geoms', [g]):
+        for h in q.interiors:
+            x0, y0_, x1, y1_ = Polygon(h).bounds
+            if 1.5 < x1 - x0 < 2.4 and x1 < -24: out.append(((x0 + x1) / 2, -(y1_ - (x1 - x0) / 2), (x1 - x0)))   # teardrop: roof points print-up
+    return out[0] if len(out) == 1 else None
+def ycyl_(r, ax, y0, y1): return m3.Manifold.cylinder(y1 - y0, r, r, 64).rotate((-90, 0, 0)).translate((ax[0], y0, ax[1]))
+def knuckles(kind, body, ax):   # material along a line through the barrel wall (1.9 mm from the pin, spine side) -> intervals along the case length
+    it = section(body, ax[1]).intersection(LineString([(ax[0] - 1.9, -50), (ax[0] - 1.9, 50)]))
+    iv = sorted((min(q.coords[0][1], q.coords[-1][1]), max(q.coords[0][1], q.coords[-1][1])) for q in getattr(it, 'geoms', [it]) if q.geom_type == 'LineString' and q.length > 0.5)
+    return sorted((round(a + 44, 2), round(b + 44, 2)) if kind == 'tray' else (round(44 - b, 2), round(44 - a, 2)) for a, b in iv)
+def edge_steps(body, side, yband, hmax):   # outline inset on one long edge, layer by layer; the worst change between consecutive steps
+    rows = []
+    for zz in [m for m in mids if m < hmax]:
+        g = section(body, zz)
+        c = g.intersection(box(-40, yband[0], 40, yband[1])) if g is not None else None
+        if c is None or c.is_empty: break
+        rows.append((32.5 - c.bounds[2]) if side > 0 else (c.bounds[0] + 32.5))
+    st = [b - a for a, b in zip(rows, rows[1:])]
+    return max([abs(b - a) for a, b in zip(st[1:], st[2:])] or [0.0]), len(rows)     # the first step is the 0.2 mm first layer: skipped
+bodies, axes = {}, {}
+for o in ([] if SLEEVES else objs):
+    kind = 'cover' if 'cover' in o['name'] else 'tray'; dsg = o['name'].split()[0]; body = whole(o); bodies[(dsg, kind)] = body
+    probes = (-36.0, 0.0, 36.0) if kind == 'tray' else (-19.0, 19.0)                 # middle of each knuckle, along the length
+    bores = [bore_axis(body, y0) for y0 in probes]
+    if any(b_ is None for b_ in bores):
+        chk(f'4 {o["name"]}: a pin bore in every knuckle', False, f'{bores}'); continue
+    ax = (float(np.mean([b_[0] for b_ in bores])), float(np.mean([b_[1] for b_ in bores]))); axes[(dsg, kind)] = ax
+    line_up = max(max(abs(b_[0] - ax[0]), abs(b_[1] - ax[1])) for b_ in bores)
+    kn = knuckles(kind, body, ax)
+    if kind == 'tray':
+        okk = (len(kn) == 3 and abs(kn[0][1] - 15.7) < 0.06 and abs(kn[1][0] - 34.3) < 0.06 and abs(kn[1][1] - 53.7) < 0.06 and abs(kn[2][0] - 72.3) < 0.06)
+        chk(f'4 {o["name"]}: THREE hinge knuckles, the middle one (19.4 mm) part of the tray', okk, f'along the length: {kn}')
+        yb_open, yb_spine, hm = (-14, -4), (-4, 4), (4.5, 4.4)          # spine side measured on the new middle knuckle
+    else:
+        okk = len(kn) == 2 and abs(kn[0][0] - 16.3) < 0.06 and abs(kn[0][1] - 33.7) < 0.06 and abs(kn[1][0] - 54.3) < 0.06 and abs(kn[1][1] - 71.7) < 0.06
+        chk(f'4 {o["name"]}: TWO hinge knuckles, 0.6 mm clear of the tray\'s three', okk, f'along the length: {kn}')
+        yb_open, yb_spine, hm = (4, 14), (16, 22), (2.0, 3.2)             # spine side measured on a lid knuckle
+    blocked = (ycyl_(R_PIN, ax, -46, 46) ^ body).volume()
+    if kind == 'tray':
+        grip = min((ycyl_(0.93, ax, a, b) ^ body).volume() for a, b in ((-40, -30), (30, 40)))       # end knuckles: Ø1.80 bore holds the pin
+        slide = (ycyl_(0.975, ax, -9.5, 9.5) ^ body).volume()                                          # middle knuckle: Ø2.1, the pin slides through
+        chk(f'4 {o["name"]}: the three bores line up; a straight Ø1.75 pin passes through, grips in the two end knuckles, slides through the middle one',
+            line_up < 0.02 and blocked < 0.02 and grip > 0.3 and slide < 0.02 and abs(bores[0][2] - 1.8) < 0.03 and abs(bores[1][2] - 2.1) < 0.03,
+            f'bores Ø{bores[0][2]:.2f} / Ø{bores[1][2]:.2f} / Ø{bores[2][2]:.2f}, out of line {line_up:.3f} mm; pin vs plastic {blocked:.3f} mm3; Ø1.86 in an end knuckle bites {grip:.2f} mm3; Ø1.95 in the middle {slide:.3f} mm3')
+    else:
+        slide = (ycyl_(0.975, ax, -46, 46) ^ body).volume()
+        chk(f'4 {o["name"]}: the two bores line up; a straight Ø1.75 pin passes through and turns freely (Ø2.0 bores)',
+            line_up < 0.02 and blocked < 0.02 and slide < 0.02 and abs(bores[0][2] - 2.0) < 0.03,
+            f'bores Ø{bores[0][2]:.2f} / Ø{bores[1][2]:.2f}, out of line {line_up:.3f} mm; pin vs plastic {blocked:.3f} mm3; Ø1.95 {slide:.3f} mm3')
+    j_open, n_open = edge_steps(body, +1, yb_open, hm[0]); j_sp, n_sp = edge_steps(body, -1, yb_spine, hm[1])
+    chk(f'4 {o["name"]}: rounded edges step evenly layer to layer (no double steps = no bands): opening edge and hinge side',
+        j_open <= 0.02 and j_sp <= 0.02 and n_open >= 10 and n_sp >= 10, f'largest change between consecutive steps: opening edge {j_open:.3f} mm ({n_open} layers), hinge side {j_sp:.3f} mm ({n_sp} layers)')
+for dsg in sorted({k[0] for k in bodies}):
+    if not all((dsg, k) in axes for k in ('cover', 'tray')): continue
+    tra = bodies[(dsg, 'tray')]; at, ac = axes[(dsg, 'tray')], axes[(dsg, 'cover')]
+    lid = bodies[(dsg, 'cover')].rotate((180, 0, 0)).translate((at[0] - ac[0], 0, at[1] + ac[1]))   # onto the tray, pin bores on one line, case closed
+    swing = lambda a: lid.translate((-at[0], 0, -at[1])).rotate((0, -a, 0)).translate((at[0], 0, at[1]))
+    hits = [(a, (swing(a) ^ tra).volume()) for a in range(0, 166, 5)]
+    worst = max(hits, key=lambda h: h[1])
+    tips = [swing(a).bounding_box()[5] for a in (0, 90)]
+    closed_h = (lid + tra).bounding_box()[5]
+    planes = {'tray end knuckle': -36.0, 'lid knuckle': -19.0, 'tray middle knuckle': 0.0, 'lid knuckle 2': 19.0, 'tray end knuckle 2': 36.0}
+    tsec = {k: ysec(tra, y0) for k, y0 in planes.items()}
+    clr = {k: 99.0 for k in planes}
+    for a in range(10, 151, 10):                                     # the gap closes up from 150 deg towards the stop at 166 deg
+        la = swing(a)
+        for k, y0 in planes.items(): clr[k] = min(clr[k], ysec(la, y0).distance(tsec[k]))
+    drop = max((lid.translate((0, 0, dz)) ^ tra).volume() for dz in (8.0, 6.0, 4.0, 3.0, 2.0, 1.5, 1.0, 0.5, 0.25))
+    chk(f'4 {dsg}: assembly: the lid drops straight onto the tray, its 2 knuckles between the tray\'s 3 (no pin yet), nothing in the way', drop < 0.02,
+        f'worst overlap on the way down {drop:.3f} mm3')
+    chk(f'4 {dsg}: on the pin the case closes to 13.5 mm and the lid swings 0-165 deg with no contact; running clearance at every knuckle >= 0.11 mm (10-150 deg)',
+        worst[1] < 0.02 and tips[1] > tips[0] + 20 and min(clr.values()) >= 0.11 and abs(closed_h - D_CASE) < 0.02,
+        f'closed {closed_h:.2f} mm; worst overlap {worst[1]:.3f} mm3 (at {worst[0]} deg); least gap 10-150 deg: ' + ', '.join(f'{k} {v:.2f}' for k, v in clr.items()))
+
 # ---- 5 slice
 sys.argv = [sys.argv[0], WD]
 import slicetest as ST
@@ -192,8 +302,10 @@ def acc(k):
     return f'{d:g}' if float(v) == 0 else v
 prusa = []
 for o in objs:   # bake the plate transform into the meshes (PrusaSlicer project gets plain positions)
-    prusa.append((o['name'], [(q.rotate((0, 0, o['ang'])), 'part', e, {}) for q, n_, e in o['parts']], (o['tx'], o['ty'])))
-ST.prusa_3mf(f'{WD}/wood.3mf', prusa, [])
+    prusa.append((o['name'], [(q.rotate((0, 0, o['ang'])), 'part', e, ({} if o.get('fdir') is None else {'fill_angle': o['fdir']})) for q, n_, e in o['parts']], (o['tx'], o['ty'])))
+fl_h = cfg['initial_layer_print_height']
+ranges = {i + 1: [(0, fl_h, {'extruder': 0, 'layer_height': fl_h, 'perimeters': 1})] for i, o in enumerate(objs) if o.get('one_wall')}   # = only_one_wall_first_layer
+ST.prusa_3mf(f'{WD}/wood.3mf', prusa, [], ranges=ranges or None)
 ini = f'{WD}/a1_wood_{LH}.ini'; ST.config(LH, ini); txt = open(ini).read()
 rep = {'nozzle_diameter': '0.4,0.4,0.4,0.4', 'retract_length': '0.8,0.8,0.8,0.8', 'retract_speed': '30,30,30,30', 'retract_length_toolchange': '2,2,2,2',
        'filament_toolchange_delay': '0,0,0,0', 'filament_cooling_moves': '0,0,0,0', 'filament_diameter': '1.75,1.75,1.75,1.75',
@@ -256,10 +368,11 @@ chk('5 slice: OK (sequential, A1 73 mm clearance accepted), no pauses', r5['paus
 from shapely.geometry import LineString
 FIL_AREA, H1 = np.pi * (1.75 / 2) ** 2, float(cfg['initial_layer_print_height'])
 glines = open(gc).read().split('\n'); labels6 = dict(re.findall(r'M486 S(\d+)\nM486 A(.+)', '\n'.join(glines)))
-segs = {}; tool = 0; obj6 = None; zc = 0.0; x = y = 0.0
+segs = {}; tlen = {}; fdirs = {}; typ6 = ''; tool = 0; obj6 = None; zc = 0.0; x = y = 0.0
 for l in glines:
     if l.startswith('M486 S'): obj6 = None if l.startswith('M486 S-1') else labels6.get(l.split()[1][1:])
     elif l.startswith(';Z:'): zc = float(l[3:])
+    elif l.startswith(';TYPE:'): typ6 = l[6:].strip()
     elif re.match(r'^T\d', l): tool = int(l[1])
     elif l.startswith('G1 '):
         mx = re.search(r' X([-\d.]+)', l); my = re.search(r' Y([-\d.]+)', l); me = re.search(r' E([-\d.]+)', l)
@@ -267,6 +380,8 @@ for l in glines:
         if me and float(me.group(1)) > 0 and zc <= H1 + 1e-4 and ln > 1e-6:
             w = float(me.group(1)) * FIL_AREA / (ln * H1) + H1 * (1 - np.pi / 4)
             segs.setdefault((obj6, tool), []).append((LineString([(x, y), (nx, ny)]), w))
+            tlen[(obj6, typ6)] = tlen.get((obj6, typ6), 0.0) + ln            # first-layer length per feature type (walls / infill)
+            if typ6 == 'Solid infill': fdirs.setdefault(obj6, []).append((float(np.degrees(np.arctan2(ny - y, nx - x))) % 180, ln))
         x, y = nx, ny
 def laid(key, near):                                   # the plastic one wood lays on the face layer of one object, near the mark
     return unary_union([ls.buffer(w / 2, quad_segs=8) for ls, w in segs.get(key, []) if ls.distance(near) < 1.0])
@@ -342,4 +457,58 @@ if marks:
             f'red = {"letter not covered" if mode == "inlaid" else "plastic inside a letter"})', fontsize=8.5)
     plt.tight_layout(); plt.savefig(f'{WD}/ab_toolpaths.png', dpi=110)
     print(f'     A·B toolpath picture: {WD}/ab_toolpaths.png')
+# ---- 7 the plate-side FACES as sliced (owner, 25 Nov: "make it so the layers don't show up ... the side where it touches the plate,
+# the ones with cubes and squares"). The first print showed rings (four wall loops) and a centre dot inside every inlaid cell
+# wherever the first layer went down a touch high. Now: one outline + straight lines on those faces, and 4 % more plastic.
+#   every wood covers its own part of the face (>= 97 % from 0.05 mm inside its outline); no bare spot a 0.5 mm dot fits in and at
+#   most 2 that a 0.3 mm dot fits in (the first print's rings left 1-12 centre patches per lid; a wall-loop face can leave one beside a letter);
+#   no other wood lies in it; one-outline objects have no inner wall loops on the first layer (= no rings).
+from shapely.geometry import MultiLineString
+def laid_all(key):                                    # all the plastic one wood lays on one object's face layer, at true widths
+    bins = {}
+    for ls, w in segs.get(key, []): bins.setdefault(round(w, 2), []).append(ls)
+    return unary_union([MultiLineString(v).buffer(wb / 2, quad_segs=4) for wb, v in bins.items()]) if bins else Polygon()
+facepics = []
+for o in ([] if SLEEVES else objs):
+    regs = [(world(o, first_layer(q)), e - 1, n_) for q, n_, e in o['parts']]
+    regs = [(g, e, n_) for g, e, n_ in regs if g is not None and not g.is_empty]
+    face = unary_union([g for g, e, n_ in regs]); inner = face.buffer(-0.3)       # the outline is pulled in 0.15 mm on purpose (elephant foot)
+    tools = sorted({e for g, e, n_ in regs}); Ld = {e: laid_all((o['name'], e)) for e in tools}
+    tot = bare_a = wrong = 0.0; spots = []; per = []
+    for e in tools:
+        reg = unary_union([g for g, e_, n_ in regs if e_ == e]).intersection(inner).buffer(-0.05)
+        if reg.is_empty: continue
+        bare = reg.difference(Ld[e]); tot += reg.area; bare_a += bare.area; per.append(round(1 - bare.area / reg.area, 3))
+        spots += [g for g in getattr(bare, 'geoms', [bare]) if not g.is_empty and not g.buffer(-0.15).is_empty]
+        oth = [Ld[t] for t in tools if t != e]
+        if oth: wrong += reg.buffer(-0.1).intersection(unary_union(oth)).area
+    walls_in = tlen.get((o['name'], 'Perimeter'), 0.0); walls_out = tlen.get((o['name'], 'External perimeter'), 0.0)
+    rings_ok = (walls_in < 0.01 * max(walls_out, 1.0)) if o['one_wall'] else True
+    fd = [(a_, l_) for a_, l_ in fdirs.get(o['name'], []) if l_ >= 1.0]      # the lines themselves (the short links between them follow the cell edges)
+    ftot = sum(l_ for a_, l_ in fd)
+    along = (sum(l_ for a_, l_ in fd if min(abs(a_ - o['fdir']), 180 - abs(a_ - o['fdir'])) <= 3.0) / ftot) if (fd and o['fdir'] is not None) else 0.0
+    grain_ok = along >= 0.95 if o['one_wall'] else (along >= 0.90 or ftot < 200)
+    big = [g for g in spots if not g.buffer(-0.25).is_empty]                 # a 0.5 mm dot fits: a pit you would see
+    chk(f'7 {o["name"]}: plate-side face as sliced: every wood covers its own area (>= 97 %), no bare spot a 0.5 mm dot fits in and at most 2 a 0.3 mm dot fits in, no wood in another\'s area'
+        + ('; one outline per cell, no inner rings; straight lines along the grain direction' if o['one_wall'] else '; full wall loops'),
+        min(per) >= 0.97 and not big and len(spots) <= 2 and wrong < 0.5 and rings_ok and grain_ok,
+        f'coverage per wood {per}, bare spots >= 0.3 mm: {len(spots)}' + (f' ({", ".join(f"{g.area:.2f} mm2" for g in spots)})' if spots else '') + f', >= 0.5 mm: {len(big)}, '
+        f'stray wood {wrong:.2f} mm2, first-layer walls: outline {walls_out:.0f} mm + inner rings {walls_in:.0f} mm, straight lines {ftot:.0f} mm of which {100 * along:.0f} % at {o["fdir"]} deg')
+    if 'cover' in o['name']: facepics.append((o, face, tools))
+if facepics:
+    import matplotlib; matplotlib.use('Agg'); import matplotlib.pyplot as plt
+    from matplotlib.collections import LineCollection
+    fig, axs = plt.subplots(len(facepics), 2, figsize=(13, 6.6 * len(facepics))); axs = np.atleast_2d(axs)
+    for row, (o, face, tools) in enumerate(facepics):
+        bx = face.bounds; cx, cy = (bx[0] + bx[2]) / 2, (bx[1] + bx[3]) / 2
+        for col, (win, ttl) in enumerate((((bx[0] - 1, bx[1] - 1, bx[2] + 1, bx[3] + 1), 'whole face'), ((cx - 9, cy - 9, cx + 9, cy + 9), '18 mm close-up of the middle'))):
+            ax = axs[row, col]; span = win[2] - win[0]
+            lw = 0.40 / span * (5.6 * 72)                                       # lines drawn about 0.4 mm wide
+            for e in tools:
+                sg = [list(ls.coords) for ls, w in segs.get((o['name'], e), []) if ls.intersects(box(*win))]
+                ax.add_collection(LineCollection(sg, colors=cfg['filament_colour'][e], linewidths=lw, capstyle='round'))
+            ax.set_xlim(win[0], win[2]); ax.set_ylim(win[1], win[3]); ax.set_aspect('equal'); ax.set_facecolor('#1b1b1b'); ax.set_xticks([]); ax.set_yticks([])
+            ax.set_title(f'{o["name"]}: plate-side face, first layer as sliced ({ttl})', fontsize=10)
+    plt.tight_layout(); plt.savefig(f'{WD}/face_toolpaths.png', dpi=100)
+    print(f'     face toolpath picture: {WD}/face_toolpaths.png')
 print('ALL PASS' if ok else 'SOMETHING FAILED')

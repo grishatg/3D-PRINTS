@@ -1,19 +1,31 @@
-# Rollie Book · wood PLA · FINAL print files (v10.5, 24 Nov)
+# Rollie Book · wood PLA · print files (v10.6, 25 Nov)
 
-There are seven Bambu Studio projects, all printing **by object** with **no pauses**. You glue the magnets in afterwards.
-- **Six case plates.** Each prints **two complete cases** (lid and tray). There are three pairs, each **with A·B** or **without initials**; print one version of each pair.
-- **One hinge-sleeve plate** with all six sleeves (50 min).
-- **Delete every older 3MF and print only these (v10.5).**
+There are six Bambu Studio projects. Each prints **two complete cases** (lid and tray each) on one plate, **by object**, with **no pauses, no brim and no supports**. You glue the magnets in afterwards.
+- There are three pairs, each **with A·B** or **without initials**. Print one version of each pair.
+- **Nothing else to print:** the hinge sleeve is gone. The middle hinge knuckle is now part of the tray.
+- **Delete every older 3MF and print only these (v10.6).**
 
-## Print plan: the long, complicated plates run overnight
-| When | Plate | Time* (without initials) | Colour changes (without) |
-|---|---|---|---|
-| **Tonight** | **ENDGRAIN + CUBES**: the longest, and the showpiece | **5 h 32 m** (5 h 18 m) | 28 (19) |
-| Tomorrow morning | **Hinge sleeves**, all six | **50 m** | 2 |
-| Tomorrow, daytime | **KUMIKO + DIAL**: the simplest, the one to run while you're around | **4 h 34 m** (4 h 26 m) | 8 (3) |
-| Tomorrow night | **RIVA + PARQUET**: the most colour changes | **4 h 55 m** (4 h 48 m) | 29 (25) |
+## What changed since your first full print (v10.5)
+1. **Hinge: three knuckles on the back, two on the lid.** The loose sleeve is now a third knuckle on the tray, so each case is two printed parts and a pin. The sleeve plate is gone. See `checks/hinge_3_and_2.png`.
+2. **The plate-side faces (cubes and squares).** Your lids showed four nested rings and a centre dot inside every square and cube. Two things caused it, and both are changed:
+   - **The toolpath.** Each small cell was filled with four wall loops. Now each cell is **one outline plus straight lines running along the case**, so there are no rings and no centre dots. What shows of the lines reads as grain. See `checks/faces_before_after.png`.
+   - **The squish.** The rings showed most where the first layer went down a touch high: the front and back of the bed in your photos. The first layer now gets **5 % more plastic**. The rest is on the printer: see checklist item 4.
+3. **No brim.** Each part sits on the plate with its whole face, and your first print stuck well.
+4. **No Cherry.** Slot 3 isn't used by any design:
+   - CUBES base: Walnut (was Cherry).
+   - RIVA hull: Walnut with Oak seams (was Cherry).
+   - PARQUET staves: Teak and Walnut in the Oak lid (was Teak and Cherry).
+5. **Hinge-side layers.** The rounded edges were modelled in 0.1 mm steps, which beat against the 0.12 mm print layers and left a band every five layers, most visible on the lid's hinge knuckles. They now step evenly, and the knuckle barrels are four times smoother.
 
-Each part does its colour changes in its first few layers, and the four parts print one after another. So the changes are spread through the night, not bunched at the start. Dry spools (checklist item 7) are what keep the AMS lite feeding cleanly at 3 a.m.
+## The projects
+| Project file | Cases | Time* | Colour changes | Walnut |
+|---|---|---|---|---|
+| `Rollie_Book_wood_Endgrain_Cubes_A1_no_initials.3mf` | ENDGRAIN + CUBES | **5 h 21 m** | 19 | 48 g |
+| `AB_Rollie_Book_wood_Endgrain_Cubes_A1.3mf` | ENDGRAIN + CUBES, with A·B | **5 h 35 m** | 28 | 48 g |
+| `Rollie_Book_wood_Riva_Parquet_A1_no_initials.3mf` | RIVA + PARQUET | **4 h 46 m** | 25 | 58 g |
+| `AB_Rollie_Book_wood_Riva_Parquet_A1.3mf` | RIVA + PARQUET, with A·B | **4 h 54 m** | 29 | 58 g |
+| `Rollie_Book_wood_Kumiko_Dial_A1_no_initials.3mf` | KUMIKO + DIAL | **4 h 30 m** | 3 | 45 g |
+| `AB_Rollie_Book_wood_Kumiko_Dial_A1.3mf` | KUMIKO + DIAL, with A·B | **4 h 38 m** | 8 | 45 g |
 
 \* **How the times are estimated:**
 - an A1-emulated slice using Bambu's own speeds and accelerations from the preset;
@@ -22,75 +34,54 @@ Each part does its colour changes in its first few layers, and the four parts pr
 
 Bambu Studio shows its own figure, which may differ a little. Add about 5 minutes for heating and levelling.
 
+**Each plate uses about 71 g in the parts:** 11–13 g of Oak, 2–13 g of Teak and the Walnut shown, plus up to 8 g of purge.
+
+**Walnut is the one to watch.** The three plates together take about **151 g of Walnut** plus about 15 g of purge. RIVA + PARQUET alone needs about 66 g.
+
 ## Before you press Print: checklist
-1. **Use these seven files only (v10.5).** Earlier versions have a broken B, corner holes, deep magnets or the sleeves on the case plates.
-2. **AMS lite slots:** 1 **Oak**, 2 **Teak**, 3 **Cherry**, 4 **Walnut**. When Bambu Studio shows the **filament mapping** on Send, check that 1→Oak, 2→Teak, 3→Cherry and 4→Walnut.
+1. **Use these six files only (v10.6).**
+2. **AMS lite slots:** 1 **Oak**, 2 **Teak**, 3 **empty** (not used), 4 **Walnut**. On Send, check the filament mapping shows 1 → Oak, 2 → Teak, 4 → Walnut.
 3. **Textured PEI plate, washed:**
    - use washing-up liquid and warm water, rinse and dry;
    - don't touch the print surface afterwards;
-   - a fingerprint is the usual reason a part lets go at hour 4.
-4. **Filament:** keep at least **60 g on each spool** for a case plate. The most any plate takes from one spool is 43 g (walnut, KUMIKO + DIAL), plus up to 9 g of purge.
-5. **Don't press Arrange, and don't move the parts.** The four parts on each plate are spaced so the A1 can print them one at a time without the toolhead hitting a finished part. If Bambu ever warns about clearance, reload the file.
-6. **Purge dialog: leave it alone.** Don't press Re-calculate, and keep the Multiplier at 1, or the times above grow.
-7. **Dry the wood spools first** (55 °C, 8 h). Wet wood PLA strings, blobs and can snap in the AMS lite.
-8. **Check the A·B in Bambu (10 seconds):**
-   - press **Slice**, then in **Preview** drag the layer slider right down to **layer 1** (the outside face);
-   - zoom in on each tray's A·B;
-   - it should look like `checks/ab_toolpaths_*.png`: solid letters, both holes in the B and the hole in the A open.
-9. **Nozzle:** wood fibres wear stainless nozzles over many prints. A hardened-steel 0.4 mm nozzle is the long-term fix.
-
-## What's new in v10.5
-- **The A·B is fixed.** Your screenshot showed the B on the CUBES tray with missing bits. There were three causes, all fixed in every design:
-  1. **The B's lower hole was filled in.** The font draws that hole in a way the old code read as solid. The letters are now traced from the font outlines properly, holes and all.
-  2. **Hairlines too thin to print.** Some serif strokes were thinner than a 0.4 mm nozzle can lay, so the slicer dropped them. Every stroke is now at least **0.5 mm** and every hole at least **0.6 mm** wide. The serif letters are also a touch bigger (7 mm tall, was 6).
-  3. **A hairline gap in one typeface's B**, at the middle bar, is now closed.
-- **A new check slices every file and reads the first layer back, line by line.** That layer is the outside face, since the trays print face-down.
-  - **Inlaid A·B:** A, dot and B come out **98–100 % covered** in their wood, with **no bare spot** as big as 0.3 mm. The holes in the A and B stay open and are filled by the body wood.
-  - **KUMIKO's engraved A·B:** the letters stay **100 % open**, and the islands inside the A and B print.
-  - Pictures: `checks/ab_toolpaths_*.png`; before and after letters: `checks/ab_letters_before_after.png`.
-- **Back on Bambu's 0.12 mm High Quality.** You said up to 6 h is fine, so every plate gets the finer 0.12 mm layers.
-- **The hinge sleeves have their own short morning plate,** so the overnight plates carry just the cases.
-
-## The projects
-| Project file | Cases | Time | Filament | Colour changes |
-|---|---|---|---|---|
-| `AB_Rollie_Book_wood_Endgrain_Cubes_A1.3mf` | ENDGRAIN + CUBES, with A·B | **5 h 32 m** | 70 g | 28 |
-| `Rollie_Book_wood_Endgrain_Cubes_A1_no_initials.3mf` | ENDGRAIN + CUBES | **5 h 18 m** | 70 g | 19 |
-| `AB_Rollie_Book_wood_Riva_Parquet_A1.3mf` | RIVA + PARQUET, with A·B | **4 h 55 m** | 69 g | 29 |
-| `Rollie_Book_wood_Riva_Parquet_A1_no_initials.3mf` | RIVA + PARQUET | **4 h 48 m** | 69 g | 25 |
-| `AB_Rollie_Book_wood_Kumiko_Dial_A1.3mf` | KUMIKO + DIAL, with A·B | **4 h 34 m** | 70 g | 8 |
-| `Rollie_Book_wood_Kumiko_Dial_A1_no_initials.3mf` | KUMIKO + DIAL | **4 h 26 m** | 70 g | 3 |
-| `Rollie_Book_wood_hinge_sleeves_all_six_A1.3mf` | the six hinge sleeves | **50 m** | 3 g | 2 |
-
-The filament column is what goes into the parts; purge adds up to 9 g per plate.
-
-## Print quality
-Bambu's own **0.12 mm High Quality @BBL A1** preset. The inlays are exactly 5 layers deep and the magnet floors land on layer boundaries. On top of the preset:
-- **4 walls**, so no infill shows through the 2 mm walls, plus a 1.0 mm top skin and 6 bottom layers.
-- **A slow, narrow first layer** (40 mm/s, 0.42 mm lines). That layer is the outside face, so the inlays, engraving and A·B come out crisp.
-- **Arachne walls,** which vary the line width to fill thin strokes, which matters for the letters.
-- **Scarf seams** on the outer walls, which blend the seam line on the curved sides.
-- **Travel avoids crossing walls.**
-- A 3 mm brim on the outside of each part.
-
-**Seams:** if you'd rather not use scarf seams, go to **Filament settings → Seam → Scarf seam type → None** for each filament.
+   - with no brim, a clean plate is what holds the corners down.
+4. **Tick "Bed levelling" in the Send dialog, and check the nozzle tip is clean first.** This matters for the faces: your first print's rings showed where the first layer sat slightly high. A blob on the nozzle tip throws the levelling off.
+5. **Filament:** at least **60 g of Walnut** for ENDGRAIN + CUBES or KUMIKO + DIAL, **70 g** for RIVA + PARQUET; 20 g each of Oak and Teak.
+6. **Don't press Arrange, and don't move the parts.** The four parts are spaced so the A1 can print them one at a time without the toolhead hitting a finished part. If Bambu ever warns about clearance, reload the file.
+7. **Purge dialog: leave it alone.** Don't press Re-calculate, and keep the Multiplier at 1.
+8. **Dry the wood spools first** (55 °C, 8 h). Wet wood PLA strings, blobs and can snap in the AMS lite.
+9. **Look at layer 1 in Bambu's Preview (10 seconds):**
+   - press **Slice**, then drag the layer slider right down to **layer 1**;
+   - on the lids, each square or cube should show **one outline and straight lines**, not nested rings;
+   - with A·B: the letters solid, both holes in the B and the hole in the A open.
 
 ## What's on each plate
-**Case plates:** four objects, printed one after the other: lid A, tray A, lid B, tray B.
+Four objects, printed one after the other: lid A, tray A, lid B, tray B.
 
-**Hinge-sleeve plate:** six separate sleeves in three groups, one wood each. Match them to the cases by colour:
+Each part does its colour changes in its first few layers, so the changes come in four bursts through the print, not all at the start.
 
-| Case | KUMIKO | DIAL | RIVA | PARQUET | ENDGRAIN | CUBES |
-|---|---|---|---|---|---|---|
-| Sleeve wood | walnut | walnut | oak | cherry | oak | walnut |
+**ENDGRAIN + CUBES, no initials, as an example:**
+
+| Part | Starts | Ends | Colour changes |
+|---|---|---|---|
+| ENDGRAIN lid (teak, walnut squares) | 0:00 | 0:59 | 6 |
+| ENDGRAIN tray (walnut) | 0:59 | 2:35 | 1 |
+| CUBES lid (oak, teak and walnut cubes) | 2:35 | 3:45 | 11 |
+| CUBES tray (walnut) | 3:45 | 5:21 | 1 |
+
+## Putting a case together
+You need, per case: **4 × Ø5 × 2 mm magnets** and **88 mm of 1.75 mm filament** for the hinge pin.
+
+1. **Magnets first** (below), and let the glue cure.
+2. **Drop the lid onto the tray** so the lid's two knuckles sit between the tray's three.
+3. **Push the pin through from one end.** It grips in the tray's two end knuckles and slides through the other three. Trim it flush.
+
+The lid swings freely to about 150°, and stops at 166°.
 
 ## Magnets: flush, glued in after printing
-You need **4 × Ø5 × 2 mm magnets per case**, 8 per plate.
-
 **How they sit:**
 - Each pocket is exactly magnet-deep, with its floor on a layer boundary. A glued magnet sits **0.04 mm below the face**: flush to the eye, and it can't stick out and stop the case closing.
-- Closed, the magnet faces are **0.34 mm apart**. The test print had 2.4 mm.
-- That's about **4.5× the pull of the test print**: ~780 g for both pairs on an N35 model. It's the most these magnets can give.
+- Closed, the magnet faces are **0.34 mm apart**. That's about 780 g of pull per case on an N35 model.
 - Each lid magnet sits inside its round boss, with the full 2 mm lid plate behind it, so nothing shows on the outside.
 
 **Polarity** (once per case):
@@ -114,50 +105,71 @@ You need **4 × Ø5 × 2 mm magnets per case**, 8 per plate.
 | 0.45 mm | ~525 g |
 | 0.7 mm (e.g. thin felt) | ~430 g |
 
-**Hinge pin:** 1.75 mm PETG filament.
+## Print quality
+Bambu's own **0.12 mm High Quality @BBL A1** preset. The inlays are exactly 5 layers deep and the magnet floors land on layer boundaries. On top of the preset:
+- **4 walls**, a 1.0 mm top skin and 6 bottom layers.
+- **A slow, narrow first layer** (40 mm/s, 0.42 mm lines) with **5 % extra flow**. That layer is the outside face.
+- **The face layer's lines run along the case,** like grain (PARQUET: at 45°, with its staves).
+- **Arachne walls** and **scarf seams** on the outer walls.
+- **Travel avoids crossing walls.**
+- **No brim.** To add one back: Process → Others → Brim type → Outer brim only.
 
-## Your question: could the printer cap the magnets last, after an overnight pause?
-Not on these plates:
-- **The plates print by object,** because each case uses different woods, so the printer finishes each part before starting the next. It can't come back at the end to put the last layers on earlier parts.
-- **The hinge knuckles stand taller than the magnet bosses,** so the cap layers would never be the last layers anyway.
-- **An overnight pause leaves the nozzle sitting hot at 220 °C,** which chars wood PLA.
+**How each face is laid:**
 
-Glued flush is also the strongest option: any plastic cap between the magnets weakens the pull.
+| Design | Lid | Tray |
+|---|---|---|
+| ENDGRAIN, CUBES, KUMIKO, RIVA | one outline + lines | one outline + lines |
+| DIAL | one outline + lines | wall loops (its 1.85 mm studs are too small for lines) |
+| PARQUET | wall loops (they run along each stave, like its grain) | wall loops |
+
+Every **tray with A·B** keeps its wall loops, whatever the design: they are what fills each letter stroke completely.
+
+## If the faces still show lines at one end
+That is the first layer going down slightly high in that part of the bed. In order:
+1. **Bed levelling ticked, nozzle tip clean, plate washed** (checklist items 3 and 4).
+2. **Run the printer's full calibration** from its screen, with the textured plate on.
+3. **Tell me which parts and which ends.** The plate offset in the printer's start routine can be lowered a little for these files. Owners report it helps on the textured plate, but one reports the printer overriding it, so I've left it at Bambu's value until we know it's needed.
 
 ## How these were checked
 `src/w_pair_verify.py` reads only the 3MF.
-- **Results:** all seven pass **ALL PASS**: 40 checks for each A·B plate, 38–39 for the no-initials plates, 15 for the sleeve plate.
+- **Results:** all six pass every check: 61–62 for the no-initials plates, 63 for the A·B plates.
 - **Reports:** in `checks/`.
 
-1. **Bambu loader check,** emulated from Bambu's source at v02.03.01.51, v02.08.04.61 and v02.09.01.70. It's identical to the 26-flag baseline that loads fine, using the same key set as the files you've already opened.
+1. **Bambu loader check,** emulated from Bambu's source at v02.03.01.51, v02.08.04.61 and v02.09.01.70. It's identical to the 26-flag baseline of the files you've already opened and printed.
 2. **Settings:**
-   - 4 × Bambu PLA Wood;
-   - 0.12 mm High Quality;
-   - scarf seams on;
-   - by object, with no pause anywhere.
+   - 4 × Bambu PLA Wood, 0.12 mm High Quality, scarf seams;
+   - by object, no pause, no brim;
+   - first-layer flow 1.05.
 3. **Plate:**
-   - every pair of objects is at least 74 mm apart (Bambu needs more than 72.8);
-   - everything plus the brim is on the bed;
-   - there are no sleeves on the case plates.
+   - every pair of objects is 74 mm apart (Bambu needs more than 72.8);
+   - everything is on the bed;
+   - no sleeve parts;
+   - each object carries the right face style.
 4. **Each lid and tray:**
-   - R4.5 rounded edges;
+   - R4.5 rounded edges that step evenly from layer to layer;
    - colour work only in the first 5 layers;
-   - walls at least 1.1 mm to the outside on every layer (thinnest 1.19 mm);
-   - the tray cavity enclosed from floor to rim;
-   - magnet pockets exactly magnet-deep, so a glued magnet sits 0.04 mm below the face;
+   - walls at least 1.1 mm to the outside on every layer, and the tray cavity enclosed;
+   - magnet pockets exactly magnet-deep;
    - closed case: magnet faces 0.34 mm apart.
-5. **A1-emulated slice of the file exactly as laid out:** sequential with the A1's 73 mm clearance, and no pauses.
-6. **The A·B as sliced:**
-   - every first-layer line of every tray is read back at its real width;
-   - the letters must be complete and the holes open, as described above;
-   - files without initials must have no letters at all.
+5. **Hinge:**
+   - three knuckles on the tray, two on the lid, 0.6 mm between neighbours;
+   - a straight Ø1.75 pin passes through all five, grips in the two end knuckles and slides through the other three;
+   - the lid drops straight onto the tray;
+   - the lid swings 0–165° with no contact, and at least 0.12 mm of running clearance at every knuckle up to 150°.
+6. **A1-emulated slice of the file exactly as laid out,** with the per-object face settings applied: no pauses, time and filament as in the table.
+7. **The A·B as sliced:** A, dot and B 98–100 % covered, no bare spot, holes open.
+8. **The faces as sliced:** every wood covers its own area (98–100 %), no rings where lines are used, and no bare spot a 0.5 mm dot fits in. One A·B tray (CUBES) has a single 0.2 mm² spot under the A's crossbar; every other face has none.
 
-**Independent second scanner** (separate code), on all 24 lids and trays:
-- No outer wall is thinner than 1.1 mm.
-- The only thin spots it flags are deliberate interior features, identical on every design:
-  - the 0.8 mm lid magnet bosses;
+**Also checked:**
+- **Independent second scanner** (separate code) on all 24 lids and trays: no outer wall under 1.1 mm. The only thin spots it flags are deliberate interior features, the same on every design:
+  - the lid's magnet bosses (0.8 mm, chamfered at the top);
   - the 1.0 mm socket walls;
-  - the filter-tip bay ribs;
-  - the hinge-clearance edge at the top of the tray's spine wall.
+  - the tip-bay ribs;
+  - the hinge-clearance edge and barrel tops, now on three tray knuckles.
+- **The older PETG files** still rebuild identically.
 
-**Expected slicer notes (benign):** "Long bridging" on parts with an **engraved** pattern. This is layer 5 roofing over the engraved grooves. Each bridge only crosses a groove about 0.5–0.9 mm wide, with solid layers either side, and it's hidden inside the part.
+**What has not been done:** nobody has opened these v10.6 files in the real Bambu Studio yet. The slice check uses a different slicer set up like the A1. The first real slice is step 9 of the checklist.
+
+**Expected slicer notes (benign):**
+- "Long bridging" on parts with an **engraved** pattern. This is layer 5 roofing over the engraved grooves; it's what makes the floor of ENDGRAIN's sunken squares look stranded.
+- "Low bed adhesion, consider a brim" on a tray with an engraved back. The brim was removed on purpose.

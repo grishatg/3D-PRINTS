@@ -13,8 +13,10 @@ LH = [float(x) for x in (sys.argv[2:] or ['0.16'])]
 def mesh(man):
     mm = man.to_mesh(); return np.asarray(mm.vert_properties)[:, :3].astype(float), np.asarray(mm.tri_verts).astype(int)
 
-def prusa_3mf(path, objects, pauses):
-    """objects: list of (name, [(manifold, kind, extruder, settings)], (x, y))"""
+def prusa_3mf(path, objects, pauses, ranges=None):
+    """objects: list of (name, [(manifold, kind, extruder, settings)], (x, y))
+    ranges: optional {object index (1-based): [(min_z, max_z, {option: value})]} = PrusaSlicer height-range modifiers
+    (used to emulate Bambu's per-object "only one wall on first layer")."""
     model = io.StringIO(); cfg = io.StringIO()
     model.write('<?xml version="1.0" encoding="UTF-8"?>\n<model unit="millimeter" xml:lang="en-US" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" '
                 'xmlns:slic3rpe="http://schemas.slic3r.org/3mf/2017/06">\n <metadata name="slic3rpe:Version3mf">1</metadata>\n <resources>\n')
@@ -52,6 +54,11 @@ def prusa_3mf(path, objects, pauses):
                    '<Relationship Target="/3D/3dmodel.model" Id="rel0" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/></Relationships>')
         z.writestr('3D/3dmodel.model', model.getvalue()); z.writestr('Metadata/Slic3r_PE_model.config', cfg.getvalue())
         z.writestr('Metadata/Prusa_Slicer_custom_gcode_per_print_z.xml', pz)
+        if ranges:
+            rx = '<?xml version="1.0" encoding="utf-8"?>\n<objects>\n' + ''.join(
+                f' <object id="{oid}">\n' + ''.join(f'  <range min_z="{a_}" max_z="{b_}">\n' + ''.join(f'   <option opt_key="{k}">{v}</option>\n' for k, v in o_.items()) + '  </range>\n'
+                                                 for a_, b_, o_ in rs) + ' </object>\n' for oid, rs in ranges.items()) + '</objects>\n'
+            z.writestr('Metadata/Prusa_Slicer_layer_config_ranges.xml', rx)
 
 def config(lh, path):
     """Bambu P1S + AMS approximated in PrusaSlicer terms. PETG-HF on Textured PEI."""

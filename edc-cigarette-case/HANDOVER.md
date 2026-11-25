@@ -21,7 +21,48 @@
 
 ## 0a. Wood PLA line (24 Nov 2026): the CURRENT work. Read this before §0
 
-> **v10.5 (24 Nov, night): FINAL, current.** Owner: "leave 6h if needed but make quality builds… 2 designs overnight… in the morning I can print the hinge parts". Then, with a Bambu screenshot of the CUBES tray: "make sure the B is printed properly, not missing bits… I want the longer, most complicated prints overnight… check it works, I don't want to come back again".
+> **v10.6 (25 Nov): current.** The owner printed v10.5 ENDGRAIN + CUBES overnight, sent four photos and asked for changes. The cloud session could not reach their PC, so sending and watching the print is handed to a local session: **`LOCAL_PRINT_HANDOVER.md`** (next to this file).
+> - **Owner's requests, in their words:**
+>   - "put that hinge sleeve connected to the back plate so it prints in 1 go … the back has 3 hinges the top 2";
+>   - "make it so the layers don't show up on this side as much". Asked which side, they answered: "the side where it touches the plate, the ones with cubes and squares";
+>   - "why does it need a brim?", then chose to remove it;
+>   - "I ran out of cherry wood filament, use the other, oakwood and walnut, for colours".
+> - **Hinge** (`v5.book`, v10 only, via `P` in `v7.py`):
+>   - `OWN=['T','C','M','C','T']`: the middle segment is a tray knuckle ('M': barrel on a pillar like the ends, `PIN_SLEEVE` 2.1 bore so the pin slides). `book()` returns `sleeve=None`; there is no sleeve part and no sleeve plate.
+>   - `SWEEP_CLR=0.12`: the lid's hinge-side edge is an arc at R+G round the pin, and the swing cut used to leave the tray knuckles at exactly that radius (zero gap from about 111°). They are now cut to R+G−0.12.
+>   - `SWEEP_R=14`: the swing cut is made copy by copy from the lid's hinge zone. The single union of 83 rotated lids took 137 s once the barrels were smooth; `book()` now takes 8 s.
+>   - PETG v7.1 does not set these keys and rebuilds identically (checked: B_Rings 3MFs and STLs, UUIDs aside).
+> - **Layers on the hinge side** (found from the owner's photo, fixed although they meant the faces):
+>   - `round_env` built the R4.5 edges from 0.1 mm slabs. Against 0.12 mm layers that gave steps of 0.1, 0.2, 0.1, 0.1, 0.1: a band every 5 layers. `ENV_STEP=0.04`, counted from each bed face, puts every layer's slicing plane mid-slab. Steps are now 0.160 then 0.120 exactly, then smooth.
+>   - `BARREL_SEG=192` (was 48: 0.37 mm facets). `KEEP_EXTRA=0.03` lets the lid knuckle's first layer follow the chamfer (it was 0.36 mm short).
+> - **Plate-side faces** (`w_pair_export.face_settings`, per object in `model_settings.config`):
+>   - `only_one_wall_first_layer=1` ('lines') where the pattern has compact cells, plus `infill_direction` along the case (bed angle = 90 − the object's turn; PARQUET 45).
+>   - `W.DESIGNS[key]['face'] = (lid, tray)`. Lines / lines: ENDGRAIN, CUBES, KUMIKO, RIVA. DIAL: lines / walls. PARQUET: walls / walls.
+>   - Every tray with initials keeps its walls: four variable-width loops are what fill each letter stroke.
+>   - Chosen from sliced comparisons of all 12 parts in both modes (`FACE_FORCE=walls` makes the comparison build). Lines beat walls on 9 parts. With lines, DIAL's tray fell to 93.6 % coverage and PARQUET's tray had 12 bare spots; with walls, DIAL's lid had 12 bare spots and CUBES' lid 1.
+>   - Lines at 45° left bare corners in the cubes (96.7 %); along the case they fill cleanly (99.7 %).
+>   - `FINAL`: `initial_layer_flow_ratio` 1.05, `brim_type` no_brim.
+>   - `only_one_wall_first_layer` is object-level in Bambu (`PerimeterGenerator.cpp`, v02.09.01.70), so it cannot be switched off for one part of an object.
+> - **PARQUET back:** `island_min=1.7` (`v7.ISLAND_MIN`) engraves away about 160 pin-sized islands the herringbone outlines left; each printed as one loop with a hole. Per design only: the same rule would erase KUMIKO's lattice (571 cells under 1 mm).
+> - **Colours:** no design uses cherry. CUBES tray walnut; RIVA lid and tray walnut with oak seams; PARQUET staves teak + walnut. Slot 3 stays defined so the proven 4-filament layout is unchanged.
+> - **`w_pair_verify.py`:**
+>   - §3: no sleeve part; face style per object against a table; line direction.
+>   - §4h: knuckle count and positions from a probe line through the barrel wall; pin axis measured from each part's own bores (the lid's frame is 0.31 mm off-centre in x because `centre()` uses the bounding box); pin path, grip and slide; straight-drop assembly; swing 0–165° with clearance at five sections; even edge steps.
+>   - §5: emulates one-wall with a PrusaSlicer height range (`slicetest.prusa_3mf(..., ranges=)`: 0–0.2 mm, perimeters 1) and per-volume `fill_angle`.
+>   - §7: faces as sliced: coverage per wood, bare spots, stray wood, no inner loops where lines are used, line direction. Writes `face_toolpaths.png`.
+> - **Results:** all 6 projects ALL PASS (61 / 61 / 62 without initials, 63 each with). Faces 98.1–100 % covered. One 0.21 mm² spot (CUBES A·B tray, under the A's crossbar); none elsewhere.
+>   - Estimates with / without A·B (colour changes): ENDGRAIN+CUBES 5h35 / 5h21 (28 / 19), RIVA+PARQUET 4h54 / 4h46 (29 / 25), KUMIKO+DIAL 4h38 / 4h30 (8 / 3).
+>   - Walnut per plate: 48 / 58 / 45 g.
+> - **Not done, and the owner knows:**
+>   - No v10.6 file has been opened in the real Bambu Studio. `local-tools/check_bambu_slice.py` checks a Bambu-sliced file on the PC; it was written from Bambu's G-code comments and not run on real output.
+>   - The first print's rings showed near the front and back of the bed (first layer a touch high). That is the printer. The start G-code's `G29.1 Z{-0.02}` for the textured plate was **not** changed: forum reports say −0.04 helps, and one says `G29.4` overrides it.
+>   - The engraved floors of ENDGRAIN's sunken squares are a layer-5 bridge and look stranded in the owner's photo. They did not ask for a change; outlines only (`grid_lines`) would fix it.
+> - **Lessons:**
+>   - Ask when "this side" could mean three things. The first guess (hinge side) was wrong; one question settled it.
+>   - Model steps must sit on the print's layer grid, or they beat against it.
+>   - A toolpath setting is a per-design choice. Slice both ways and compare; don't apply one rule to every pattern.
+>
+> **v10.5 (24 Nov, night; superseded by v10.6: it has the loose sleeve, a brim, cherry and ringed faces).** Owner: "leave 6h if needed but make quality builds… 2 designs overnight… in the morning I can print the hinge parts". Then, with a Bambu screenshot of the CUBES tray: "make sure the B is printed properly, not missing bits… I want the longer, most complicated prints overnight… check it works, I don't want to come back again".
 > - **Files:** `wood-3mf/` holds **7 projects**: 6 case plates (3 pairs × A·B / no initials, **no sleeves**) and `Rollie_Book_wood_hinge_sleeves_all_six_A1.3mf` (`w_pair_export.py <out> <tmpl> sleeves`: 3 one-wood objects, walnut KUMIKO/DIAL/CUBES, oak RIVA/ENDGRAIN, cherry PARQUET, 50 min).
 > - **Profile:** `w_export.FINAL` is back on `0.12mm High Quality @BBL A1` (4 walls, top 8 / 1.0 mm, bottom 6, 15 % gyroid, concentric top, first layer 40/80 mm/s at 0.42, EFC 0.15, scarf seams, `reduce_crossing_wall`, 3 mm outer brim). `w_pair_export` sets `v7.PRINT_LAYER` from it, so the glue pockets snap to the 0.12 grid: magnet 0.04 below the face, 0.34 mm face to face (~780 g per case, N35 charge model).
 > - **A·B fix:** the screenshot's B had missing bits. Three causes, each fixed on the v10 path only:

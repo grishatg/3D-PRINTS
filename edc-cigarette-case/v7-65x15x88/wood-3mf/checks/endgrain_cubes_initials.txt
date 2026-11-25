@@ -6,43 +6,70 @@ PASS 2 settings: 4 x Bambu PLA Wood @BBL A1 (GFA16), A1 0.4, by object, no prime
 PASS 2 settings: flush matrix 4 x 4, vector 8, different_settings_to_system 6
 PASS 2 no pause anywhere (magnets are glued after printing)
 PASS 2 print profile: 0.12mm High Quality @BBL A1, 0.12 mm layers, scarf seams external, seam aligned
-     print: infill 15% gyroid, walls 4, top/bottom 8/6 (top min 1.0 mm), brim outer_only 3 mm, outer wall 60 mm/s, first layer 40 mm/s @ 0.42 mm
+PASS 2 no brim; first-layer flow 1.05 (v10.6: plate-side faces close up)  [brim no_brim, first-layer flow 1.05]
+     print: infill 15% gyroid, walls 4, top/bottom 8/6 (top min 1.0 mm), brim no_brim 5 mm, outer wall 60 mm/s, first layer 40 mm/s @ 0.42 mm
 PASS 3 four objects: cover, tray, cover, tray (= by-object print order)  [ENDGRAIN cover / ENDGRAIN tray / CUBES cover / CUBES tray]
 PASS 3 ENDGRAIN cover: 2 meshes valid, on the bed, parts do not overlap  [filaments [2, 4], h 5.70, turned 0 deg]
 PASS 3 ENDGRAIN tray: 2 meshes valid, on the bed, parts do not overlap  [filaments [1, 4], h 13.40, turned 90 deg]
 PASS 3 CUBES cover: 3 meshes valid, on the bed, parts do not overlap  [filaments [1, 2, 4], h 5.70, turned 90 deg]
-PASS 3 CUBES tray: 2 meshes valid, on the bed, parts do not overlap  [filaments [1, 3], h 13.40, turned 0 deg]
+PASS 3 CUBES tray: 2 meshes valid, on the bed, parts do not overlap  [filaments [1, 4], h 13.40, turned 0 deg]
 PASS 3 A1 by-object clearance: every pair of objects >= 73 mm apart (Bambu needs > 72.8), all < 25 mm tall  [min gap 74.0 mm, tallest 13.4 mm]
 PASS 3 everything + brim inside the 256 x 256 bed  [extent 15.0, 14.5, 241.0, 241.5]
-PASS 3 no hinge sleeves on this plate (they print on their own plate)
+PASS 3 no sleeve part anywhere (v10.6: the middle hinge knuckle is part of the tray)
+PASS 3 plate-side faces: one outline + straight lines where the pattern has compact cells; full wall loops on PARQUET (staves), on the DIAL back (studs) and on every tray with initials (letters)  [ENDGRAIN cover: lines, ENDGRAIN tray: walls, CUBES cover: lines, CUBES tray: walls]
+PASS 3 plate-side faces: the first-layer lines run along the case, like grain (PARQUET: 45 deg, with its staves)  [ENDGRAIN cover: 90 deg on the bed = 90 deg in the part, ENDGRAIN tray: 0 deg on the bed = 90 deg in the part, CUBES cover: 0 deg on the bed = 90 deg in the part, CUBES tray: 90 deg on the bed = 90 deg in the part]
 PASS 4 ENDGRAIN cover: every inlay / mark sits in the first 5 layers (z <= 0.84)  [top z 0.68]
-PASS 4 ENDGRAIN cover: R4.5 rounded long edges (first-layer inset 2.2-3.0 mm a side)  [inset 2.74 mm]
+PASS 4 ENDGRAIN cover: R4.5 rounded long edges (first-layer inset 2.2-3.0 mm a side)  [inset 2.54 mm]
 PASS 4 ENDGRAIN cover: walls >= 1.1 mm between every inside opening and the outside  [thinnest 99.00 mm at z 0.98, xy None]
 PASS 4 ENDGRAIN cover: two Ø5.35 pockets open from the floor (z 2.12) to the closing face; a glued Ø5x2 magnet sits 0.04 mm below the face  [Ø5.35, 2.04 mm deep (flush, never proud)]
 PASS 4 ENDGRAIN tray: every inlay / mark sits in the first 5 layers (z <= 0.84)  [top z 0.68]
-PASS 4 ENDGRAIN tray: R4.5 rounded long edges (first-layer inset 2.2-3.0 mm a side)  [inset 2.59 mm]
+PASS 4 ENDGRAIN tray: R4.5 rounded long edges (first-layer inset 2.2-3.0 mm a side)  [inset 2.54 mm]
 PASS 4 ENDGRAIN tray: cavity fully enclosed on every layer from the floor to the rim (no breach)  [74 layers z 2.66-11.42]
 PASS 4 ENDGRAIN tray: walls >= 1.1 mm between every inside opening and the outside  [thinnest 1.19 mm at z 11.42, xy (30.1, 24.9)]
 PASS 4 ENDGRAIN tray: two Ø5.35 pockets open from the floor (z 7.04) to the closing face; a glued Ø5x2 magnet sits 0.04 mm below the face  [Ø5.35, 2.04 mm deep (flush, never proud)]
 PASS 4 CUBES cover: every inlay / mark sits in the first 5 layers (z <= 0.84)  [top z 0.68]
-PASS 4 CUBES cover: R4.5 rounded long edges (first-layer inset 2.2-3.0 mm a side)  [inset 2.74 mm]
+PASS 4 CUBES cover: R4.5 rounded long edges (first-layer inset 2.2-3.0 mm a side)  [inset 2.54 mm]
 PASS 4 CUBES cover: walls >= 1.1 mm between every inside opening and the outside  [thinnest 99.00 mm at z 0.98, xy None]
 PASS 4 CUBES cover: two Ø5.35 pockets open from the floor (z 2.12) to the closing face; a glued Ø5x2 magnet sits 0.04 mm below the face  [Ø5.35, 2.04 mm deep (flush, never proud)]
 PASS 4 CUBES tray: every inlay / mark sits in the first 5 layers (z <= 0.84)  [top z 0.68]
-PASS 4 CUBES tray: R4.5 rounded long edges (first-layer inset 2.2-3.0 mm a side)  [inset 2.59 mm]
+PASS 4 CUBES tray: R4.5 rounded long edges (first-layer inset 2.2-3.0 mm a side)  [inset 2.54 mm]
 PASS 4 CUBES tray: cavity fully enclosed on every layer from the floor to the rim (no breach)  [74 layers z 2.66-11.42]
 PASS 4 CUBES tray: walls >= 1.1 mm between every inside opening and the outside  [thinnest 1.19 mm at z 11.42, xy (30.1, 24.9)]
 PASS 4 CUBES tray: two Ø5.35 pockets open from the floor (z 7.04) to the closing face; a glued Ø5x2 magnet sits 0.04 mm below the face  [Ø5.35, 2.04 mm deep (flush, never proud)]
 PASS 4 CUBES: closed case, magnet face to magnet face 0.34 mm (was 2.4 in the test print)
 PASS 4 ENDGRAIN: closed case, magnet face to magnet face 0.34 mm (was 2.4 in the test print)
-     slice: {"time": "5h 19m 6s", "filament_g": "10.90, 12.89, 21.73, 24.21", "toolchanges": 29, "layers": 111, "pauses": 0, "estimate_with_purges": "5h 32m", "filaments_used": [1, 2, 3, 4]}
+PASS 4 ENDGRAIN cover: TWO hinge knuckles, 0.6 mm clear of the tray's three  [along the length: [(16.3, 33.7), (54.3, 71.7)]]
+PASS 4 ENDGRAIN cover: the two bores line up; a straight Ø1.75 pin passes through and turns freely (Ø2.0 bores)  [bores Ø2.00 / Ø2.00, out of line 0.000 mm; pin vs plastic 0.000 mm3; Ø1.95 0.000 mm3]
+PASS 4 ENDGRAIN cover: rounded edges step evenly layer to layer (no double steps = no bands): opening edge and hinge side  [largest change between consecutive steps: opening edge 0.008 mm (16 layers), hinge side 0.008 mm (26 layers)]
+PASS 4 ENDGRAIN tray: THREE hinge knuckles, the middle one (19.4 mm) part of the tray  [along the length: [(1.49, 15.7), (34.3, 53.7), (72.3, 86.51)]]
+PASS 4 ENDGRAIN tray: the three bores line up; a straight Ø1.75 pin passes through, grips in the two end knuckles, slides through the middle one  [bores Ø1.80 / Ø2.10 / Ø1.80, out of line 0.000 mm; pin vs plastic 0.000 mm3; Ø1.86 in an end knuckle bites 1.43 mm3; Ø1.95 in the middle 0.000 mm3]
+PASS 4 ENDGRAIN tray: rounded edges step evenly layer to layer (no double steps = no bands): opening edge and hinge side  [largest change between consecutive steps: opening edge 0.008 mm (37 layers), hinge side 0.008 mm (36 layers)]
+PASS 4 CUBES cover: TWO hinge knuckles, 0.6 mm clear of the tray's three  [along the length: [(16.3, 33.7), (54.3, 71.7)]]
+PASS 4 CUBES cover: the two bores line up; a straight Ø1.75 pin passes through and turns freely (Ø2.0 bores)  [bores Ø2.00 / Ø2.00, out of line 0.000 mm; pin vs plastic 0.000 mm3; Ø1.95 0.000 mm3]
+PASS 4 CUBES cover: rounded edges step evenly layer to layer (no double steps = no bands): opening edge and hinge side  [largest change between consecutive steps: opening edge 0.008 mm (16 layers), hinge side 0.008 mm (26 layers)]
+PASS 4 CUBES tray: THREE hinge knuckles, the middle one (19.4 mm) part of the tray  [along the length: [(1.49, 15.7), (34.3, 53.7), (72.3, 86.51)]]
+PASS 4 CUBES tray: the three bores line up; a straight Ø1.75 pin passes through, grips in the two end knuckles, slides through the middle one  [bores Ø1.80 / Ø2.10 / Ø1.80, out of line 0.000 mm; pin vs plastic 0.000 mm3; Ø1.86 in an end knuckle bites 1.43 mm3; Ø1.95 in the middle 0.000 mm3]
+PASS 4 CUBES tray: rounded edges step evenly layer to layer (no double steps = no bands): opening edge and hinge side  [largest change between consecutive steps: opening edge 0.008 mm (37 layers), hinge side 0.008 mm (36 layers)]
+PASS 4 CUBES: assembly: the lid drops straight onto the tray, its 2 knuckles between the tray's 3 (no pin yet), nothing in the way  [worst overlap on the way down 0.000 mm3]
+PASS 4 CUBES: on the pin the case closes to 13.5 mm and the lid swings 0-165 deg with no contact; running clearance at every knuckle >= 0.11 mm (10-150 deg)  [closed 13.50 mm; worst overlap 0.000 mm3 (at 0 deg); least gap 10-150 deg: tray end knuckle 0.12, lid knuckle 0.19, tray middle knuckle 0.12, lid knuckle 2 0.19, tray end knuckle 2 0.12]
+PASS 4 ENDGRAIN: assembly: the lid drops straight onto the tray, its 2 knuckles between the tray's 3 (no pin yet), nothing in the way  [worst overlap on the way down 0.000 mm3]
+PASS 4 ENDGRAIN: on the pin the case closes to 13.5 mm and the lid swings 0-165 deg with no contact; running clearance at every knuckle >= 0.11 mm (10-150 deg)  [closed 13.50 mm; worst overlap 0.000 mm3 (at 0 deg); least gap 10-150 deg: tray end knuckle 0.12, lid knuckle 0.19, tray middle knuckle 0.12, lid knuckle 2 0.19, tray end knuckle 2 0.12]
+     slice: {"time": "5h 22m 19s", "filament_g": "10.96, 12.24, 0.00, 48.03", "toolchanges": 29, "layers": 111, "pauses": 0, "estimate_with_purges": "5h 35m", "filaments_used": [1, 2, 4]}
      slicer says: print warning: Detected print stability issues:
+     slicer says: ENDGRAIN tray
      slicer says: Long bridging extrusions
-     slicer says: ENDGRAIN tray, CUBES tray
+     slicer says: CUBES tray
+     slicer says: Low bed adhesion
      slicer says: Consider enabling supports.
+     slicer says: Also consider enabling brim.
 PASS 5 slice: OK (sequential, A1 73 mm clearance accepted), no pauses
 PASS 6 ENDGRAIN tray: sliced A·B complete: A, dot and B each >= 98 % covered by their wood (from 0.05 mm inside the outline), no bare spot >= 0.3 mm; the 3 counters stay open (<= 3 % letter wood) and are filled by the body wood (>= 95 %)  [coverage A/dot/B [0.999, 1.0, 0.992] (to the very edge [0.994, 0.949, 0.986]), bare spots >= 0.3 mm: 0, letter wood in counters 0.0 %, body wood in counters 97.3 %]
 PASS 6 CUBES tray: sliced A·B complete: A, dot and B each >= 98 % covered by their wood (from 0.05 mm inside the outline), no bare spot >= 0.3 mm; the 3 counters stay open (<= 3 % letter wood) and are filled by the body wood (>= 95 %)  [coverage A/dot/B [0.994, 1.0, 0.995] (to the very edge [0.991, 0.949, 0.991]), bare spots >= 0.3 mm: 0, letter wood in counters 0.0 %, body wood in counters 98.3 %]
 PASS 6 A·B file: both trays carry the A·B  [['ENDGRAIN tray', 'CUBES tray']]
      A·B toolpath picture: checks/ab_toolpaths_endgrain_cubes.png
+PASS 7 ENDGRAIN cover: plate-side face as sliced: every wood covers its own area (>= 97 %), no bare spot a 0.5 mm dot fits in and at most 2 a 0.3 mm dot fits in, no wood in another's area; one outline per cell, no inner rings; straight lines along the grain direction  [coverage per wood [0.998, 1.0], bare spots >= 0.3 mm: 0, >= 0.5 mm: 0, stray wood 0.00 mm2, first-layer walls: outline 3355 mm + inner rings 0 mm, straight lines 9160 mm of which 100 % at 90 deg]
+PASS 7 ENDGRAIN tray: plate-side face as sliced: every wood covers its own area (>= 97 %), no bare spot a 0.5 mm dot fits in and at most 2 a 0.3 mm dot fits in, no wood in another's area; full wall loops  [coverage per wood [0.996, 0.998], bare spots >= 0.3 mm: 0, >= 0.5 mm: 0, stray wood 0.00 mm2, first-layer walls: outline 1981 mm + inner rings 4465 mm, straight lines 1746 mm of which 100 % at 0 deg]
+PASS 7 CUBES cover: plate-side face as sliced: every wood covers its own area (>= 97 %), no bare spot a 0.5 mm dot fits in and at most 2 a 0.3 mm dot fits in, no wood in another's area; one outline per cell, no inner rings; straight lines along the grain direction  [coverage per wood [0.998, 0.997, 0.997], bare spots >= 0.3 mm: 0, >= 0.5 mm: 0, stray wood 0.00 mm2, first-layer walls: outline 5466 mm + inner rings 0 mm, straight lines 6293 mm of which 100 % at 0 deg]
+PASS 7 CUBES tray: plate-side face as sliced: every wood covers its own area (>= 97 %), no bare spot a 0.5 mm dot fits in and at most 2 a 0.3 mm dot fits in, no wood in another's area; full wall loops  [coverage per wood [0.994, 0.991], bare spots >= 0.3 mm: 1 (0.21 mm2), >= 0.5 mm: 0, stray wood 0.00 mm2, first-layer walls: outline 3264 mm + inner rings 2840 mm, straight lines 41 mm of which 100 % at 90 deg]
+     face toolpath picture: checks/face_toolpaths_endgrain_cubes.png
 ALL PASS

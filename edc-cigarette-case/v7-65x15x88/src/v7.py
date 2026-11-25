@@ -68,6 +68,13 @@ P.update(TC=2.0, WB=2.0, WS=2.6, END=(2.0 if PLATFORM == 'v10' else 9.0), R=2.8,
          LIP_R=3.0, INNER_FRAME=False, GRIP_GROOVES=False, NOTCH_ROUND=True)
 if PLATFORM == 'v10':
     P.update(CAV_ROUND=(2.5, 1.2, 0.5), RIB_ROUND=True, LIP_ROUND=True, RIB_TOP=52.0)
+    # v10.6 (owner, 25 Nov, after the first full wood print): "put that hinge sleeve connected to the back plate so it prints in
+    # one go ... the back has 3 hinges, the top 2" and "make it so the layers don't show up on this side [the hinge side] as much".
+    P.update(OWN=['T', 'C', 'M', 'C', 'T'],      # middle knuckle is part of the tray (slip bore): no loose sleeve, nothing extra to assemble
+             BARREL_SEG=192,                     # smooth barrels: 0.09 mm facets instead of 0.37 mm (those printed as bands)
+             KEEP_EXTRA=0.03,                    # lid knuckle's first layer follows the edge chamfer
+             SWEEP_R=14.0,                       # swing clearance is cut from the lid's hinge zone only (v7.checks still swings the whole lid)
+             SWEEP_CLR=0.12)                     # 0.12 mm running clearance between the lid's edge and the tray knuckles when wide open
 TC, WB, WS, END, R = P['TC'], P['WB'], P['WS'], P['END'], P['R']
 YS = -D / 2 + TC
 CX0, CX1 = -W / 2 + WS, W / 2 - WS
@@ -105,10 +112,17 @@ if OUTLINE == 'squircle':
     BASE = _squircle(-W / 2, 0, W / 2, H, CORNER_SPINE, CORNER_OPEN)
 else:
     BASE = _rrect(-W / 2, 0, W / 2 + 20, H, CORNER_SPINE).intersection(_rrect(-W / 2 - 20, 0, W / 2, H, CORNER_OPEN))
+ENV_STEP = 0.04   # v10.6: slab height of the rounded long edges, counted from EACH bed face. 0.2 = 5 slabs and 0.12 = 3 slabs, so every
+                  # printed layer is sliced through the middle of a slab and gets the true profile at its own mid-height. The old 0.1 mm
+                  # slabs beat against the 0.12 mm layers: steps of 0.1, 0.2, 0.1, 0.1, 0.1 ... = a visible band every 5 layers (0.6 mm).
 def round_env(p=None, step=0.1):
     zones = []
-    ys_ = list(np.arange(-D / 2, -D / 2 + EDGE_R, step)) + [-D / 2 + EDGE_R, D / 2 - EDGE_R] + list(np.arange(D / 2 - EDGE_R + step, D / 2 + 1e-9, step))
-    ys_ = sorted(set(round(y, 4) for y in ys_ + [D / 2]))
+    if PLATFORM == 'v10':
+        hs = [round(k * ENV_STEP, 6) for k in range(int(np.floor(EDGE_R / ENV_STEP + 1e-9)) + 1)] + [EDGE_R]      # heights above a bed face
+        ys_ = sorted(set([round(-D / 2 + h, 6) for h in hs] + [round(D / 2 - h, 6) for h in hs]))
+    else:
+        ys_ = list(np.arange(-D / 2, -D / 2 + EDGE_R, step)) + [-D / 2 + EDGE_R, D / 2 - EDGE_R] + list(np.arange(D / 2 - EDGE_R + step, D / 2 + 1e-9, step))
+        ys_ = sorted(set(round(y, 4) for y in ys_ + [D / 2]))
     for a, b in zip(ys_[:-1], ys_[1:]):
         ym = (a + b) / 2; ins = max(edge_inset(ym + D / 2), edge_inset(D / 2 - ym))
         zones.append(v5._map_inner(K.shapely_to_cs(BASE.buffer(-ins, quad_segs=24) if ins > 0 else BASE).extrude(b - a), a))
@@ -168,6 +182,8 @@ def fit_mark(g0):
             return g, round(float(d), 2)
     raise AssertionError(f'A·B in {FONT} at cap {CAP} cannot be made printable')
 MARK_FIT = {}
+ISLAND_MIN = 0.0      # v10.6, set per design (PARQUET 1.7): islands of face narrower than this (inscribed circle) inside an engraved pattern are engraved away
+ISLAND_STATS = {}     # per build: side -> (count, mm2, widest removed)
 def monogram():
     if PLATFORM == 'v10':        # v10.5: exact glyph outline (nesting, not winding) + printable fit; the dot stays a Ø1.5 disc
         raw = v6.text_poly_nz('A·B', CAP, FONT)
@@ -183,6 +199,7 @@ def monogram():
     return unary_union(parts[1:] + [Point(dot.x, dot.y).buffer(0.75, quad_segs=16)])
 
 def build():
+    ISLAND_STATS.clear()
     d = v5.book('none', p=P); tray, cover, ys = d['tray'], d['cover'], d['ys']
     env = round_env(P)
     # ---- magnet clasp (sealed-in magnets) ----
@@ -341,6 +358,15 @@ def build():
         for side, part in (('front', 'c'), ('back', 't')):
             for g, key in pats.get(side, []):
                 if side == 'back' and zone_back is not None: g = g.difference(zone_back)   # clean field round the initials
+                if key == 'engrave' and PLATFORM == 'v10' and ISLAND_MIN > 0:
+                    # v10.6: PARQUET's engraved herringbone left ~160 pin-sized islands of face between its grooves (diamonds
+                    # 0.7-1.3 mm across); the sliced-face check found each printing as one loop with a hole in it. Engrave those
+                    # too: they join the groove. Per design only: KUMIKO's lattice cells are this small on purpose and print fine.
+                    rest = (BACK if side == 'back' else FRONT).buffer(2.0).difference(g)
+                    tiny = [q for q in getattr(rest, 'geoms', [rest]) if not q.is_empty and q.buffer(-ISLAND_MIN / 2).is_empty]
+                    if tiny:
+                        g = unary_union([g] + [q.buffer(0.02) for q in tiny]).buffer(0)
+                        ISLAND_STATS[side] = (len(tiny), round(sum(q.area for q in tiny), 2), round(max(2 * max(r for r in np.arange(0, 1.0, 0.02) if not q.buffer(-r).is_empty) for q in tiny), 2))
                 if key == 'engrave':      # tone-on-tone engraving: 3 stepped layers (45 deg), prints support-free face down
                     for k_, dep in enumerate((LAYER0, LAYER0 + LAYER, LAYER0 + 2 * LAYER)):
                         gk = g.buffer(-0.16 * k_, quad_segs=6) if k_ else g
@@ -405,7 +431,7 @@ def build():
                 c_top_z=c_top_z, t_top_z=t_top_z, zd=zd, c_floor=c_floor, t_floor=t_floor)
 
 def checks(r):
-    a, b, s = r['tray'], r['cover'], r['sleeve']
+    a, b, s = r['tray'], r['cover'], (r['sleeve'] if r['sleeve'] is not None else m3.Manifold())   # v10.6: no sleeve part
     allp = [a, b, s] + r['yel_cover'] + r['yel_tray']
     ov = sum((x ^ y).volume() for i, x in enumerate(allp) for y in allp[i + 1:])
     ov_ribs = round(((r['badge_black'] + r['badge_yellow']) ^ a).volume(), 3) if r['badge_black'] is not None else None

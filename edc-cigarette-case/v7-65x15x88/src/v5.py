@@ -84,7 +84,8 @@ def book(surface='knurl', seed=(5, 11), p=P):
     ys = -D / 2 + TC
     XA, YA = -W / 2 + R + 0.1, -D / 2 + R + 0.1
     segs = p.get('SEGS', [(0, 15), (15, 33), (33, 52), (52, 70), (70, 85)])
-    own = ['T', 'C', 'S', 'C', 'T']
+    own = p.get('OWN', ['T', 'C', 'S', 'C', 'T'])            # v10.6: 'M' = a third tray knuckle in the middle instead of the loose sleeve
+    NB = p.get('BARREL_SEG', 48)                              # v10.6: 192 on v10 (48 printed as 0.37 mm facets: visible bands on the knuckles)
     env = p['ENV'](p) if p.get('ENV') else envelope(p)          # v7.1: optional rounded envelope
     halfT = chbox(-W, W, ys, D, -1, H + 1, cv=0.1); halfC = chbox(-W, W, -D, ys, -1, H + 1, cv=0.1)
     tray = env ^ halfT
@@ -158,12 +159,12 @@ def book(surface='knurl', seed=(5, 11), p=P):
     sleeve = None
     for (z0, z1), o in zip(segs, own):
         g0, g1 = (z0 + (G if z0 > 0 else 0)), (z1 - (G if z1 < H else 0))
-        barrel = m3.Manifold.cylinder(g1 - g0, R, R, 48).translate((XA, YA, g0)) ^ env
-        clear = m3.Manifold.cylinder(z1 - z0 + 2 * G, R + G, R + G, 48).translate((XA, YA, z0 - G))
-        if o == 'T':
+        barrel = m3.Manifold.cylinder(g1 - g0, R, R, NB).translate((XA, YA, g0)) ^ env
+        clear = m3.Manifold.cylinder(z1 - z0 + 2 * G, R + G, R + G, NB).translate((XA, YA, z0 - G))
+        if o in ('T', 'M'):     # tray knuckle: barrel on a pillar that stands on the back plate. 'T' grips the pin, 'M' lets it slide through
             cover -= clear
             tray += barrel + (chbox(-W / 2, XA + R - 0.1, YA, D / 2 - WB + 0.1, g0, g1, cv=0.1) ^ env ^ halfT)
-            tray -= teardrop(XA, YA, p['PIN_PRESS'] / 2, -1, z0 - 1, z1 + 1)
+            tray -= teardrop(XA, YA, p['PIN_PRESS' if o == 'T' else 'PIN_SLEEVE'] / 2, -1, z0 - 1, z1 + 1)
         elif o == 'C':
             tray -= clear
             cover += barrel + (chbox(XA, XA + R + 1.5, YA - R, ys, g0, g1, cv=0.1) ^ env)
@@ -172,10 +173,24 @@ def book(surface='knurl', seed=(5, 11), p=P):
             tray -= clear; cover -= clear
             hexs = m3.Manifold.cylinder(g1 - g0, R, R, 6).rotate((0, 0, 30)).translate((XA, YA, g0))
             sleeve = hexs - m3.Manifold.cylinder(H + 2, p['PIN_SLEEVE'] / 2, p['PIN_SLEEVE'] / 2, 32).translate((XA, YA, -1))
-    keep = chbox(XA, W, -D, D, -1, H + 1, cv=0.1) + m3.Manifold.cylinder(H + 2, R, R, 48).translate((XA, YA, -1))
+    rk = R + p.get('KEEP_EXTRA', 0.0)                          # v10.6: lets the lid knuckle's first layer follow the edge chamfer (it was 0.36 mm short)
+    keep = chbox(XA, W, -D, D, -1, H + 1, cv=0.1) + m3.Manifold.cylinder(H + 2, rk, rk, NB).translate((XA, YA, -1))
     cover = cover ^ keep
-    SW = m3.Manifold.batch_boolean([cover.translate((-XA, -YA, 0)).rotate((0, 0, -a)).translate((XA, YA, 0)) for a in range(2, 168, 2)], m3.OpType.Add)
-    tray -= SW
+    if p.get('SWEEP_R'):      # v10.6: same swing clearance, computed copy by copy from the lid's hinge zone (the one big union of 83
+        rs = p['SWEEP_R']     # overlapping lids took 137 s once the barrels were smooth). Nothing further than 4.2 mm from the pin can
+        cov_s = cover ^ m3.Manifold.cylinder(H + 2, rs, rs, 96).translate((XA, YA, -1))      # reach the tray inside 166 degrees.
+        clr = p.get('SWEEP_CLR', 0.0)
+        if clr:               # running clearance at wide-open angles: the lid's hinge-side edge is a concave arc at r = R + G around the
+            # pin, and the swing cut left the tray knuckles at exactly that radius (zero gap from ~111 deg on). Cut them to R + G - clr.
+            ann = m3.Manifold.cylinder(H + 2, R + G, R + G, NB).translate((XA, YA, -1)) - m3.Manifold.cylinder(H + 4, R + G - clr, R + G - clr, NB).translate((XA, YA, -2))
+            fat = [chbox(XA, W, -D, ys, z0 - G, z1 + G, cv=0.01) for (z0, z1), o in zip(segs, own) if o in ('T', 'M')]
+            cov_s = cov_s + (m3.Manifold.batch_boolean(fat, m3.OpType.Add) ^ env ^ ann)
+        for a in range(2, 168, 2):
+            tray = tray - cov_s.translate((-XA, -YA, 0)).rotate((0, 0, -a)).translate((XA, YA, 0))
+            tray.num_tri()    # evaluate now: keeps each cut small instead of one union of all the copies
+    else:
+        SW = m3.Manifold.batch_boolean([cover.translate((-XA, -YA, 0)).rotate((0, 0, -a)).translate((XA, YA, 0)) for a in range(2, 168, 2)], m3.OpType.Add)
+        tray -= SW
     # magnets 6x2 discs in the 8.5 mm end blocks
     mx = cx1 - 4.6; mags = []
     for z in ((END / 2, H - END / 2) if p.get('MAG_ENDS', True) else ()):

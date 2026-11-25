@@ -1,13 +1,12 @@
-"""Wood-PLA print projects for a Bambu Lab A1 + AMS lite (v10.5 FINAL). Fixed AMS slots: 1 Oak, 2 Teak, 3 Cherry, 4 Walnut.
+"""Wood-PLA print projects for a Bambu Lab A1 + AMS lite (v10.6). Fixed AMS slots: 1 Oak, 2 Teak, 3 Cherry (unused since the owner
+ran out, 25 Nov), 4 Walnut.
 
-1. Overnight plates: TWO designs (cover + tray each) in ONE project, ONE plate, print by object, no pauses (magnets are glued
-   in flush after printing). 4 objects in a pinwheel, every pair of objects >= 74 mm apart hull to hull (Bambu's by-object check
-   for the A1: each convex hull grows by extruder_clearance_max_radius / 2 = 36.4 mm). Pairs: KUMIKO + DIAL, RIVA + PARQUET,
-   ENDGRAIN + CUBES.
-2. Morning plate: all six hinge sleeves, grouped by wood into three objects (walnut / oak / cherry): 2 colour changes.
+TWO designs (cover + tray each) in ONE project, ONE plate, print by object, no pauses (magnets are glued in flush after
+printing). 4 objects in a pinwheel, every pair of objects >= 74 mm apart hull to hull (Bambu's by-object check for the A1: each
+convex hull grows by extruder_clearance_max_radius / 2 = 36.4 mm). Pairs: KUMIKO + DIAL, RIVA + PARQUET, ENDGRAIN + CUBES.
+v10.6: no hinge sleeve and no sleeve plate: the middle knuckle is part of the tray (3 knuckles on the back, 2 on the lid).
 
 Usage: python3 src/w_pair_export.py <out_dir> <template_dir> <designA> <designB> <initials|noinit>
-       python3 src/w_pair_export.py <out_dir> <template_dir> sleeves
 """
 import os, sys, json, uuid, zipfile
 os.environ.setdefault('PLATFORM', 'v10')
@@ -23,12 +22,24 @@ assert (v7.PLATFORM, v7.OUTLINE, v7.EDGE_R, v7.CORNER_OPEN, v7.CORNER_SPINE, v7.
 PAIRS = [('kumiko', 'dial'), ('riva', 'parquet'), ('endgrain', 'cubes')]
 GAP = 74.0           # hull-to-hull (Bambu needs > 72.8 on the A1)
 BED = 256.0
-BRIM = 3.0
+BRIM = 3.0           # margin kept round the plate (the files have no brim since v10.6; the layout is unchanged)
+def face_settings(key, kind, rot, initials):
+    """Per-object settings for the plate-side face (v10.6, owner: "make it so the layers don't show up ... the side where it touches
+    the plate, the ones with cubes and squares"). The first print showed four wall rings and a centre dot inside every inlaid cell.
+    - infill_direction: the straight first-layer lines run ALONG the case (bed angle = 90 - the object's turn on the plate), so what
+      shows of them reads as wood grain; PARQUET keeps 45 (parallel / square to its staves).
+    - only_one_wall_first_layer ('lines' in W.DESIGNS[key]['face']): one outline per cell + those lines, no rings. Never on a tray
+      with initials: an inlaid A·B needs its four variable-width walls to fill every letter stroke (checked as sliced)."""
+    d = {'infill_direction': '45' if key == 'parquet' else str(int((90 - rot) % 180))}
+    mode = W.DESIGNS[key]['face'][0 if kind == 'c' else 1]
+    if mode == 'lines' and (kind == 'c' or not initials): d['only_one_wall_first_layer'] = '1'
+    if os.environ.get('FACE_FORCE') == 'walls': d.pop('only_one_wall_first_layer', None)      # comparison builds only
+    return d
 slot = lambda wood: SLOTS.index(wood) + 1
 U = lambda vs: m3.Manifold.batch_boolean(vs, m3.OpType.Add) if len(vs) > 1 else vs[0]
 
 def design_parts(key, initials):
-    """Cover / tray parts in print orientation (canonical frame: spine at -x, length along y), plus the sleeve."""
+    """Cover / tray parts in print orientation (canonical frame: spine at -x, length along y)."""
     v7.MAGNET_MODE = 'glue'
     v7.PRINT_LAYER = float(FINAL['layer_height'])        # glue-pocket floors snap to the print's own layer grid
     cfgd = W.DESIGNS[key]
@@ -37,6 +48,7 @@ def design_parts(key, initials):
            (k == 'pieces' and chk[k] != (1, 1)) or (k in ('overlap', 'rollups_vs_tray') and abs(chk[k]) > 1e-3) or
            (k == 'pocket_material' and max(abs(v) for v in chk[k]) > 1e-3) or (k == 'swing_contacts' and chk[k])}
     assert not bad, (key, bad)
+    assert r['sleeve'] is None, 'v10.6: the middle knuckle belongs to the tray, there is no sleeve part'
     tray_rot = lambda m: m.rotate((-90, 0, 0)); cover_rot = lambda m: m.rotate((90, 0, 0))
     N = cfgd['name']
     cov = [(cover_rot(r['cover']), f'{N} lid ({cfgd["cover"]})', slot(cfgd['cover']))] + \
@@ -44,7 +56,7 @@ def design_parts(key, initials):
     tra = [(tray_rot(r['tray']), f'{N} tray ({cfgd["tray"]})', slot(cfgd['tray']))] + \
           [(tray_rot(y), f'{N} inlay ({cfgd[a]})', slot(cfgd[a])) for y, p, a in r['acc'] if p == 't']
     if r.get('y4') is not None: tra.append((tray_rot(r['y4']), f'{N} A·B ({cfgd["mono"]})', slot(cfgd['mono'])))
-    return dict(cover=cov, tray=tra, sleeve=r['sleeve'], chk=chk, cfg=cfgd)
+    return dict(cover=cov, tray=tra, chk=chk, cfg=cfgd)
 
 def centre(parts):
     bb = U([q for q, n_, e in parts]).bounding_box()
@@ -82,11 +94,11 @@ def transform(rot, x, y):
     return f'{c} {s} 0 {-s} {c} 0 0 0 1 {x:.3f} {y:.3f} 0'
 
 def write_project(out, orig, stem, title, desc, plate_name, order):
-    """order: [(object name, parts, rot, (x, y))] in print order."""
+    """order: [(object name, parts, rot, (x, y), {extra per-object settings})] in print order."""
     files, rels, res, build, sets, inst = {}, [], [], [], [], []
     pid, top, ident = 1, 1000, 300
     pr = FINAL
-    for name, parts, rot, (px, py) in order:
+    for name, parts, rot, (px, py), extra in order:
         parts = centre(parts); comps, pcfg = [], []
         for i, (man, nm, ext) in enumerate(parts):
             path = f'3D/Objects/object_{pid}.model'; files[path] = v6_final.model_xml(pid, man); rels.append(path)
@@ -100,6 +112,7 @@ def write_project(out, orig, stem, title, desc, plate_name, order):
         sets.append(f'  <object id="{top}">\n    <metadata key="name" value="{name}"/>\n    <metadata key="extruder" value="{parts[0][2]}"/>\n'
                     f'    <metadata key="sparse_infill_density" value="{pr["sparse_infill_density"]}"/>\n    <metadata key="sparse_infill_pattern" value="gyroid"/>\n'
                     f'    <metadata key="wall_loops" value="{pr["wall_loops"]}"/>\n    <metadata key="flush_into_infill" value="1"/>\n' +
+                    ''.join(f'    <metadata key="{k_}" value="{v_}"/>\n' for k_, v_ in extra.items()) +
                     '\n'.join(pcfg) + '\n  </object>')
         inst.append(f'    <model_instance>\n      <metadata key="object_id" value="{top}"/>\n      <metadata key="instance_id" value="0"/>\n'
                     f'      <metadata key="identify_id" value="{ident}"/>\n    </model_instance>')
@@ -140,45 +153,17 @@ def export_pair(kA, kB, initials, out, orig):
     title = f'{"AB " if initials else ""}Rollie Book wood PLA: {nA} + {nB} - A1, one plate, by object, 0.12 mm High Quality'
     desc = (f'Two slim rollie cases (65x13.5x88 mm) in wood PLA: {A["cfg"]["craft"]}; {B["cfg"]["craft"]}. A1 + AMS lite slots: {WOODS_TXT}. '
             'No pauses: glue 4 x Ø5x2 mm magnets per case flush into the pockets after printing (lid marked face UP, tray marked face DOWN). '
-            'Hinge sleeves: print the separate hinge-sleeves project. Hinge pin: 1.75 mm PETG filament. No supports.')
-    fn = write_project(out, orig, stem, title, desc, f'{nA} + {nB}', [(names[k], objs[k], rot[k], place[k]) for k in ('cA', 'tA', 'cB', 'tB')])
+            'Hinge: 3 knuckles on the tray, 2 on the lid, nothing else to print; push an 88 mm length of 1.75 mm filament through as the pin. No supports.')
+    extra = {k: face_settings(kA if k[1] == 'A' else kB, k[0], rot[k], initials) for k in ('cA', 'tA', 'cB', 'tB')}
+    fn = write_project(out, orig, stem, title, desc, f'{nA} + {nB}', [(names[k], objs[k], rot[k], place[k], extra[k]) for k in ('cA', 'tA', 'cB', 'tB')])
     return fn, dict(dmin=round(dmin, 1), extent=[round(v, 1) for v in gb], names=[names[k] for k in ('cA', 'tA', 'cB', 'tB')],
                     chk={kA: A['chk'], kB: B['chk']})
 
-def export_sleeves(out, orig):
-    """All six hinge sleeves, grouped by wood (one object per wood, printed by object: 2 colour changes)."""
-    sleeve = design_parts('kumiko', False)['sleeve']          # the sleeve is the same part for every design (hinge geometry only)
-    groups = {}
-    for key, cfgd in W.DESIGNS.items():
-        groups.setdefault(cfgd['sleeve'], []).append(cfgd['name'])
-    order_w = sorted(groups, key=lambda w: -len(groups[w]))     # walnut (3), oak (2), cherry (1)
-    objs, names = {}, {}
-    for w in order_w:
-        parts = []
-        for i, N in enumerate(groups[w]):                      # a row, 12 mm apart (their brims merge)
-            sb = sleeve.bounding_box()
-            parts.append((sleeve.translate((i * 12.0 - sb[0], -sb[1], -sb[2])), f'{N} hinge sleeve ({w})', slot(w)))
-        objs[w] = parts; names[w] = f'Sleeves {w} ({", ".join(groups[w])})'
-    H = {w: hull2d(centre(objs[w])) for w in objs}
-    spots = [(64.0, 70.0), (192.0, 70.0), (128.0, 186.0)]      # a triangle: > 100 mm between any two groups
-    place = {w: spots[i] for i, w in enumerate(order_w)}
-    dmin, gb = check_layout(H, place)
-    stem = 'Rollie_Book_wood_hinge_sleeves_all_six_A1'
-    title = 'Rollie Book wood PLA: all six hinge sleeves - A1, one plate, by object, 0.12 mm High Quality'
-    desc = (f'The hinge sleeve (middle knuckle) for each of the six wood designs, in its accent wood, grouped by wood: '
-            + '; '.join(f'{w}: {", ".join(groups[w])}' for w in order_w) + f'. A1 + AMS lite slots: {WOODS_TXT}.')
-    fn = write_project(out, orig, stem, title, desc, 'Hinge sleeves', [(names[w], objs[w], 0, place[w]) for w in order_w])
-    return fn, dict(dmin=round(dmin, 1), extent=[round(v, 1) for v in gb], names=[names[w] for w in order_w])
-
 if __name__ == '__main__':
-    if sys.argv[3] == 'sleeves':
-        fn, info = export_sleeves(sys.argv[1], sys.argv[2])
-        print(fn); print('objects (print order):', ' | '.join(info['names'])); print('min hull gap', info['dmin'], '| extent', info['extent'])
-    else:
-        out, orig, kA, kB, ini = sys.argv[1:6]
-        fn, info = export_pair(kA, kB, ini == 'initials', out, orig)
-        print(fn)
-        print('objects (print order):', ' | '.join(info['names']))
-        print('min hull gap', info['dmin'], 'mm (A1 needs > 72.8) | plate extent', info['extent'])
-        for k, c in info['chk'].items():
-            print(k, {q: c[q] for q in ('env', 'pieces', 'overlap', 'pocket_material', 'rollups_vs_tray', 'swing_contacts', 'magnet_gap')})
+    out, orig, kA, kB, ini = sys.argv[1:6]
+    fn, info = export_pair(kA, kB, ini == 'initials', out, orig)
+    print(fn)
+    print('objects (print order):', ' | '.join(info['names']))
+    print('min hull gap', info['dmin'], 'mm (A1 needs > 72.8) | plate extent', info['extent'])
+    for k, c in info['chk'].items():
+        print(k, {q: c[q] for q in ('env', 'pieces', 'overlap', 'pocket_material', 'rollups_vs_tray', 'swing_contacts', 'magnet_gap')})

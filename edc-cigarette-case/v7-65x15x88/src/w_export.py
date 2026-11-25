@@ -38,7 +38,13 @@ FINAL = {'layer_height': '0.12', 'initial_layer_print_height': '0.2', 'wall_gene
          'sparse_infill_pattern': 'gyroid', 'sparse_infill_density': '15%', 'top_surface_pattern': 'concentric',
          'wall_loops': '4', 'top_shell_layers': '8', 'top_shell_thickness': '1.0', 'bottom_shell_layers': '6',
          'initial_layer_speed': '40', 'initial_layer_infill_speed': '80', 'initial_layer_line_width': '0.42',
-         'reduce_crossing_wall': '1', 'brim_type': 'outer_only', 'brim_width': '3',
+         'reduce_crossing_wall': '1',
+         # v10.6 (owner, 25 Nov): no brim ("why does it need a brim?": every part sits on the plate with its whole face, and the
+         # first full print stuck well), and the plate-side faces "show the layers" (rings inside every square / cube where
+         # the first layer went down a little high, near the front and back of the bed): 5 % more plastic on the first layer;
+         # the faces are laid as one outline + straight lines along the case instead of four rings per cell (per object,
+         # see w_pair_export.face_settings).
+         'brim_type': 'no_brim', 'initial_layer_flow_ratio': '1.05',
          'filament_scarf_seam_type': ['external'] * 4}
 if os.environ.get('WOOD_PROFILE_TRIAL'): FINAL.update(json.loads(os.environ['WOOD_PROFILE_TRIAL']))   # timing trials only
 PROFILES = {
@@ -48,6 +54,8 @@ PROFILES = {
 }
 
 def export(key, initials, profile, out, orig, geometry_only=False):
+    raise SystemExit('w_export.export is superseded: since v10.6 the wood designs have no sleeve part (the middle hinge knuckle is on the tray). '
+                     'Use src/w_pair_export.py. This module is kept for its shared settings (SLOTS, FIL, FLUSH, FINAL).')
     os.makedirs(out, exist_ok=True)
     v7.MAGNET_MODE = 'glue' if profile == 'test' else 'embed'
     cfgd = W.DESIGNS[key]

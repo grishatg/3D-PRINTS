@@ -1,4 +1,7 @@
 """Wood-PLA designs (renders first). Four wood tones from the owner's filament photo: Oak, Teak, Cherry, Walnut (= 4 AMS lite slots).
+v10.6 (25 Nov): the owner ran out of Cherry ("use the other, oak wood and walnut, for colours"): no design uses cherry any more
+(RIVA hull and CUBES base are walnut, PARQUET staves are teak + walnut). The hinge sleeve is gone too: it is now a third knuckle
+on the tray, in the tray's wood.
 Each design takes its cue from a wood craft or brand, and its A·B initials use a matching typeface, placed as a maker's mark
 in the bottom corner of the BACK plate (hinge side). Every design also exists without initials.
 Platform: v9 (continuous-curvature corners, R4.5 edges, crescent thumb scoop, pinch zone, sealed magnets).
@@ -56,7 +59,7 @@ def w_parquet(k):
     F, B = full(k, 'f'), full(k, 'b')
     a, b = herringbone(F, w=4.0, L=14.0)
     ea, eb = herringbone(B, w=4.0, L=14.0)
-    # marquetry: teak and cherry staves inlaid in the oak lid; the 0.5 mm oak gaps between them read as the joints
+    # marquetry: teak and walnut staves inlaid in the oak lid; the 0.5 mm oak gaps between them read as the joints
     return {'front': [(a, 'acc2'), (b.difference(a.buffer(0.2, join_style=2)), 'acc1')], 'back': [(unary_union([ea.boundary, eb.boundary]).buffer(0.45, quad_segs=4).intersection(B), 'engrave')]}
 def w_inlay(k):
     F, B = k['FRONT'], k['BACK']
@@ -112,30 +115,35 @@ def w_cubes(k):
     _a, _b, eb = tumbling_blocks(B)
     return {'front': [(lf, 'acc2'), (rf, 'acc1')], 'back': [(eb.buffer(0.45, quad_segs=4).intersection(B), 'engrave')]}
 
+# face = (lid, tray): how the plate-side face is laid (v10.6). 'lines' = one outline per cell + straight lines along the case
+# (compact cells: squares, cubes, lattice triangles, planks: no rings, no centre dots); 'walls' = the usual four wall loops
+# (PARQUET's long staves: the loops run along each stave like its grain; DIAL's back: its 1.85 mm studs are too small for
+# lines). Chosen per part from the sliced faces of both variants (coverage and bare spots; HANDOVER §0a, v10.6).
+# island_min: engrave away islands of face narrower than this inside the engraved back pattern (v7.ISLAND_MIN).
 DESIGNS = {
- 'kumiko':  dict(name='KUMIKO', craft='Japanese kumiko joinery', cover='oak', tray='walnut', sleeve='walnut', mono='engrave',
+ 'kumiko':  dict(name='KUMIKO', craft='Japanese kumiko joinery', cover='oak', tray='walnut', mono='engrave', face=('lines', 'lines'),
                  font='ShipporiMinchoB1-ExtraBold-Latin.ttf', fontname='Shippori Mincho (a Japanese foundry’s serif)', cap=7.0, thick=0.12, fn=w_kumiko,
                  idea='Pale oak lid, dark walnut base, like a hinoki box on a walnut tray. The asanoha lattice (growth, strength) is engraved across the lid.',
                  front='Engraved asanoha lattice across the oak lid', back='A narrow lattice band along the opening edge; A·B engraved in the corner'),
- 'riva':    dict(name='RIVA', craft='Riva Aquarama: varnished mahogany decks with pale caulking seams', cover='cherry', tray='cherry', sleeve='oak', acc1='oak', mono='oak',
+ 'riva':    dict(name='RIVA', craft='Riva Aquarama: varnished mahogany decks with pale caulking seams', cover='walnut', tray='walnut', acc1='oak', mono='oak', face=('lines', 'lines'),
                  font='BodoniModa-Bold.ttf', fontname='Bodoni (Italian Didone, after the Italian boatyard)', cap=7.0, thick=0.10, fn=w_riva,
-                 idea='A deep cherry hull with pale oak seams running bow to stern, edge to edge, like a Riva deck. One oak waterline on the back.',
+                 idea='A dark walnut hull with pale oak seams running bow to stern, edge to edge, like a Riva deck. One oak waterline on the back.',
                  front='Oak deck seams, full length', back='One oak waterline; oak A·B in the corner'),
- 'dial':    dict(name='DIAL', craft='Swiss watch dials: guilloché sunburst and clous de Paris', cover='teak', tray='walnut', sleeve='walnut', mono='oak',
+ 'dial':    dict(name='DIAL', craft='Swiss watch dials: guilloché sunburst and clous de Paris', cover='teak', tray='walnut', mono='oak', face=('lines', 'walls'),
                  font='Cinzel-Bold.ttf', fontname='Cinzel (Roman inscriptional capitals, as on dials and casebacks)', cap=7.0, thick=0.10, fn=w_dial,
                  idea='A warm teak "dial" with sunburst rays from the opening edge; a walnut caseback with clous de Paris and an oak signature in the corner.',
                  front='Engraved sunburst rays on teak', back='Engraved clous de Paris; oak A·B "signature"'),
- 'parquet': dict(name='PARQUET', craft='European herringbone parquet', cover='oak', tray='walnut', sleeve='cherry', acc1='cherry', acc2='teak', mono='oak',
+ 'parquet': dict(name='PARQUET', craft='European herringbone parquet', cover='oak', tray='walnut', acc1='walnut', acc2='teak', mono='oak', face=('walls', 'walls'), island_min=1.7,
                  font='Jost-Bold.ttf', fontname='Jost (Futura-like, European modernism)', cap=5.0, thick=0.0, fn=w_parquet,
-                 idea='Marquetry: a herringbone of teak and cherry staves laid into an oak lid, the oak showing as fine joints. All four woods in one case; the walnut back carries the pattern engraved.',
-                 front='Teak and cherry herringbone with oak joints', back='Engraved herringbone outlines; oak A·B in the corner'),
- 'endgrain': dict(name='ENDGRAIN', craft='End-grain butcher blocks and two-tone chequered luggage canvas', cover='teak', tray='walnut', sleeve='oak', acc1='walnut', mono='oak',
+                 idea='Marquetry: a herringbone of teak and walnut staves laid into an oak lid, the oak showing as fine joints. Three woods in one case; the walnut back carries the pattern engraved.',
+                 front='Teak and walnut herringbone with oak joints', back='Engraved herringbone outlines; oak A·B in the corner'),
+ 'endgrain': dict(name='ENDGRAIN', craft='End-grain butcher blocks and two-tone chequered luggage canvas', cover='teak', tray='walnut', acc1='walnut', mono='oak', face=('lines', 'lines'),
                  font='Inter-Bold.ttf', fontname='Inter (Helvetica-like, Scandinavian modern)', cap=5.0, thick=0.0, fn=w_endgrain,
                  idea='Two browns, one fine chequer: walnut blocks set into a teak lid like an end-grain board, the quiet two-tone check of old travel trunks. The walnut base repeats the chequer, engraved tone-on-tone.',
                  front='Teak and walnut chequer, full face', back='Engraved chequer, tone-on-tone; oak A·B in the corner'),
- 'cubes':   dict(name='CUBES', craft='18th-century French marquetry à cubes (tumbling blocks)', cover='oak', tray='cherry', sleeve='walnut', acc1='walnut', acc2='teak', mono='oak',
+ 'cubes':   dict(name='CUBES', craft='18th-century French marquetry à cubes (tumbling blocks)', cover='oak', tray='walnut', acc1='walnut', acc2='teak', mono='oak', face=('lines', 'lines'),
                  font='CormorantGaramond-Bold.ttf', fontname='Garamond (the French ébénistes’ typeface)', cap=7.0, thick=0.12, fn=w_cubes,
-                 idea='Stacked cubes in three woods: oak tops, teak and walnut sides, the 3D illusion of Louis XV marquetry. A cherry base with the cube outlines engraved.',
+                 idea='Stacked cubes in three woods: oak tops, teak and walnut sides, the 3D illusion of Louis XV marquetry. A walnut base with the cube outlines engraved.',
                  front='Oak / teak / walnut tumbling blocks, full face', back='Engraved cube outlines; oak A·B in the corner'),
 }
 
@@ -143,9 +151,11 @@ def build(key, initials=True):
     cfg = DESIGNS[key]; v7.PATTERN_HOOK = cfg['fn']
     v7.INITIALS = initials; v7.FONT = cfg['font']; v7.CAP = cfg['cap']; v7.MONO_THICKEN = cfg['thick']
     v7.INITIALS_MODE = 'engrave' if cfg['mono'] == 'engrave' else 'inlay'
+    v7.ISLAND_MIN = cfg.get('island_min', 0.0)
     r = v7.build(); chk = v7.checks(r)
     col = lambda n: WOOD[n]
-    parts = [(r['cover'], col(cfg['cover']), 'c'), (r['tray'], col(cfg['tray']), 't'), (r['sleeve'], col(cfg['sleeve']), 's')]
+    parts = [(r['cover'], col(cfg['cover']), 'c'), (r['tray'], col(cfg['tray']), 't')]
+    if r['sleeve'] is not None and 'sleeve' in cfg: parts.append((r['sleeve'], col(cfg['sleeve']), 's'))      # pre-v10.6 only
     parts += [(y, col(cfg[a]), p) for y, p, a in r['acc']]
     if r.get('y4') is not None: parts.append((r['y4'], col(cfg['mono']), 't'))
     fil = sorted({cfg[q] for q in ('cover', 'tray', 'sleeve', 'acc1', 'acc2') if q in cfg} | ({cfg['mono']} if cfg['mono'] != 'engrave' and initials else set()))
